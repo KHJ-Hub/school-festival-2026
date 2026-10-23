@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
 import { BOOTHS, CLUBS, INITIAL_ACTIVITIES, INITIAL_VOUCHERS, RANKINGS } from './mockData'
 import type { Activity, View, Voucher } from './types'
 
@@ -9,7 +10,8 @@ const NAV_ITEMS: Array<{ id: View; label: string; icon: string }> = [
 ]
 
 function App() {
-  const [view, setView] = useState<View>('coins')
+  const [mode, setMode] = useState<AppMode>('student')
+  const [view, setView] = useState<View>('vouchers')
   const [coins, setCoins] = useState(120)
   const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES)
   const [vouchers, setVouchers] = useState<Voucher[]>(INITIAL_VOUCHERS)
@@ -57,25 +59,33 @@ function App() {
     showNotice('사용 처리되었습니다. 실제 중복 검증은 서버 연결 후 적용됩니다.')
   }
 
+  const changeMode = (nextMode: AppMode) => {
+    setMode(nextMode)
+    setView(nextMode === 'student' ? 'vouchers' : 'coins')
+  }
+
   return (
     <div className="app-shell">
       <header className="topbar">
-        <button className="brand" onClick={() => setView('coins')} aria-label="첫 화면으로 이동">
+        <button className="brand" onClick={() => setView(mode === 'student' ? 'vouchers' : 'coins')} aria-label="첫 화면으로 이동">
           <span className="brand-mark">F!</span>
           <span>
             <strong>모여라! 축제 연구소</strong>
             <small>2026 연합 동아리 프로젝트</small>
           </span>
         </button>
-        <div className="festival-date"><span>축제까지</span><strong>12월 29일</strong></div>
+        <div className="header-actions">
+          <ModeSwitcher mode={mode} onChange={changeMode} />
+          <div className="festival-date"><span>축제까지</span><strong>12월 29일</strong></div>
+        </div>
       </header>
 
       <main>
         <section className="hero">
           <div>
-            <p className="eyebrow">우리 손으로 만드는 축제</p>
+            <p className="eyebrow">{mode === 'student' ? '학생용 체험 화면' : '운영진용 개발 화면'}</p>
             <h1>놀고, 모으고,<br /><em>함께 기록해요.</em></h1>
-            <p className="hero-copy">세 동아리가 준비하는 코인·교환권·게임 랭킹 체험 공간입니다.</p>
+            <p className="hero-copy">{mode === 'student' ? '교환권 상태와 게임 랭킹을 확인하는 화면의 기본 틀입니다.' : '코인·교환권·랭킹 기능을 학생들이 직접 완성할 운영 화면의 기본 틀입니다.'}</p>
           </div>
           <div className="coin-card" aria-label={`현재 보유 코인 ${coins}`}>
             <span className="coin-symbol">F</span>
@@ -86,20 +96,23 @@ function App() {
 
         <div className="demo-alert" role="note">
           <span>ⓘ</span>
-          <p><strong>가상 데이터로 연습 중이에요.</strong> 이름·학번 같은 개인정보는 입력하지 않습니다. 새로고침하면 처음 상태로 돌아갑니다.</p>
+          <p><strong>가상 데이터로 연습 중이에요.</strong> 화면 전환은 실제 관리자 인증이 아니며, 새로고침하면 처음 상태로 돌아갑니다.</p>
         </div>
 
         <nav className="tabs" aria-label="주요 화면">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter((item) => mode === 'admin' || item.id !== 'coins').map((item) => (
             <button key={item.id} className={view === item.id ? 'active' : ''} onClick={() => setView(item.id)}>
               <span>{item.icon}</span>{item.label}
             </button>
           ))}
         </nav>
 
-        {view === 'coins' && <CoinView activities={activities} onAdd={addCoins} />}
-        {view === 'vouchers' && <VoucherView vouchers={vouchers} onExchange={exchangeVoucher} onUse={useVoucher} />}
+        {mode === 'admin' && view === 'coins' && <CoinView activities={activities} onAdd={addCoins} />}
+        {mode === 'admin' && view === 'vouchers' && <VoucherView vouchers={vouchers} onExchange={exchangeVoucher} onUse={useVoucher} />}
+        {mode === 'student' && view === 'vouchers' && <StudentVoucherView vouchers={vouchers} />}
         {view === 'ranking' && <RankingView />}
+
+        {mode === 'admin' && <StudentTaskRoadmap />}
 
         <section className="clubs">
           <span>함께 만드는 동아리</span>
@@ -113,6 +126,30 @@ function App() {
       </footer>
       {notice && <div className="toast" role="status">{notice}</div>}
     </div>
+  )
+}
+
+function StudentVoucherView({ vouchers }: { vouchers: Voucher[] }) {
+  const issuedVouchers = vouchers.filter((voucher) => voucher.status !== 'available')
+  return (
+    <section className="panel full-panel">
+      <div className="section-title"><span className="title-icon yellow">◇</span><div><h2>내 모바일 교환권</h2><p>가상 학생에게 발급된 교환권의 상태를 조회합니다.</p></div></div>
+      <div className="student-access-note"><strong>향후 본인 확인 적용 위치</strong><span>현재는 데모 데이터만 보여 줍니다. 실제 서비스에서는 안전한 개별 접근 토큰 또는 본인 인증이 필요합니다.</span></div>
+      {issuedVouchers.length === 0 ? (
+        <div className="empty-state"><strong>아직 발급된 교환권이 없어요.</strong><span>운영진용 데모 화면에서 교환권을 먼저 발급해 보세요.</span></div>
+      ) : (
+        <div className="voucher-grid">{issuedVouchers.map((voucher) => <article className={`voucher ${voucher.color}`} key={voucher.id}><div className="voucher-visual"><span>{voucher.icon}</span><small>FESTIVAL TICKET</small></div><div className="voucher-body"><span className={`status ${voucher.status}`}>{voucher.status === 'issued' ? '발급됨' : '사용 완료'}</span><h3>{voucher.name}</h3><p>{voucher.booth}</p><strong>{voucher.price} coin</strong><p className="helper">학생 화면에서는 상태만 확인할 수 있습니다.</p></div></article>)}</div>
+      )}
+    </section>
+  )
+}
+
+function StudentTaskRoadmap() {
+  return (
+    <section className="learning-roadmap">
+      <div><span className="eyebrow">STUDENT TODO</span><h2>운영 기능은 우리가 직접 완성해요</h2><p><code>src/studentTasks.ts</code>의 TODO와 <code>docs/STUDENT_TASKS.md</code>를 따라 한 과제씩 구현하세요.</p></div>
+      <div className="task-chips"><span>① 학번별 코인</span><span>② 교환권 발급</span><span>③ QR 사용 처리</span><span>④ 자동 랭킹</span></div>
+    </section>
   )
 }
 
