@@ -27,4 +27,37 @@ footer { padding: 25px max(5vw, 24px); display: flex; justify-content: space-bet
 @media (max-width: 780px) { .hero { grid-template-columns: 1fr; padding: 45px 0; }.hero h1 { font-size: 40px; }.coin-card { justify-self: stretch; }.content-grid { grid-template-columns: 1fr; }.voucher-grid, .podium { grid-template-columns: 1fr; }.ranking-heading { display: block; }.filters { justify-content: flex-start; margin-bottom: 18px; }.clubs { align-items: flex-start; flex-direction: column; }.festival-date span { display: none; } }
 @media (max-width: 500px) { main { width: min(100% - 24px, 1120px); }.topbar { height: 70px; padding: 0 14px; }.brand small { display: none; }.brand strong { font-size: 17px; }.festival-date strong { font-size: 12px; }.hero { min-height: 0; }.hero h1 { font-size: 36px; }.coin-card { padding: 22px; grid-template-columns: auto 1fr; }.demo-chip { display: none; }.tabs button { padding: 11px 4px; font-size: 12px; }.tabs button span { display: block; margin: 0 0 3px; }.panel { padding: 20px; }.amount-options { gap: 6px; }.server-note { display: block; }.server-note strong { display: block; margin-bottom: 5px; }.table-row { grid-template-columns: 38px 1.5fr .8fr 55px; padding: 10px 8px; font-size: 12px; }.table-head { font-size: 10px; } footer { gap: 10px; flex-direction: column; } }
 
+/* Student/admin learning scaffold: keep the original visual language. */
+.header-actions { display: flex; align-items: center; gap: 18px; }
+.mode-switcher { padding: 4px; display: flex; gap: 3px; border-radius: 10px; background: #e9e1d8; }
+.mode-switcher button { padding: 7px 11px; border: 0; border-radius: 7px; background: transparent; color: #79675e; font-size: 12px; font-weight: 700; }
+.mode-switcher button.active { background: #2d2420; color: #fff; }
+.tabs:has(button:nth-child(2):last-child) { grid-template-columns: repeat(2, 1fr); }
+.student-access-note { margin: -5px 0 22px; padding: 15px; display: flex; gap: 12px; border: 1px dashed #d5ae43; border-radius: 11px; background: #fff8db; color: #6d5b27; font-size: 13px; }
+.student-access-note strong { flex: none; }
+.empty-state { min-height: 220px; display: grid; place-content: center; gap: 5px; text-align: center; color: #8a786e; }
+.empty-state strong { color: #4d3e36; font: 21px 'Jua'; }
+.learning-roadmap { margin-top: 22px; padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-radius: 18px; background: #2d2420; color: white; }
+.learning-roadmap h2, .learning-roadmap p { margin: 0; }
+.learning-roadmap h2 { font: 23px 'Jua'; }
+.learning-roadmap p { margin-top: 7px; color: #d8ccc5; font-size: 13px; }
+.learning-roadmap code { color: #f5c65b; }
+.task-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+.task-chips span { padding: 7px 9px; border: 1px solid #67564d; border-radius: 99px; color: #eadfd9; font-size: 11px; }
+
+@media (max-width: 780px) {
+  .festival-date { display: none; }
+  .learning-roadmap { align-items: flex-start; flex-direction: column; }
+  .task-chips { justify-content: flex-start; }
+}
+
+@media (max-width: 500px) {
+  .topbar { min-height: 82px; height: auto; padding: 10px 14px; }
+  .brand strong { font-size: 16px; }
+  .header-actions { gap: 8px; }
+  .mode-switcher button { padding: 7px 8px; }
+  .student-access-note { display: block; }
+  .student-access-note strong { display: block; margin-bottom: 5px; }
+}
+
 
