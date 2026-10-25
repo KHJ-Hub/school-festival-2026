@@ -5,8 +5,9 @@ export function findEnabledMenu(_menus: SnackMenu[], _menuId: string): SnackMenu
   return undefined
 }
 
-export function canAffordMenu(_balance: number, _menu: SnackMenu): boolean {
-  // TODO(학생 4): 보유 코인이 필요 코인보다 많거나 같은지 확인하세요.
+export function canAffordMenu(_approvedBalance: number, _menu: SnackMenu): boolean {
+  // TODO(학생 4 / Issue #7): 승인 완료된 잔액만으로 교환 가능한지 확인하세요.
+  // pending 신청 수량은 approvedBalance에 포함되면 안 됩니다.
   return false
 }
 
