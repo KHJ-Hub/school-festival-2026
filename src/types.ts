@@ -1,12 +1,5 @@
 export type View = 'coins' | 'vouchers' | 'ranking'
 
-export type Activity = {
-  id: number
-  booth: string
-  amount: number
-  time: string
-}
-
 export type Voucher = {
   id: number
   name: string
