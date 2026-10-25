@@ -1,19 +1,20 @@
-import type { TaskVoucher } from './taskTypes'
+import type { CoinExchangeRequest, TaskVoucher } from './taskTypes'
 
 type StudentVoucherCardProps = {
   voucher: TaskVoucher
   menuName: string
+  coinRequests?: CoinExchangeRequest[]
 }
 
-export function StudentVoucherCard({ voucher, menuName }: StudentVoucherCardProps) {
-  // TODO(학생 8): 발급됨/사용 완료/취소 상태를 색상과 쉬운 문구로 구분하세요.
+export function StudentVoucherCard({ voucher, menuName, coinRequests = [] }: StudentVoucherCardProps) {
+  // TODO(학생 8 / Issue #11): pending/approved/rejected 신청 상태와 교환권 상태를 읽기 전용으로 표시하세요.
   // 버튼을 추가하지 마세요. 학생용 화면은 조회 전용이어야 합니다.
   return (
     <article className="voucher">
       <div className="voucher-body">
         <span className={`status ${voucher.status}`}>{voucher.status}</span>
         <h3>{menuName}</h3>
-        <p>학생용 교환권 카드 TODO</p>
+        <p>코인 신청 {coinRequests.length}건 · 학생용 상태 카드 TODO</p>
       </div>
     </article>
   )

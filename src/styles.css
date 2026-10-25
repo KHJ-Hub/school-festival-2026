@@ -44,6 +44,19 @@ footer { padding: 25px max(5vw, 24px); display: flex; justify-content: space-bet
 .learning-roadmap code { color: #f5c65b; }
 .task-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
 .task-chips span { padding: 7px 9px; border: 1px solid #67564d; border-radius: 99px; color: #eadfd9; font-size: 11px; }
+input { width: 100%; margin-top: 8px; padding: 13px 14px; border: 1px solid #dcd1c5; border-radius: 10px; background: #fcfaf7; color: #3a2e28; }
+.primary-button:disabled { background: #a89991; box-shadow: 0 5px 0 #7d7069; cursor: not-allowed; }
+.request-list { display: grid; gap: 10px; margin-top: 16px; }
+.request-item { padding: 13px 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px dashed #e5dbd0; }
+.request-item:last-child { border-bottom: 0; }
+.request-item strong, .request-item small { display: block; }
+.request-item small { margin-top: 3px; color: #9a877c; }
+.request-status { padding: 5px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.request-status.pending { background: #fff1c7; color: #8b6817; }
+.request-status.approved { background: #e4f4eb; color: #357358; }
+.request-status.rejected { background: #f2e8e5; color: #9a4e43; }
+.review-actions { display: flex; gap: 6px; }
+.review-actions button { padding: 7px 9px; border: 1px solid #d8c9bd; border-radius: 8px; background: #eee8e2; color: #8c7c73; cursor: not-allowed; }
 
 @media (max-width: 780px) {
   .festival-date { display: none; }
@@ -58,6 +71,8 @@ footer { padding: 25px max(5vw, 24px); display: flex; justify-content: space-bet
   .mode-switcher button { padding: 7px 8px; }
   .student-access-note { display: block; }
   .student-access-note strong { display: block; margin-bottom: 5px; }
+  .request-item { align-items: flex-start; }
+  .review-actions { flex-direction: column; }
 }
 
 
