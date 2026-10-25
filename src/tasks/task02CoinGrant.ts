@@ -1,13 +1,24 @@
-import type { CoinGrant, CoinReason } from './taskTypes'
+import type { CoinExchangeRequest } from './taskTypes'
 
-export function canGrantCoin(_grants: CoinGrant[], _studentId: string, _reason: CoinReason): boolean {
-  // TODO(학생 2): 같은 학생에게 같은 사유로 이미 지급했는지 확인하세요.
+export type SubmitCoinExchangeResult = {
+  ok: boolean
+  message: string
+  requests: CoinExchangeRequest[]
+}
+
+export function isValidPhysicalCoinCount(_physicalCoinCount: number): boolean {
+  // TODO(학생 2 / Issue #5): 양의 정수인 실물 코인 수량만 허용하세요.
   return false
 }
 
-export function addCoinGrant(grants: CoinGrant[], _studentId: string, _reason: CoinReason): CoinGrant[] {
-  // TODO(학생 2): 중복이 아닐 때만 1코인 지급 내역을 새 배열로 반환하세요.
-  return grants
+export function submitCoinExchangeRequest(
+  requests: CoinExchangeRequest[],
+  _studentId: string,
+  _physicalCoinCount: number,
+): SubmitCoinExchangeResult {
+  // TODO(학생 2 / Issue #5): pending 신청을 추가하세요.
+  // 중요: 신청만으로 사용 가능 잔액을 늘리면 안 됩니다.
+  return { ok: false, message: '아직 구현되지 않은 교육용 기능입니다.', requests }
 }
 
 
