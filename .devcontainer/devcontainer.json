@@ -1,0 +1,23 @@
+{
+  "name": "school-festival-2026",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "24" }
+  },
+  "postCreateCommand": "npm install",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": { "label": "축제 웹앱 미리보기", "onAutoForward": "openBrowser" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["vitest.explorer"],
+      "settings": {
+        "workbench.startupEditor": "none",
+        "editor.wordWrap": "on",
+        "editor.minimap.enabled": false,
+        "files.autoSave": "afterDelay"
+      }
+    }
+  }
+}
