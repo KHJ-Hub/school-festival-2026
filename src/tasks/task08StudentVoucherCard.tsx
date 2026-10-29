@@ -1,4 +1,5 @@
 import type { TaskVoucher } from './taskTypes'
+import './task08StudentVoucherCard.css'
 
 type StudentVoucherCardProps = {
   voucher: TaskVoucher

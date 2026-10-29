@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
+import { TaskPlayground } from './components/TaskPlayground'
+import './components/TaskPlayground.css'
 import { BOOTHS, CLUBS, INITIAL_ACTIVITIES, INITIAL_VOUCHERS, RANKINGS } from './mockData'
 import type { Activity, View, Voucher } from './types'
 
@@ -113,6 +115,7 @@ function App() {
         {view === 'ranking' && <RankingView />}
 
         {mode === 'admin' && <StudentTaskRoadmap />}
+        {mode === 'admin' && <TaskPlayground />}
 
         <section className="clubs">
           <span>함께 만드는 동아리</span>
@@ -147,8 +150,8 @@ function StudentVoucherView({ vouchers }: { vouchers: Voucher[] }) {
 function StudentTaskRoadmap() {
   return (
     <section className="learning-roadmap">
-      <div><span className="eyebrow">STUDENT TODO</span><h2>운영 기능은 우리가 직접 완성해요</h2><p><code>src/studentTasks.ts</code>의 TODO와 <code>docs/STUDENT_TASKS.md</code>를 따라 한 과제씩 구현하세요.</p></div>
-      <div className="task-chips"><span>① 학번별 코인</span><span>② 교환권 발급</span><span>③ QR 사용 처리</span><span>④ 자동 랭킹</span></div>
+      <div><span className="eyebrow">STUDENT TODO</span><h2>운영 기능은 우리가 직접 완성해요</h2><p><code>src/tasks/</code>의 내 파일 TODO와 <code>docs/STUDENT_TASKS.md</code>를 따라 한 과제씩 구현하세요. 확인은 <code>npm test</code>.</p></div>
+      <div className="task-chips"><span>① 학번 검사</span><span>② 적립 신청·승인</span><span>③ 잔액·누적 계산</span><span>④ 간식 메뉴</span><span>⑤ 교환권 발급</span><span>⑥ 사용 처리</span><span>⑦ 코인 랭킹</span><span>⑧ 교환권 카드</span></div>
     </section>
   )
 }

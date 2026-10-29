@@ -1,0 +1,10 @@
+/* 교사 관리: TaskPlayground 전용 스타일 (공용 styles.css와 분리해 충돌을 줄입니다) */
+.playground { display: block; }
+.playground-grid { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.playground-task { padding: 14px; border: 1px solid #e5dbd0; border-radius: 14px; background: white; min-width: 0; }
+.playground-task h3 { margin: 0 0 10px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.playground-task h3 span { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: #302620; color: white; font-size: 12px; }
+.playground-task dl { margin: 0; display: grid; gap: 8px; }
+.playground-task dt { font-size: 12px; color: #8a786e; word-break: break-all; }
+.playground-task dd { margin: 2px 0 0; font: 13px ui-monospace, Consolas, monospace; word-break: break-all; }
+.playground-cards { display: grid; gap: 10px; }
