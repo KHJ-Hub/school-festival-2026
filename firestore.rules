@@ -1,0 +1,154 @@
+rules_version = '2';
+
+// 배정고 친환경 팝업스토어 보안 규칙
+// 적용 방법: Firebase 콘솔 > Firestore Database > 규칙 탭에 이 파일 내용을 그대로 붙여 넣고 [게시]를 누릅니다.
+// - 학번·이름(명단, 계정)은 운영진과 본인만 읽을 수 있습니다. 랭킹은 닉네임과 코인만 공개합니다.
+// - 운영진 = Authentication에 만든 admin 계정(src/firebase.ts의 ADMIN_EMAIL과 같아야 함).
+// - 학생은 화면에 안 보이는 익명 로그인으로 기기마다 구분합니다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'admin@school-festival-2026.firebaseapp.com';
+    }
+    function docPath(collectionName, id) {
+      return /databases/$(database)/documents/$(collectionName)/$(id);
+    }
+    function rosterName(sid) {
+      return get(docPath('roster', sid)).data.name;
+    }
+    // 이 기기(익명 로그인)가 그 학번의 주인인지
+    function ownerOf(sid) {
+      return signedIn()
+        && exists(docPath('accounts', sid))
+        && get(docPath('accounts', sid)).data.uid == request.auth.uid;
+    }
+    function validNickname(nickname) {
+      return nickname is string && nickname.size() >= 2 && nickname.size() <= 12;
+    }
+    // 같은 요청 안에서 닉네임 문서가 이 학생·이 기기 것으로 만들어졌는지(닉네임 중복 방지)
+    function nicknameClaimed(key, sid) {
+      return getAfter(docPath('nicknames', key)).data.uid == request.auth.uid
+        && getAfter(docPath('nicknames', key)).data.studentId == sid;
+    }
+
+    // ── 운영진 명단(학번·이름): 운영진만 ──
+    match /roster/{sid} {
+      allow read, write: if isAdmin();
+    }
+
+    // ── 학생 계정 ──
+    match /accounts/{sid} {
+      // 없는 학번 확인 / 내 계정 / 운영진만 읽기 (남의 계정은 읽기가 막혀서 "이미 등록됨"으로 판단)
+      allow get: if signedIn() && (resource == null || resource.data.uid == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
+
+      // 처음 등록: 학번·이름이 명단과 같아야 하고, 닉네임 문서를 같이 만들어야 함
+      allow create: if signedIn()
+        && sid.matches('^[0-9]{5}$')
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'nickname', 'nicknameKey'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name == rosterName(sid)
+        && validNickname(request.resource.data.nickname)
+        && nicknameClaimed(request.resource.data.nicknameKey, sid);
+
+      allow update: if isAdmin()
+        // 다시 들어오기(다른 기기): 같은 요청에서 새로 만든 확인서(claims)의 학번·이름이 명단과 맞아야 함
+        || (signedIn()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid', 'claimId'])
+          && request.resource.data.uid == request.auth.uid
+          && !exists(docPath('claims', request.resource.data.claimId))
+          && getAfter(docPath('claims', request.resource.data.claimId)).data.uid == request.auth.uid
+          && getAfter(docPath('claims', request.resource.data.claimId)).data.studentId == sid)
+        // 닉네임 바꾸기: 본인만, 새 닉네임 문서를 같이 만들어야 함
+        || (signedIn()
+          && resource.data.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname', 'nicknameKey'])
+          && validNickname(request.resource.data.nickname)
+          && nicknameClaimed(request.resource.data.nicknameKey, sid));
+
+      allow delete: if isAdmin();
+    }
+
+    // ── 다시 들어오기 확인서: 학번·이름이 명단과 맞을 때만 만들 수 있음(아무도 읽지 못함) ──
+    match /claims/{id} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['studentId', 'name', 'uid'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name == rosterName(request.resource.data.studentId);
+    }
+
+    // ── 닉네임(중복 방지용). 문서 이름 = 띄어쓰기·기호를 뺀 닉네임 ──
+    match /nicknames/{key} {
+      // 없는 닉네임 확인 / 내 닉네임 / 운영진만 읽기 → 남이 쓰는 닉네임은 읽기가 막혀서 "이미 있음"으로 판단
+      allow get: if signedIn() && (resource == null || resource.data.uid == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['studentId', 'uid'])
+        && request.resource.data.uid == request.auth.uid
+        && getAfter(docPath('accounts', request.resource.data.studentId)).data.uid == request.auth.uid
+        && getAfter(docPath('accounts', request.resource.data.studentId)).data.nicknameKey == key;
+      // 다시 들어오기 후 이 기기로 옮기기
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid
+        && get(docPath('accounts', resource.data.studentId)).data.uid == request.auth.uid;
+      // 닉네임을 바꾸면 예전 닉네임 문서 지우기
+      allow delete: if isAdmin()
+        || (signedIn()
+          && resource.data.uid == request.auth.uid
+          && getAfter(docPath('accounts', resource.data.studentId)).data.nicknameKey != key);
+    }
+
+    // ── 학생별 기록: 본인과 운영진만 ──
+    match /students/{sid}/requests/{id} {
+      allow read: if isAdmin() || ownerOf(sid);
+      allow create: if ownerOf(sid)
+        && request.resource.data.keys().hasOnly(['claimedAmount', 'status', 'uid'])
+        && request.resource.data.status == 'pending'
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.claimedAmount is int
+        && request.resource.data.claimedAmount >= 1
+        && request.resource.data.claimedAmount <= 100;
+      allow update, delete: if isAdmin();
+    }
+    match /students/{sid}/grants/{id} {
+      allow read: if isAdmin() || ownerOf(sid);
+      allow write: if isAdmin();
+    }
+    match /students/{sid}/vouchers/{code} {
+      allow read: if isAdmin() || ownerOf(sid);
+      allow create: if ownerOf(sid)
+        && request.resource.data.keys().hasOnly(['menuId', 'cost', 'status', 'uid'])
+        && request.resource.data.status == 'issued'
+        && request.resource.data.uid == request.auth.uid
+        && ((request.resource.data.menuId == 'popcorn-cup' && request.resource.data.cost == 1)
+          || (request.resource.data.menuId == 'popcorn-bag' && request.resource.data.cost == 3));
+      allow update, delete: if isAdmin();
+    }
+
+    // 운영진 화면: 모든 학생의 신청·지급·교환권을 한 번에 읽기
+    match /{path=**}/requests/{id} {
+      allow read: if isAdmin();
+    }
+    match /{path=**}/grants/{id} {
+      allow read: if isAdmin();
+    }
+    match /{path=**}/vouchers/{id} {
+      allow read: if isAdmin();
+    }
+
+    // ── 모두 읽기: 랭킹(닉네임·코인만), 금지어 ──
+    match /public/ranking {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /settings/bannedWords {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

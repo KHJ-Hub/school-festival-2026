@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   StudentVoucherCard,
   calculateCoinBalance,
@@ -13,19 +13,29 @@ import {
   rankByTotalEarned,
   resolveCoinRequest,
 } from '../studentTasks'
-import type { CoinGrant, CoinRequest, TaskVoucher } from '../tasks/taskTypes'
-import { DEMO_GRANTS, DEMO_MENUS, DEMO_REQUESTS, DEMO_STUDENTS, DEMO_VOUCHERS } from '../tasks/fixtures'
+import { DEMO_GRANTS, DEMO_MENUS, DEMO_STUDENTS } from '../tasks/fixtures'
+import {
+  saveNewRequest,
+  saveNewVoucher,
+  saveRanking,
+  saveResolution,
+  saveVoucherUse,
+  useAdminData,
+  useRanking,
+  useStudentData,
+} from '../data/store'
 import { Barcode } from './Barcode'
-import type { Account } from './nicknameRules'
 import type { AppMode } from './ModeSwitcher'
+import type { Account } from './nicknameRules'
 import './FestivalLive.css'
 
 /**
  * 교사 관리 파일: 학생들이 만든 함수(src/tasks/)를 실제 화면 흐름에 연결합니다.
+ * 학생 함수의 계산 결과는 그대로 쓰고, 바뀐 부분만 Firestore에 저장합니다(src/data/store.ts).
  * 학생 코드에서 오류가 나도 화면이 멈추지 않도록 호출마다 감쌉니다.
- * 아직 만들지 않은 기능은 "N번 학생이 만드는 중"으로 보여 줍니다.
  */
 const NOT_BUILT = '아직 구현되지 않은 교육용 기능입니다.'
+const SAVE_FAILED = '저장하지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.'
 
 function safe<T>(run: () => T, fallback: T): T {
   try {
@@ -35,15 +45,14 @@ function safe<T>(run: () => T, fallback: T): T {
   }
 }
 
-/** 학생 화면·랭킹용: 닉네임만 보여 줍니다(학번·이름은 숨김). */
-function nicknameOf(studentId: string, accounts: Account[]): string {
-  return accounts.find((account) => account.studentId === studentId)?.nickname ?? '닉네임 없음'
-}
-
 /** 운영진 화면용: 중복 수령 확인을 위해 닉네임과 학번·이름을 함께 보여 줍니다. */
 function adminLabel(studentId: string, accounts: Account[]): string {
   const account = accounts.find((item) => item.studentId === studentId)
   return account ? `${account.nickname} (${account.studentId} ${account.name})` : `${studentId} (미등록)`
+}
+
+function menuName(menuId: string): string {
+  return DEMO_MENUS.find((menu) => menu.id === menuId)?.name ?? '메뉴'
 }
 
 function Section({ no, title, desc, built = true, children }: { no: number; title: string; desc: string; built?: boolean; children: ReactNode }) {
@@ -62,10 +71,11 @@ function Section({ no, title, desc, built = true, children }: { no: number; titl
 }
 
 /** 학번·이름·닉네임 등록칸. 처음이면 등록, 이미 등록한 학번이면 다시 들어오기로 처리합니다(App이 판단). */
-export function StudentIdBox({ me, onEnter, onRename, onLeave }: {
+export function StudentIdBox({ me, busy, onEnter, onRename, onLeave }: {
   me: Account | null
-  onEnter: (input: { studentId: string; name: string; nickname: string }) => string | null
-  onRename: (nickname: string) => string | null
+  busy: boolean
+  onEnter: (input: { studentId: string; name: string; nickname: string }) => Promise<string | null>
+  onRename: (nickname: string) => Promise<string | null>
   onLeave: () => void
 }) {
   const [studentId, setStudentId] = useState('')
@@ -73,13 +83,16 @@ export function StudentIdBox({ me, onEnter, onRename, onLeave }: {
   const [nickname, setNickname] = useState('')
   const [newNick, setNewNick] = useState('')
   const [renaming, setRenaming] = useState(false)
+  const [working, setWorking] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
-  // 1번 학생 함수가 만들어졌는지: 올바른 연습 학번을 넣어 보고 확인합니다(입력칸이 비어 있어도 정확히 표시).
+  // 1번 학생 함수가 만들어졌는지: 올바른 연습 학번을 넣어 보고 확인합니다.
   const built = safe(() => isDemoStudentId('90001'), false) || Boolean(safe(() => findDemoStudent(DEMO_STUDENTS, '90001'), undefined))
 
-  const submit = () => {
-    const problem = onEnter({ studentId, name, nickname })
+  const submit = async () => {
+    setWorking(true)
+    const problem = await onEnter({ studentId, name, nickname })
+    setWorking(false)
     setError(problem ?? '')
     if (!problem) {
       setStudentId('')
@@ -88,8 +101,10 @@ export function StudentIdBox({ me, onEnter, onRename, onLeave }: {
     }
   }
 
-  const rename = () => {
-    const problem = onRename(newNick)
+  const rename = async () => {
+    setWorking(true)
+    const problem = await onRename(newNick)
+    setWorking(false)
     setError(problem ?? '')
     if (!problem) {
       setRenaming(false)
@@ -110,7 +125,7 @@ export function StudentIdBox({ me, onEnter, onRename, onLeave }: {
         {renaming ? (
           <div className="live-row">
             <input value={newNick} onChange={(event) => setNewNick(event.target.value)} maxLength={12} placeholder="새 닉네임" aria-label="새 닉네임" />
-            <button className="live-reset" onClick={rename}>바꾸기</button>
+            <button className="live-reset" onClick={() => void rename()} disabled={working}>{working ? '바꾸는 중…' : '바꾸기'}</button>
             <button className="live-reset" onClick={() => { setRenaming(false); setError('') }}>취소</button>
           </div>
         ) : (
@@ -141,7 +156,7 @@ export function StudentIdBox({ me, onEnter, onRename, onLeave }: {
         </label>
       </div>
       <div className="live-id-action">
-        <button className="primary-button" onClick={submit}>등록 / 다시 들어오기 <span>→</span></button>
+        <button className="primary-button" onClick={() => void submit()} disabled={busy || working}>{busy ? '연결 중…' : working ? '확인 중…' : '등록 / 다시 들어오기'} <span>→</span></button>
         <span className={`live-badge ${built ? 'done' : 'todo'}`}>{built ? '학번 확인: 1번 학생이 만든 기능' : '학번 확인: 1번 학생이 만드는 중'}</span>
       </div>
       <p className="live-empty">이미 등록했다면 학번과 이름만 쓰고 누르면 다시 들어와요.</p>
@@ -150,78 +165,103 @@ export function StudentIdBox({ me, onEnter, onRename, onLeave }: {
   )
 }
 
-export function FestivalLive({ mode, studentId, accounts }: { mode: AppMode; studentId: string; accounts: Account[] }) {
+export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account | null; isAdmin: boolean }) {
+  const studentId = me?.studentId ?? ''
+  const mine = useStudentData(studentId || null)
+  const all = useAdminData(isAdmin)
+  const ranking = useRanking()
   const [amount, setAmount] = useState(3)
-  const [requests, setRequests] = useState<CoinRequest[]>(DEMO_REQUESTS)
-  const [grants, setGrants] = useState<CoinGrant[]>(DEMO_GRANTS)
-  const [vouchers, setVouchers] = useState<TaskVoucher[]>(DEMO_VOUCHERS)
   const [message, setMessage] = useState('')
   const [scanCode, setScanCode] = useState('')
   const [lastNotBuilt, setLastNotBuilt] = useState<Record<number, boolean>>({})
 
-  const knownId = DEMO_STUDENTS.some((student) => student.studentId === studentId)
-  const balance = safe(() => calculateCoinBalance(studentId, grants, vouchers), 0)
-  const earned = safe(() => calculateTotalEarned(studentId, grants), 0)
-  const ranking = safe(() => rankByTotalEarned(grants, 5), [])
-  const myVouchers = vouchers.filter((voucher) => voucher.studentId === studentId)
-  const pending = requests.filter((request) => request.status === 'pending')
-  const issued = vouchers.filter((voucher) => voucher.status === 'issued')
+  const balance = safe(() => calculateCoinBalance(studentId, mine.grants, mine.vouchers), 0)
+  const earned = safe(() => calculateTotalEarned(studentId, mine.grants), 0)
+  const pending = all.requests.filter((request) => request.status === 'pending')
+  const issued = all.vouchers.filter((voucher) => voucher.status === 'issued')
+  const rankingBuilt = safe(() => rankByTotalEarned(DEMO_GRANTS, 5).length > 0, false)
+
+  // 운영진 화면이 열려 있으면 지급 내역이 바뀔 때마다 7번 학생 함수로 랭킹을 다시 계산해 닉네임만 공개합니다.
+  useEffect(() => {
+    if (!isAdmin) return
+    const rows = safe(() => rankByTotalEarned(all.grants, 10), []).map((row) => ({
+      rank: row.rank,
+      nickname: all.accounts.find((account) => account.studentId === row.studentId)?.nickname ?? '닉네임 없음',
+      total: row.total,
+    }))
+    if (JSON.stringify(rows) !== JSON.stringify(ranking)) void saveRanking(rows).catch(() => undefined)
+  }, [isAdmin, all.grants, all.accounts, ranking])
 
   const report = (no: number, text: string, notBuilt: boolean) => {
     setMessage(text)
     setLastNotBuilt((current) => ({ ...current, [no]: notBuilt }))
   }
 
-  const submitRequest = () => {
-    const result = safe(() => createCoinRequest(requests, studentId, amount), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', requests })
-    if (result.ok) setRequests(result.requests)
-    report(2, result.message || (result.ok ? '신청했어요. 운영진 승인을 기다려요.' : ''), result.message === NOT_BUILT)
+  const submitRequest = async () => {
+    const result = safe(() => createCoinRequest(mine.requests, studentId, amount), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', requests: mine.requests })
+    const created = result.ok ? result.requests.find((request) => !mine.requests.some((old) => old.id === request.id)) : undefined
+    if (created) {
+      try {
+        await saveNewRequest(studentId, created)
+      } catch {
+        return report(2, SAVE_FAILED, false)
+      }
+    }
+    report(2, result.message || (result.ok ? '신청했어요. 운영진에게 실물 코인을 내고 승인을 기다려요.' : ''), result.message === NOT_BUILT)
   }
 
-  const exchange = (menuId: string) => {
+  const exchange = async (menuId: string) => {
     const menu = safe(() => findEnabledMenu(DEMO_MENUS, menuId), undefined)
-    if (!menu) {
-      report(1, '지금은 판매하지 않는 메뉴예요.', false)
-      return
+    if (!menu) return report(1, '지금은 판매하지 않는 메뉴예요.', false)
+    if (!safe(() => canAffordMenu(balance, menu), false)) return report(1, '코인이 부족해요.', false)
+    const result = safe(() => issueVoucher(mine.vouchers, studentId, menu, balance), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', vouchers: mine.vouchers })
+    const created = result.ok ? result.vouchers.find((voucher) => !mine.vouchers.some((old) => old.id === voucher.id)) : undefined
+    if (created) {
+      try {
+        await saveNewVoucher(studentId, created)
+      } catch {
+        return report(5, SAVE_FAILED, false)
+      }
     }
-    if (!safe(() => canAffordMenu(balance, menu), false)) {
-      report(1, '코인이 부족해요.', false)
-      return
-    }
-    const result = safe(() => issueVoucher(vouchers, studentId, menu, balance), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', vouchers })
-    if (result.ok) setVouchers(result.vouchers)
     report(5, result.message || (result.ok ? `${menu.name} 교환권을 받았어요.` : ''), result.message === NOT_BUILT)
   }
 
-  const decide = (requestId: string, decision: 'approve' | 'reject') => {
-    const result = safe(() => resolveCoinRequest(requests, grants, requestId, decision), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', requests, grants })
+  const decide = async (requestId: string, decision: 'approve' | 'reject') => {
+    const before = { requests: all.requests, grants: all.grants }
+    const result = safe(() => resolveCoinRequest(all.requests, all.grants, requestId, decision), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', requests: all.requests, grants: all.grants })
     if (result.ok) {
-      setRequests(result.requests)
-      setGrants(result.grants)
+      try {
+        await saveResolution(before, { requests: result.requests, grants: result.grants })
+      } catch {
+        return report(4, SAVE_FAILED, false)
+      }
     }
     report(4, result.message || (result.ok ? (decision === 'approve' ? '승인했어요.' : '거절했어요.') : ''), result.message === NOT_BUILT)
   }
 
   /** 바코드 스캐너가 읽은 값(또는 직접 입력한 코드)으로 교환권을 찾아 자동으로 사용 처리합니다. */
-  const scanVoucher = (code: string) => {
-    const voucherId = code.trim().toLowerCase()
+  const scanVoucher = async (code: string) => {
+    const voucherId = code.trim().toUpperCase()
     setScanCode('')
-    if (!vouchers.some((voucher) => voucher.id === voucherId)) {
-      report(6, `"${code.trim()}"는 없는 교환권이에요. 다시 스캔해 주세요.`, false)
-      return
+    if (!all.vouchers.some((voucher) => voucher.id === voucherId)) return report(6, `"${code.trim()}"는 없는 교환권이에요. 다시 스캔해 주세요.`, false)
+    const result = safe(() => markVoucherUsed(all.vouchers, voucherId), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', vouchers: all.vouchers })
+    if (result.ok) {
+      try {
+        await saveVoucherUse(all.vouchers, result.vouchers)
+      } catch {
+        return report(6, SAVE_FAILED, false)
+      }
     }
-    const result = safe(() => markVoucherUsed(vouchers, voucherId), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', vouchers })
-    if (result.ok) setVouchers(result.vouchers)
     report(6, result.message || (result.ok ? '스캔 완료! 사용 처리됐어요.' : ''), result.message === NOT_BUILT)
   }
 
   const rankingSection = (
-    <Section no={7} title="코인 랭킹" desc="지금까지 모은 코인이 많은 순서예요. 닉네임만 보여 줘요." built={ranking.length > 0}>
+    <Section no={7} title="코인 랭킹" desc="지금까지 모은 코인이 많은 순서예요. 닉네임만 보여 줘요." built={rankingBuilt}>
       {ranking.length === 0 ? (
-        <p className="live-empty">7번 학생 코드가 순위를 만들면 여기에 나타나요.</p>
+        <p className="live-empty">{rankingBuilt ? '아직 승인된 코인이 없어요.' : '7번 학생 코드가 순위를 만들면 여기에 나타나요.'}</p>
       ) : (
         <ol className="live-rank">
-          {ranking.map((row) => <li key={row.rank}><b>{row.rank}위</b><span>{nicknameOf(row.studentId, accounts)}</span><strong>{row.total} coin</strong></li>)}
+          {ranking.map((row) => <li key={row.rank}><b>{row.rank}위</b><span>{row.nickname}</span><strong>{row.total} coin</strong></li>)}
         </ol>
       )}
     </Section>
@@ -237,24 +277,23 @@ export function FestivalLive({ mode, studentId, accounts }: { mode: AppMode; stu
 
       {mode === 'student' && studentId && (
         <>
-          <Section no={2} title="코인 적립 신청" desc="내가 가진 코인 수를 신청하면 운영진이 확인해요." built={!lastNotBuilt[2]}>
+          <Section no={2} title="코인 적립 신청" desc="받은 실물 코인 수를 신청하면 운영진이 코인을 회수하고 승인해요." built={!lastNotBuilt[2]}>
             <div className="live-row">
               <input type="number" min={1} value={amount} onChange={(event) => setAmount(Number(event.target.value))} aria-label="신청할 코인 수" />
-              <button className="primary-button" onClick={submitRequest}>신청하기 <span>→</span></button>
+              <button className="primary-button" onClick={() => void submitRequest()}>신청하기 <span>→</span></button>
             </div>
             <ul className="live-list">
-              {requests.filter((request) => request.studentId === studentId).map((request) => (
-                <li key={request.id}><span>{request.claimedAmount} coin 신청</span><b className={`live-status ${request.status}`}>{{ pending: '기다리는 중', approved: '승인됨', rejected: '거절됨' }[request.status]}</b></li>
+              {mine.requests.map((request) => (
+                <li key={request.id}><span>{request.claimedAmount} coin 신청</span><b className={`live-status ${request.status}`}>{{ pending: '기다리는 중', approved: `승인됨${request.approvedAmount !== undefined && request.approvedAmount !== request.claimedAmount ? ` (${request.approvedAmount} coin)` : ''}`, rejected: '거절됨' }[request.status]}</b></li>
               ))}
             </ul>
           </Section>
 
-          <Section no={3} title="내 코인" desc="받은 코인과 지금 쓸 수 있는 코인이에요." built={earned > 0 || balance > 0 || !knownId}>
+          <Section no={3} title="내 코인" desc="받은 코인과 지금 쓸 수 있는 코인이에요." built={!(mine.grants.length > 0 && earned === 0)}>
             <div className="live-numbers">
               <div><small>지금 쓸 수 있는 코인</small><strong>{balance} coin</strong></div>
               <div><small>지금까지 모은 코인</small><strong>{earned} coin</strong></div>
             </div>
-            {knownId && earned === 0 && balance === 0 && <p className="live-empty">0이면 3번 학생 코드가 아직 계산하지 않는 거예요.</p>}
           </Section>
 
           <Section no={5} title="간식 교환" desc="모은 코인으로 팝콘 교환권을 받아요." built={!lastNotBuilt[5]}>
@@ -262,18 +301,18 @@ export function FestivalLive({ mode, studentId, accounts }: { mode: AppMode; stu
               {DEMO_MENUS.map((menu) => (
                 <li key={menu.id}>
                   <span>{menu.name} · {menu.cost} coin{!menu.enabled && ' (판매 중지)'}</span>
-                  <button onClick={() => exchange(menu.id)}>교환하기</button>
+                  <button onClick={() => void exchange(menu.id)}>교환하기</button>
                 </li>
               ))}
             </ul>
           </Section>
 
-          <Section no={8} title="내 모바일 교환권" desc="받은 교환권의 상태를 보여 줘요. 학생 화면에는 버튼이 없어요.">
-            {myVouchers.length === 0 ? <p className="live-empty">아직 받은 교환권이 없어요.</p> : (
+          <Section no={8} title="내 모바일 교환권" desc="부스에서 바코드를 보여 주면 운영진이 스캔해요.">
+            {mine.vouchers.length === 0 ? <p className="live-empty">아직 받은 교환권이 없어요.</p> : (
               <div className="live-cards">
-                {myVouchers.map((voucher) => (
+                {mine.vouchers.map((voucher) => (
                   <div key={voucher.id} className={`gifticon ${voucher.status}`}>
-                    <StudentVoucherCard voucher={voucher} menuName={DEMO_MENUS.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'} />
+                    <StudentVoucherCard voucher={voucher} menuName={menuName(voucher.menuId)} />
                     <div className="gifticon-code">
                       <Barcode value={voucher.id} />
                       <small>{voucher.id}</small>
@@ -287,15 +326,15 @@ export function FestivalLive({ mode, studentId, accounts }: { mode: AppMode; stu
         </>
       )}
 
-      {mode === 'admin' && (
+      {mode === 'admin' && isAdmin && (
         <>
-          <Section no={4} title="적립 신청 승인" desc="학생이 신청한 코인을 확인하고 승인하거나 거절해요." built={!lastNotBuilt[4]}>
-            {pending.length === 0 ? <p className="live-empty">기다리는 신청이 없어요. 학생용 화면에서 신청해 보세요.</p> : (
+          <Section no={4} title="적립 신청 승인" desc="실물 코인을 회수한 뒤 승인해요. 학번·이름으로 중복 수령을 확인하세요." built={!lastNotBuilt[4]}>
+            {pending.length === 0 ? <p className="live-empty">기다리는 신청이 없어요.</p> : (
               <ul className="live-list">
                 {pending.map((request) => (
                   <li key={request.id}>
-                    <span>{adminLabel(request.studentId, accounts)} · {request.claimedAmount} coin 신청</span>
-                    <span className="live-buttons"><button onClick={() => decide(request.id, 'approve')}>승인</button><button className="ghost" onClick={() => decide(request.id, 'reject')}>거절</button></span>
+                    <span>{adminLabel(request.studentId, all.accounts)} · {request.claimedAmount} coin 신청</span>
+                    <span className="live-buttons"><button onClick={() => void decide(request.id, 'approve')}>승인</button><button className="ghost" onClick={() => void decide(request.id, 'reject')}>거절</button></span>
                   </li>
                 ))}
               </ul>
@@ -303,8 +342,8 @@ export function FestivalLive({ mode, studentId, accounts }: { mode: AppMode; stu
           </Section>
 
           <Section no={6} title="교환권 바코드 스캔" desc="손님 폰의 바코드를 스캔하면 자동으로 사용 처리돼요. 스캐너가 없으면 코드를 직접 입력해도 돼요." built={!lastNotBuilt[6]}>
-            <form className="live-row" onSubmit={(event) => { event.preventDefault(); if (scanCode.trim()) scanVoucher(scanCode) }}>
-              <input value={scanCode} onChange={(event) => setScanCode(event.target.value)} placeholder="여기에 스캔 (예: v-1)" aria-label="교환권 바코드 값" autoComplete="off" />
+            <form className="live-row" onSubmit={(event) => { event.preventDefault(); if (scanCode.trim()) void scanVoucher(scanCode) }}>
+              <input value={scanCode} onChange={(event) => setScanCode(event.target.value)} placeholder="여기에 스캔 (예: K7F2Q9AB)" aria-label="교환권 바코드 값" autoComplete="off" />
               <button className="primary-button" type="submit">스캔 <span>→</span></button>
             </form>
             <p className="live-empty">바코드 스캐너는 읽은 값을 이 칸에 입력하고 Enter를 눌러 줘요.</p>
@@ -312,8 +351,8 @@ export function FestivalLive({ mode, studentId, accounts }: { mode: AppMode; stu
               <ul className="live-list">
                 {issued.map((voucher) => (
                   <li key={voucher.id}>
-                    <span>{adminLabel(voucher.studentId, accounts)} · {DEMO_MENUS.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'} · <code>{voucher.id}</code></span>
-                    <button onClick={() => scanVoucher(voucher.id)}>스캔해 보기</button>
+                    <span>{adminLabel(voucher.studentId, all.accounts)} · {menuName(voucher.menuId)} · <code>{voucher.id}</code></span>
+                    <button onClick={() => void scanVoucher(voucher.id)}>스캔해 보기</button>
                   </li>
                 ))}
               </ul>

@@ -1,0 +1,266 @@
+import { useEffect, useState } from 'react'
+import {
+  collection,
+  collectionGroup,
+  deleteDoc,
+  doc,
+  getDoc,
+  onSnapshot,
+  setDoc,
+  updateDoc,
+  writeBatch,
+  type DocumentData,
+  type QuerySnapshot,
+} from 'firebase/firestore'
+import { auth, db } from '../firebase'
+import { normalizeForCheck, type Account, type RosterEntry } from '../components/nicknameRules'
+import type { CoinGrant, CoinRequest, TaskVoucher } from '../tasks/taskTypes'
+
+/**
+ * 교사 관리 파일: Firestore에 읽고 쓰는 함수 모음. 화면(App, FestivalLive)은 여기만 부릅니다.
+ *
+ * 저장 구조 (보안 규칙은 firestore.rules)
+ *   roster/{학번}                     { name }                         운영진만
+ *   accounts/{학번}                   { uid, name, nickname, nicknameKey } 본인·운영진
+ *   nicknames/{닉네임키}              { studentId, uid }               중복 확인용
+ *   students/{학번}/requests/{id}     코인 신청                         본인·운영진
+ *   students/{학번}/grants/{id}       지급 내역                         본인 읽기·운영진
+ *   students/{학번}/vouchers/{코드}   교환권(코드 = 바코드 값)           본인·운영진
+ *   public/ranking                    { rows: [{ rank, nickname, total }] } 모두 읽기
+ *   settings/bannedWords              { words: [] }                    모두 읽기·운영진
+ */
+
+export type RankingRow = { rank: number; nickname: string; total: number }
+
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+
+/** 바코드에 쓸 교환권 코드: 헷갈리는 글자(0, O, 1, I, L)를 뺀 8글자 */
+export function newVoucherCode(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(8))
+  return [...bytes].map((byte) => CODE_CHARS[byte % CODE_CHARS.length]).join('')
+}
+
+/** 학번은 경로(students/{학번}/...)에 있으므로 문서에서 꺼내 붙입니다. */
+function withStudent<T>(snapshot: QuerySnapshot<DocumentData>): T[] {
+  return snapshot.docs.map((item) => ({ ...item.data(), id: item.id, studentId: item.ref.parent.parent?.id ?? '' }) as T)
+}
+
+// ───── 학생 본인 데이터 ─────
+
+export function useStudentData(studentId: string | null) {
+  const [data, setData] = useState<{ requests: CoinRequest[]; grants: CoinGrant[]; vouchers: TaskVoucher[] }>({ requests: [], grants: [], vouchers: [] })
+  useEffect(() => {
+    setData({ requests: [], grants: [], vouchers: [] })
+    if (!studentId) return
+    const base = ['students', studentId] as const
+    const stop = [
+      onSnapshot(collection(db, ...base, 'requests'), (snap) => setData((d) => ({ ...d, requests: withStudent<CoinRequest>(snap) })), () => undefined),
+      onSnapshot(collection(db, ...base, 'grants'), (snap) => setData((d) => ({ ...d, grants: withStudent<CoinGrant>(snap) })), () => undefined),
+      onSnapshot(collection(db, ...base, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<TaskVoucher>(snap) })), () => undefined),
+    ]
+    return () => stop.forEach((unsubscribe) => unsubscribe())
+  }, [studentId])
+  return data
+}
+
+// ───── 운영진 전체 데이터 ─────
+
+export function useAdminData(enabled: boolean) {
+  const empty = { requests: [] as CoinRequest[], grants: [] as CoinGrant[], vouchers: [] as TaskVoucher[], accounts: [] as Account[], roster: [] as RosterEntry[] }
+  const [data, setData] = useState(empty)
+  useEffect(() => {
+    setData(empty)
+    if (!enabled) return
+    const stop = [
+      onSnapshot(collectionGroup(db, 'requests'), (snap) => setData((d) => ({ ...d, requests: withStudent<CoinRequest>(snap) })), () => undefined),
+      onSnapshot(collectionGroup(db, 'grants'), (snap) => setData((d) => ({ ...d, grants: withStudent<CoinGrant>(snap) })), () => undefined),
+      onSnapshot(collectionGroup(db, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<TaskVoucher>(snap) })), () => undefined),
+      onSnapshot(collection(db, 'accounts'), (snap) => setData((d) => ({ ...d, accounts: snap.docs.map((item) => ({ studentId: item.id, name: item.data().name, nickname: item.data().nickname })) })), () => undefined),
+      onSnapshot(collection(db, 'roster'), (snap) => setData((d) => ({ ...d, roster: snap.docs.map((item) => ({ studentId: item.id, name: item.data().name })) })), () => undefined),
+    ]
+    return () => stop.forEach((unsubscribe) => unsubscribe())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled])
+  return data
+}
+
+// ───── 모두 읽는 데이터 ─────
+
+export function useRanking(): RankingRow[] {
+  const [rows, setRows] = useState<RankingRow[]>([])
+  useEffect(() => onSnapshot(doc(db, 'public', 'ranking'), (snap) => setRows((snap.data()?.rows as RankingRow[]) ?? []), () => setRows([])), [])
+  return rows
+}
+
+export function useBannedWords(): string[] {
+  const [words, setWords] = useState<string[]>([])
+  useEffect(() => onSnapshot(doc(db, 'settings', 'bannedWords'), (snap) => setWords((snap.data()?.words as string[]) ?? []), () => setWords([])), [])
+  return words
+}
+
+// ───── 학생 등록 / 다시 들어오기 / 닉네임 ─────
+
+export type EnterOutcome = { ok: true; account: Account; kind: 'new' | 'reenter' } | { ok: false; message: string }
+
+const ROSTER_MISMATCH = '명단에 없는 학번이거나 이름이 달라요. 운영진에게 물어보세요.'
+
+/** 닉네임이 이미 쓰이는지: 없는 닉네임 문서만 읽을 수 있게 규칙을 만들어, 읽기가 막히면 "이미 있음"으로 봅니다. */
+export async function isNicknameTaken(nickname: string, ownStudentId?: string): Promise<boolean> {
+  try {
+    const snap = await getDoc(doc(db, 'nicknames', normalizeForCheck(nickname)))
+    return snap.exists() && snap.data().studentId !== ownStudentId
+  } catch {
+    return true
+  }
+}
+
+/** checkNewNickname: 처음 등록할 때만 부르는 닉네임 검사(금지어·길이·중복). 문제가 있으면 안내 문구를 돌려줍니다. */
+export async function enterStudent(
+  input: { studentId: string; name: string; nickname: string },
+  checkNewNickname: (nickname: string) => Promise<string | null>,
+): Promise<EnterOutcome> {
+  const uid = auth.currentUser?.uid
+  if (!uid) return { ok: false, message: '연결 중이에요. 잠시 뒤 다시 눌러 주세요.' }
+  const { studentId, name, nickname } = input
+  const accountRef = doc(db, 'accounts', studentId)
+
+  // 1) 이미 등록된 학번인지: 없는 계정·내 계정만 읽을 수 있고, 남의 계정은 읽기가 막힙니다.
+  let registeredByOther = false
+  try {
+    const snap = await getDoc(accountRef)
+    if (snap.exists()) {
+      const data = snap.data()
+      if (data.name !== name) return { ok: false, message: ROSTER_MISMATCH }
+      return { ok: true, kind: 'reenter', account: { studentId, name: data.name, nickname: data.nickname } }
+    }
+  } catch {
+    registeredByOther = true
+  }
+
+  // 2) 다시 들어오기: 다른 기기에서 등록한 학번 → 학번·이름이 명단과 맞으면 이 기기로 옮깁니다(규칙이 이름 확인).
+  if (registeredByOther) {
+    try {
+      // 학번·이름 확인서(claims)를 만들고 같은 요청에서 계정을 이 기기로 옮깁니다. 이름이 틀리면 규칙이 둘 다 막습니다.
+      const claimRef = doc(collection(db, 'claims'))
+      const batch = writeBatch(db)
+      batch.set(claimRef, { studentId, name, uid })
+      batch.update(accountRef, { uid, claimId: claimRef.id })
+      await batch.commit()
+      const data = (await getDoc(accountRef)).data()!
+      await updateDoc(doc(db, 'nicknames', data.nicknameKey), { uid })
+      return { ok: true, kind: 'reenter', account: { studentId, name: data.name, nickname: data.nickname } }
+    } catch {
+      return { ok: false, message: ROSTER_MISMATCH }
+    }
+  }
+
+  // 3) 처음 등록: 계정과 닉네임 문서를 한 번에 만듭니다(닉네임이 동시에 겹치면 한쪽만 성공).
+  const problem = await checkNewNickname(nickname)
+  if (problem) return { ok: false, message: problem }
+  const nicknameKey = normalizeForCheck(nickname)
+  const batch = writeBatch(db)
+  batch.set(accountRef, { uid, name, nickname, nicknameKey })
+  batch.set(doc(db, 'nicknames', nicknameKey), { studentId, uid })
+  try {
+    await batch.commit()
+    return { ok: true, kind: 'new', account: { studentId, name, nickname } }
+  } catch {
+    if (await isNicknameTaken(nickname, studentId)) return { ok: false, message: '이미 다른 학생이 쓰는 닉네임이에요. 다른 닉네임을 정해 주세요.' }
+    return { ok: false, message: ROSTER_MISMATCH }
+  }
+}
+
+/** 이 기기에 저장해 둔 학번이 여전히 내 계정인지 확인합니다(새로고침 후 자동으로 들어오기). */
+export async function loadOwnAccount(studentId: string): Promise<Account | null> {
+  try {
+    const snap = await getDoc(doc(db, 'accounts', studentId))
+    if (!snap.exists() || snap.data().uid !== auth.currentUser?.uid) return null
+    return { studentId, name: snap.data().name, nickname: snap.data().nickname }
+  } catch {
+    return null
+  }
+}
+
+export async function renameStudent(account: Account, nickname: string): Promise<string | null> {
+  const uid = auth.currentUser?.uid
+  if (!uid) return '연결 중이에요. 잠시 뒤 다시 눌러 주세요.'
+  const oldKey = normalizeForCheck(account.nickname)
+  const newKey = normalizeForCheck(nickname)
+  if (oldKey === newKey) {
+    await updateDoc(doc(db, 'accounts', account.studentId), { nickname, nicknameKey: newKey })
+    return null
+  }
+  const batch = writeBatch(db)
+  batch.set(doc(db, 'nicknames', newKey), { studentId: account.studentId, uid })
+  batch.delete(doc(db, 'nicknames', oldKey))
+  batch.update(doc(db, 'accounts', account.studentId), { nickname, nicknameKey: newKey })
+  try {
+    await batch.commit()
+    return null
+  } catch {
+    return (await isNicknameTaken(nickname, account.studentId)) ? '이미 다른 학생이 쓰는 닉네임이에요. 다른 닉네임을 정해 주세요.' : '닉네임을 바꾸지 못했어요. 다시 해 주세요.'
+  }
+}
+
+// ───── 학생 쓰기: 신청, 교환권 ─────
+
+/** 2번 학생 함수가 만든 새 신청을 저장합니다(번호는 겹치지 않게 Firestore가 새로 정함). */
+export async function saveNewRequest(studentId: string, request: CoinRequest): Promise<void> {
+  const ref = doc(collection(db, 'students', studentId, 'requests'))
+  await setDoc(ref, { claimedAmount: request.claimedAmount, status: 'pending', uid: auth.currentUser?.uid ?? '' })
+}
+
+/** 5번 학생 함수가 만든 새 교환권을 저장합니다(바코드 코드를 새로 정함). 저장된 코드를 돌려줍니다. */
+export async function saveNewVoucher(studentId: string, voucher: TaskVoucher): Promise<string> {
+  const code = newVoucherCode()
+  await setDoc(doc(db, 'students', studentId, 'vouchers', code), { menuId: voucher.menuId, cost: voucher.cost, status: 'issued', uid: auth.currentUser?.uid ?? '' })
+  return code
+}
+
+// ───── 운영진 쓰기 ─────
+
+/** 4번 학생 함수의 승인/거절 결과에서 바뀐 신청과 새 지급만 저장합니다. */
+export async function saveResolution(before: { requests: CoinRequest[]; grants: CoinGrant[] }, after: { requests: CoinRequest[]; grants: CoinGrant[] }): Promise<void> {
+  const batch = writeBatch(db)
+  for (const request of after.requests) {
+    const old = before.requests.find((item) => item.id === request.id)
+    if (old && (old.status !== request.status || old.approvedAmount !== request.approvedAmount)) {
+      batch.update(doc(db, 'students', request.studentId, 'requests', request.id), {
+        status: request.status,
+        ...(request.approvedAmount !== undefined ? { approvedAmount: request.approvedAmount } : {}),
+      })
+    }
+  }
+  for (const grant of after.grants.filter((item) => !before.grants.some((old) => old.id === item.id))) {
+    batch.set(doc(collection(db, 'students', grant.studentId, 'grants')), { requestId: grant.requestId, amount: grant.amount })
+  }
+  await batch.commit()
+}
+
+/** 6번 학생 함수의 사용 처리 결과에서 상태가 바뀐 교환권만 저장합니다. */
+export async function saveVoucherUse(before: TaskVoucher[], after: TaskVoucher[]): Promise<void> {
+  const batch = writeBatch(db)
+  for (const voucher of after) {
+    const old = before.find((item) => item.id === voucher.id)
+    if (old && old.status !== voucher.status) batch.update(doc(db, 'students', voucher.studentId, 'vouchers', voucher.id), { status: voucher.status })
+  }
+  await batch.commit()
+}
+
+export async function saveRanking(rows: RankingRow[]): Promise<void> {
+  await setDoc(doc(db, 'public', 'ranking'), { rows })
+}
+
+export async function saveRoster(entries: RosterEntry[]): Promise<void> {
+  const batch = writeBatch(db)
+  entries.forEach((entry) => batch.set(doc(db, 'roster', entry.studentId), { name: entry.name }))
+  await batch.commit()
+}
+
+export async function removeRoster(studentId: string): Promise<void> {
+  await deleteDoc(doc(db, 'roster', studentId))
+}
+
+export async function saveBannedWords(words: string[]): Promise<void> {
+  await setDoc(doc(db, 'settings', 'bannedWords'), { words })
+}

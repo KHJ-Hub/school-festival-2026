@@ -1,6 +1,6 @@
 /**
- * 교사 관리 파일: 닉네임 규칙(금지어·중복)과 학생 등록/다시 들어오기 판단.
- * 학생 과제 파일과 분리해 두었고, 화면 없이도 확인할 수 있게 순수 함수로만 만듭니다.
+ * 교사 관리 파일: 닉네임 규칙(금지어·길이·중복)과 명단 붙여넣기 해석.
+ * 저장은 src/data/store.ts가 하고, 여기는 화면 없이도 확인할 수 있는 순수 함수만 둡니다.
  */
 
 /** 운영진 명단 한 줄 (학번·이름). 실제 명단은 코드나 GitHub에 넣지 않고 운영진 화면에서만 입력합니다. */
@@ -50,27 +50,6 @@ export function checkNickname(nickname: string, accounts: Account[], extraWords:
     return '이미 다른 학생이 쓰는 닉네임이에요. 다른 닉네임을 정해 주세요.'
   }
   return null
-}
-
-export type EntryResult =
-  | { ok: true; kind: 'new' | 'reenter'; account: Account }
-  | { ok: false; message: string }
-
-/** 등록 또는 다시 들어오기. 학번·이름이 명단과 맞아야 하고, 이미 등록된 학번이면 새로 만들지 않고 다시 들어오기로 처리합니다. */
-export function enterStudent(roster: RosterEntry[], accounts: Account[], extraWords: string[], input: { studentId: string; name: string; nickname: string }): EntryResult {
-  const studentId = input.studentId.trim()
-  const name = input.name.trim()
-  if (!/^\d{5}$/.test(studentId)) return { ok: false, message: '학번은 숫자 5자리로 써 주세요.' }
-  if (!name) return { ok: false, message: '이름을 써 주세요.' }
-  const listed = roster.find((entry) => entry.studentId === studentId)
-  if (!listed || listed.name !== name) return { ok: false, message: '명단에 없는 학번이거나 이름이 달라요. 운영진에게 물어보세요.' }
-
-  const existing = accounts.find((account) => account.studentId === studentId)
-  if (existing) return { ok: true, kind: 'reenter', account: existing }
-
-  const problem = checkNickname(input.nickname, accounts, extraWords)
-  if (problem) return { ok: false, message: problem }
-  return { ok: true, kind: 'new', account: { studentId, name, nickname: input.nickname.trim() } }
 }
 
 /** 운영진 붙여넣기: 한 줄에 "학번 이름" 또는 "학번,이름". 형식이 틀린 줄은 따로 돌려줍니다. */

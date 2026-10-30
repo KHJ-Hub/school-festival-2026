@@ -1,52 +1,94 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { onAuthStateChanged, signInAnonymously, signOut, type User } from 'firebase/auth'
 import { AdminLock, AdminPasswordChange } from './components/AdminLock'
 import { AdminRoster } from './components/AdminRoster'
 import { FestivalLive, StudentIdBox } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
-import { checkNickname, enterStudent, type Account, type RosterEntry } from './components/nicknameRules'
+import { checkNickname, type Account } from './components/nicknameRules'
 import { VisitorSteps } from './components/PopupIntro'
+import { enterStudent, isNicknameTaken, loadOwnAccount, renameStudent, saveBannedWords, saveRoster, useAdminData, useBannedWords } from './data/store'
+import { ADMIN_EMAIL, auth } from './firebase'
 import { CLUBS } from './mockData'
-import { DEMO_STUDENTS } from './tasks/fixtures'
 
-/** 연습용 명단: 가짜 이름만 씁니다. 실제 학생 명단은 코드에 넣지 않고 운영진 화면에서 입력합니다. */
-const PRACTICE_ROSTER: RosterEntry[] = DEMO_STUDENTS.map((student, index) => ({ studentId: student.studentId, name: `연습학생${index + 1}` }))
+/** 이 기기에서 마지막으로 들어온 학번(새로고침해도 다시 들어오기). 학번만 저장하고 이름은 저장하지 않습니다. */
+const ME_KEY = 'festival-me'
+
+function readMe(): string | null {
+  try {
+    return localStorage.getItem(ME_KEY)
+  } catch {
+    return null
+  }
+}
+
+function writeMe(studentId: string | null) {
+  try {
+    if (studentId) localStorage.setItem(ME_KEY, studentId)
+    else localStorage.removeItem(ME_KEY)
+  } catch {
+    // 시크릿 창 등 저장이 안 되는 브라우저는 새로고침하면 다시 들어오면 됩니다.
+  }
+}
 
 function App() {
   const [mode, setMode] = useState<AppMode>('student')
-  const [adminUnlocked, setAdminUnlocked] = useState(false)
-  // 아래 값은 모두 이 화면(기기) 메모리에만 있습니다. 새로고침하면 처음 상태로 돌아갑니다.
-  const [roster, setRoster] = useState<RosterEntry[]>(PRACTICE_ROSTER)
-  const [accounts, setAccounts] = useState<Account[]>(
-    () => DEMO_STUDENTS.map((student, index) => ({ studentId: student.studentId, name: PRACTICE_ROSTER[index]!.name, nickname: student.nickname })),
-  )
-  const [extraWords, setExtraWords] = useState<string[]>([])
-  const [meId, setMeId] = useState<string | null>(null)
-  const me = accounts.find((account) => account.studentId === meId) ?? null
+  const [user, setUser] = useState<User | null>(null)
+  const [me, setMe] = useState<Account | null>(null)
+  const isAdmin = user?.email === ADMIN_EMAIL
+  const bannedWords = useBannedWords()
+  const admin = useAdminData(isAdmin)
 
-  const enter = (input: { studentId: string; name: string; nickname: string }) => {
-    const result = enterStudent(roster, accounts, extraWords, input)
-    if (!result.ok) return result.message
-    if (result.kind === 'new') setAccounts((current) => [...current, result.account])
-    setMeId(result.account.studentId)
-    return null
-  }
+  // 학생은 화면에 안 보이는 익명 로그인으로 기기마다 구분합니다. 운영진이 잠그면 다시 익명으로 돌아갑니다.
+  useEffect(() => onAuthStateChanged(auth, (next) => {
+    setUser(next)
+    if (!next) void signInAnonymously(auth).catch(() => undefined)
+  }), [])
 
-  const rename = (nickname: string) => {
-    if (!me) return '먼저 등록해 주세요.'
-    const problem = checkNickname(nickname, accounts, extraWords, me.studentId)
-    if (problem) return problem
-    setAccounts((current) => current.map((account) => (account.studentId === me.studentId ? { ...account, nickname: nickname.trim() } : account)))
-    return null
-  }
-
-  const addRoster = (entries: RosterEntry[]) => {
-    setRoster((current) => {
-      const next = current.filter((entry) => !entries.some((item) => item.studentId === entry.studentId))
-      return [...next, ...entries]
+  // 새로고침 후: 이 기기에서 들어왔던 학번이 여전히 내 계정이면 자동으로 다시 들어옵니다.
+  useEffect(() => {
+    if (!user || isAdmin || me) return
+    const saved = readMe()
+    if (!saved) return
+    void loadOwnAccount(saved).then((account) => {
+      if (account) setMe(account)
+      else writeMe(null)
     })
+  }, [user, isAdmin, me])
+
+  const nicknameProblem = async (nickname: string, selfId?: string) => {
+    const problem = checkNickname(nickname, [], bannedWords, selfId)
+    if (problem) return problem
+    if (await isNicknameTaken(nickname, selfId)) return '이미 다른 학생이 쓰는 닉네임이에요. 다른 닉네임을 정해 주세요.'
+    return null
   }
 
-  const adminLocked = mode === 'admin' && !adminUnlocked
+  const enter = async (input: { studentId: string; name: string; nickname: string }) => {
+    const studentId = input.studentId.trim()
+    const name = input.name.trim()
+    if (!/^\d{5}$/.test(studentId)) return '학번은 숫자 5자리로 써 주세요.'
+    if (!name) return '이름을 써 주세요.'
+    const result = await enterStudent({ studentId, name, nickname: input.nickname.trim() }, (nickname) => nicknameProblem(nickname))
+    if (!result.ok) return result.message
+    setMe(result.account)
+    writeMe(result.account.studentId)
+    return null
+  }
+
+  const rename = async (nickname: string) => {
+    if (!me) return '먼저 등록해 주세요.'
+    const value = nickname.trim()
+    const problem = await nicknameProblem(value, me.studentId)
+    if (problem) return problem
+    const failed = await renameStudent(me, value)
+    if (failed) return failed
+    setMe({ ...me, nickname: value })
+    return null
+  }
+
+  const leave = () => {
+    setMe(null)
+    writeMe(null)
+  }
 
   return (
     <div className="app-shell">
@@ -74,31 +116,32 @@ function App() {
         {mode === 'student' && (
           <>
             <VisitorSteps />
-            <StudentIdBox me={me} onEnter={enter} onRename={rename} onLeave={() => setMeId(null)} />
+            {isAdmin ? (
+              <div className="live-message" role="status">이 기기는 운영진으로 로그인되어 있어요. 운영진용 화면에서 잠그면 학생 화면을 쓸 수 있어요.</div>
+            ) : (
+              <StudentIdBox me={me} busy={!user} onEnter={enter} onRename={rename} onLeave={leave} />
+            )}
           </>
         )}
 
-        {adminLocked && <AdminLock onUnlock={() => setAdminUnlocked(true)} />}
+        {mode === 'admin' && !isAdmin && <AdminLock />}
 
-        {mode === 'admin' && adminUnlocked && (
+        {mode === 'admin' && isAdmin && (
           <div className="admin-tools">
-            <button className="live-reset" onClick={() => setAdminUnlocked(false)}>운영진 화면 잠그기</button>
+            <button className="live-reset" onClick={() => void signOut(auth)}>운영진 화면 잠그기</button>
             <AdminRoster
-              roster={roster}
-              accounts={accounts}
-              extraWords={extraWords}
-              onAddRoster={addRoster}
-              onAddWord={(word) => setExtraWords((current) => (current.includes(word) ? current : [...current, word]))}
-              onRemoveWord={(word) => setExtraWords((current) => current.filter((item) => item !== word))}
+              roster={admin.roster}
+              accounts={admin.accounts}
+              extraWords={bannedWords}
+              onAddRoster={saveRoster}
+              onAddWord={(word) => saveBannedWords(bannedWords.includes(word) ? bannedWords : [...bannedWords, word])}
+              onRemoveWord={(word) => saveBannedWords(bannedWords.filter((item) => item !== word))}
             />
             <AdminPasswordChange />
           </div>
         )}
 
-        {/* 잠겨 있어도 신청·교환권 기록이 지워지지 않도록 화면만 숨깁니다. */}
-        <div hidden={adminLocked}>
-          <FestivalLive mode={mode} studentId={me?.studentId ?? ''} accounts={accounts} />
-        </div>
+        {(mode === 'student' || isAdmin) && <FestivalLive mode={mode} me={isAdmin ? null : me} isAdmin={isAdmin} />}
 
         <section className="clubs">
           <span>함께 만드는 동아리</span>
