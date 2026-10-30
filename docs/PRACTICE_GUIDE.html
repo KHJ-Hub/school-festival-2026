@@ -10,7 +10,8 @@
   h1 { font-size: 15pt; margin: 0 0 2px; }
   .sub { margin: 0 0 6px; color: #555; }
   h2 { font-size: 11pt; margin: 9px 0 3px; padding: 2px 7px; background: #e8f0fe; border-left: 4px solid #1a73e8; break-after: avoid; }
-  h3 { font-size: 10pt; margin: 6px 0 2px; break-after: avoid; }
+  h3 { font-size: 10.4pt; margin: 15pt 0 3px; padding-top: 6pt; border-top: 1px dashed #bbb; break-after: avoid; }
+  h2 + h3 { margin-top: 4pt; border-top: none; padding-top: 0; }
   li, p { orphans: 2; widows: 2; }
   p { margin: 2px 0; }
   ol, ul { margin: 2px 0; padding-left: 19px; }
@@ -30,7 +31,7 @@
   table { border-collapse: collapse; width: 100%; margin: 3px 0; }
   th, td { border: 1px solid #bbb; padding: 2px 6px; text-align: left; vertical-align: top; }
   th { background: #f1f3f4; }
-  .newpage { break-before: page; margin-top: 0; }
+  .newpage { break-before: page; margin-top: 0 !important; border-top: none !important; padding-top: 0 !important; }
   .keep { break-inside: avoid; }
 </style>
 </head>
@@ -102,7 +103,7 @@
 
 <h3>단계 7 — 내 과제로 넘어가기</h3>
 <ol>
-  <li>연습 파일은 <b>GitHub로 보내지 않습니다.</b> 연습만 하고 끝입니다. (<code>git add</code> 하지 않기)</li>
+  <li>연습 파일은 <b>GitHub로 보내지 않습니다.</b> 연습만 하고 끝입니다. (요약 카드 <b>"올리기"의 <code>git add</code></b>(보낼 파일 고르기)에 이 파일을 넣지 않습니다)</li>
   <li>왼쪽 목록에서 <code>src</code> → <code>tasks</code> → <b>내 담당 파일</b>을 엽니다.</li>
   <li>똑같이 진행합니다. 다만 BeAT에 붙여 넣는 재료가 <b>3개</b>입니다: ① 내 파일 ② 내 테스트(<code>src/tasks/__tests__</code> 안) ③ <code>src/tasks/taskTypes.ts</code></li>
   <li>내 테스트 명령은 <code>npx vitest run task0N</code> (N은 내 번호. 예: 3번이면 <code>task03</code>)</li>
