@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FestivalLive, StudentIdBox } from './components/FestivalLive'
+import { FestivalLive, StudentIdBox, type Me } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
 import { VisitorSteps } from './components/PopupIntro'
 import { CLUBS } from './mockData'
@@ -12,7 +12,20 @@ function App() {
   const [nicknames, setNicknames] = useState<Record<string, string>>(
     () => Object.fromEntries(DEMO_STUDENTS.map((student) => [student.studentId, student.nickname])),
   )
+  // 등록을 눌러야 그 학번으로 기능이 열립니다.
+  const [me, setMe] = useState<Me | null>(null)
+  const [draftNick, setDraftNick] = useState(() => nicknames['90001'] ?? '')
   const studentId = inputId.trim()
+
+  const changeId = (value: string) => {
+    setInputId(value)
+    setDraftNick(nicknames[value.trim()] ?? '')
+  }
+  const register = () => {
+    const nickname = draftNick.trim()
+    setNicknames((current) => ({ ...current, [studentId]: nickname }))
+    setMe({ studentId, nickname })
+  }
 
   return (
     <div className="app-shell">
@@ -39,11 +52,11 @@ function App() {
         {mode === 'student' && (
           <>
             <VisitorSteps />
-            <StudentIdBox inputId={inputId} onChange={setInputId} nickname={nicknames[studentId] ?? ''} onNicknameChange={(value) => setNicknames((current) => ({ ...current, [studentId]: value }))} />
+            <StudentIdBox me={me} inputId={inputId} onIdChange={changeId} nickname={draftNick} onNicknameChange={setDraftNick} onRegister={register} onReset={() => setMe(null)} />
           </>
         )}
 
-        <FestivalLive mode={mode} inputId={inputId} nicknames={nicknames} />
+        <FestivalLive mode={mode} studentId={me?.studentId ?? ''} nicknames={nicknames} />
 
         <section className="clubs">
           <span>함께 만드는 동아리</span>

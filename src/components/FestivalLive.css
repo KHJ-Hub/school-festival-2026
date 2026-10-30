@@ -56,3 +56,13 @@
 .live-id-fields label { flex: 1 1 200px; }
 .live-id-fields input { width: 100%; }
 .live-id input:disabled { background: #f1ebe4; color: #a39286; }
+.live-id-action { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; width: 100%; }
+.live-error { margin: 0; width: 100%; color: #b4412e; font-weight: 700; }
+.live-id.registered { align-items: center; background: #eaf7f0; border-color: #a9d9bf; }
+.live-registered { display: flex; gap: 14px; align-items: center; }
+.live-registered strong, .live-registered small { display: block; }
+.live-registered strong { font: 22px 'Jua'; color: #1f5f40; }
+.live-registered small { color: #4d7b65; margin-top: 2px; }
+.live-check { width: 42px; height: 42px; border-radius: 50%; background: #2c9366; color: white; display: grid; place-items: center; font-size: 22px; font-weight: 700; flex: none; }
+.live-reset { padding: 8px 14px; border: 1px solid #a9d9bf; border-radius: 10px; background: white; color: #1f5f40; font-weight: 700; min-height: 44px; }
+@media (max-width: 600px) { .live-id-action .primary-button { flex: 1 1 100%; justify-content: center; } .live-reset { width: 100%; } .live-id.registered { display: grid; } }
