@@ -321,7 +321,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
             </div>
           </Section>
 
-          <Section no={5} title="간식 교환" desc="모은 코인으로 원하는 팝콘 하나를 골라요. 교환은 한 번만 할 수 있어요." built={BUILT[5]}>
+          <Section no={5} title="간식 교환" desc="모은 코인으로 원하는 간식 하나를 골라요. 교환은 한 번만 할 수 있어요." built={BUILT[5]}>
             {exchangedAll && <p className="live-message">교환을 마쳤어요. 아래 교환권을 부스에서 보여 주세요.</p>}
             <ul className="live-list">
               {menus.map((menu) => (
