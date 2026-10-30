@@ -20,9 +20,7 @@ function App() {
           </span>
         </button>
         <div className="header-actions">
-          <ModeSwitcher mode={mode} onChange={setMode} />
-          <div className="festival-date"><strong>12월 29일</strong></div>
-        </div>
+          <ModeSwitcher mode={mode} onChange={setMode} />        </div>
       </header>
 
       <main>
