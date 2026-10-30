@@ -174,3 +174,5 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 @media (max-width: 600px) {
   .live-title-row .live-badge { font-size: 11px; padding: 4px 8px; }
 }
+.admin-search { margin: 10px 12px 0; }
+.admin-search input { flex: 1; width: auto; }
