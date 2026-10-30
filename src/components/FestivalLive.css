@@ -153,3 +153,5 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .admin-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .admin-file span { cursor: pointer; display: inline-flex; }
 .admin-file input:focus-visible + span { outline: 3px solid #f3bd3f; }
+.admin-tools-after { margin: 18px 0 0; }
+@media (max-width: 600px) { .admin-tools-after { margin-top: 14px; gap: 14px; } }

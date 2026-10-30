@@ -135,6 +135,18 @@ function App() {
         {mode === 'admin' && isAdmin && (
           <div className="admin-tools">
             <button className="live-reset" onClick={() => void signOut(auth)}>운영진 화면 잠그기</button>
+          </div>
+        )}
+
+        {mode === 'ranking' && <RankingBoard />}
+
+        {isAdmin && <AdminRankingSync />}
+
+        {/* 운영진 화면 순서: 코인 승인·교환권 스캔(자주 쓰는 것) → 간식 메뉴 → 학생 명단·금지어 → 비밀번호 바꾸기 */}
+        {(mode === 'student' || (mode === 'admin' && isAdmin)) && <FestivalLive mode={mode} me={isAdmin ? null : me} isAdmin={isAdmin} />}
+
+        {mode === 'admin' && isAdmin && (
+          <div className="admin-tools admin-tools-after">
             <AdminMenus />
             <AdminRoster
               roster={admin.roster}
@@ -147,12 +159,6 @@ function App() {
             <AdminPasswordChange />
           </div>
         )}
-
-        {mode === 'ranking' && <RankingBoard />}
-
-        {isAdmin && <AdminRankingSync />}
-
-        {(mode === 'student' || (mode === 'admin' && isAdmin)) && <FestivalLive mode={mode} me={isAdmin ? null : me} isAdmin={isAdmin} />}
 
         <section className="clubs">
           <span>함께 만드는 동아리</span>
