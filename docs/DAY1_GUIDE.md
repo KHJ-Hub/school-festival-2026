@@ -92,7 +92,7 @@ npm test
 3. 아래 "AI에게 줄 재료" 방법으로 BeAT에게 코드를 부탁합니다.
 4. 받은 코드를 **`welcomeMessage` 함수 안에만** 붙여 넣고 저장합니다.
 5. 다시 `npx vitest run warmUp`을 실행해 **초록색**이 되면 연습 성공입니다.
-6. 이 연습 파일은 **GitHub에 올리지 않습니다.** (5단계에서 `git add`를 하지 않습니다.)
+6. 이 연습 파일은 연습용이라 **GitHub에 보내(push)지 않습니다.** (5단계에서 `git add`를 하지 않습니다.)
 
 ### 내 과제 진행 순서
 
@@ -150,8 +150,8 @@ git push
 
 - Codespaces에서는 GitHub 로그인이 이미 되어 있어서 따로 로그인하지 않아도 됩니다.
 - `403` 오류가 나면 초대 수락을 아직 안 한 것입니다. 메일을 확인하고 교사에게 알려 주세요.
-- `git status`에 연습 파일(`src/warmup/warmUp.ts`)이 보이는 것은 정상입니다. 올리지 않습니다.
+- `git status`에 연습 파일(`src/warmup/warmUp.ts`)이 보이는 것은 정상입니다. 연습용이라 `git add`를 하지 않고 GitHub에 보내지 않습니다.
 - **다른 파일이 `modified`로 보이면 실수로 고친 것입니다.** 이 설정은 자동 저장이라 글자를 바꾸면 바로 저장됩니다. 그 파일은 `git restore 파일경로`(예: `git restore src/App.tsx`)로 되돌립니다. 어떤 파일인지 모르겠으면 교사에게 물어보세요.
-- **다른 학생 브랜치와 `main`에는 올리지 않습니다.**
+- **다른 학생 브랜치와 `main`에는 push 하지 않습니다.**
 
 끝나면 `docs/ACTIVITY_LOG_TEMPLATE.md`를 복사해 오늘 한 일을 적고, 왼쪽 아래 **Codespaces** 메뉴에서 **Stop Current Codespace**로 중지합니다.
