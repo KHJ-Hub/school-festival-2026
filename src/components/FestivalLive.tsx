@@ -37,6 +37,11 @@ function maskId(studentId: string): string {
   return `${studentId.slice(0, 3)}**`
 }
 
+/** 닉네임을 적었으면 닉네임을, 없으면 가린 학번을 보여 줍니다. */
+function displayName(studentId: string, nicknames: Record<string, string>): string {
+  return nicknames[studentId]?.trim() || maskId(studentId)
+}
+
 function Section({ no, title, desc, built = true, children }: { no: number; title: string; desc: string; built?: boolean; children: ReactNode }) {
   return (
     <article className="panel live-section">
@@ -53,26 +58,32 @@ function Section({ no, title, desc, built = true, children }: { no: number; titl
 }
 
 /** 학번 입력칸: 1번 학생의 함수로 학번을 검사하고, 찾은 학생의 별명을 보여 줍니다. */
-export function StudentIdBox({ inputId, onChange }: { inputId: string; onChange: (value: string) => void }) {
+export function StudentIdBox({ inputId, onChange, nickname, onNicknameChange }: { inputId: string; onChange: (value: string) => void; nickname: string; onNicknameChange: (value: string) => void }) {
   const studentId = inputId.trim()
   const idCheck = safe(() => isDemoStudentId(studentId), false)
   const student = safe(() => findDemoStudent(DEMO_STUDENTS, studentId), undefined)
   const built = Boolean(student) || idCheck
   return (
     <section className="panel live-id">
-      <label>
-        내 학번 (연습용 학번만: 90001, 90002, 90003)
-        <input value={inputId} onChange={(event) => onChange(event.target.value)} inputMode="numeric" maxLength={5} />
-      </label>
+      <div className="live-id-fields">
+        <label>
+          내 학번 (숫자 5자리 · 연습용: 90001, 90002, 90003)
+          <input value={inputId} onChange={(event) => onChange(event.target.value)} inputMode="numeric" maxLength={5} />
+        </label>
+        <label>
+          닉네임 (랭킹에 이 이름으로 나와요 · 실명은 쓰지 마세요)
+          <input value={nickname} onChange={(event) => onNicknameChange(event.target.value)} maxLength={12} placeholder="예: 별빛여우" disabled={!idCheck} />
+        </label>
+      </div>
       <div className="live-id-result">
         <span className={`live-badge ${built ? 'done' : 'todo'}`}>{built ? '1번 학생이 만든 기능' : '1번 학생이 만드는 중'}</span>
-        {student ? <strong>{student.nickname}님, 반가워요!</strong> : idCheck ? <strong>5자리 학번이에요. 등록된 학생은 아니에요.</strong> : <strong>학번은 숫자 5자리예요.</strong>}
+        {student ? <strong>{student.nickname}님, 반가워요!</strong> : idCheck ? <strong>{nickname.trim() ? `${nickname.trim()}님, 반가워요!` : '닉네임을 정해 주세요.'}</strong> : <strong>학번은 숫자 5자리예요.</strong>}
       </div>
     </section>
   )
 }
 
-export function FestivalLive({ mode, inputId }: { mode: AppMode; inputId: string }) {
+export function FestivalLive({ mode, inputId, nicknames }: { mode: AppMode; inputId: string; nicknames: Record<string, string> }) {
   const [amount, setAmount] = useState(3)
   const [requests, setRequests] = useState<CoinRequest[]>(DEMO_REQUESTS)
   const [grants, setGrants] = useState<CoinGrant[]>(DEMO_GRANTS)
@@ -131,12 +142,12 @@ export function FestivalLive({ mode, inputId }: { mode: AppMode; inputId: string
   }
 
   const rankingSection = (
-    <Section no={7} title="코인 랭킹" desc="지금까지 모은 코인이 많은 순서예요. 학번은 가려서 보여 줘요." built={ranking.length > 0}>
+    <Section no={7} title="코인 랭킹" desc="지금까지 모은 코인이 많은 순서예요. 닉네임으로 보여 주고, 닉네임이 없으면 학번을 가려서 보여 줘요." built={ranking.length > 0}>
       {ranking.length === 0 ? (
         <p className="live-empty">7번 학생 코드가 순위를 만들면 여기에 나타나요.</p>
       ) : (
         <ol className="live-rank">
-          {ranking.map((row) => <li key={row.rank}><b>{row.rank}위</b><span>{maskId(row.studentId)}</span><strong>{row.total} coin</strong></li>)}
+          {ranking.map((row) => <li key={row.rank}><b>{row.rank}위</b><span>{displayName(row.studentId, nicknames)}</span><strong>{row.total} coin</strong></li>)}
         </ol>
       )}
     </Section>
@@ -196,7 +207,7 @@ export function FestivalLive({ mode, inputId }: { mode: AppMode; inputId: string
               <ul className="live-list">
                 {pending.map((request) => (
                   <li key={request.id}>
-                    <span>{maskId(request.studentId)} · {request.claimedAmount} coin 신청</span>
+                    <span>{displayName(request.studentId, nicknames)} · {request.claimedAmount} coin 신청</span>
                     <span className="live-buttons"><button onClick={() => decide(request.id, 'approve')}>승인</button><button className="ghost" onClick={() => decide(request.id, 'reject')}>거절</button></span>
                   </li>
                 ))}
@@ -209,7 +220,7 @@ export function FestivalLive({ mode, inputId }: { mode: AppMode; inputId: string
               <ul className="live-list">
                 {issued.map((voucher) => (
                   <li key={voucher.id}>
-                    <span>{maskId(voucher.studentId)} · {DEMO_MENUS.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'}</span>
+                    <span>{displayName(voucher.studentId, nicknames)} · {DEMO_MENUS.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'}</span>
                     <button onClick={() => useVoucher(voucher.id)}>사용 처리</button>
                   </li>
                 ))}

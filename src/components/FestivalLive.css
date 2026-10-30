@@ -52,3 +52,7 @@
   .live-rank li { grid-template-columns: 48px 1fr auto; padding: 10px; }
   .live-cards { grid-template-columns: 1fr; }
 }
+.live-id-fields { display: flex; flex-wrap: wrap; gap: 14px; flex: 1 1 360px; }
+.live-id-fields label { flex: 1 1 200px; }
+.live-id-fields input { width: 100%; }
+.live-id input:disabled { background: #f1ebe4; color: #a39286; }

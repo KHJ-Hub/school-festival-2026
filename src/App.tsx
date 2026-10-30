@@ -5,10 +5,16 @@ import { ExchangeGuide, VisitorSteps } from './components/PopupIntro'
 import { TaskPlayground } from './components/TaskPlayground'
 import './components/TaskPlayground.css'
 import { CLUBS } from './mockData'
+import { DEMO_STUDENTS } from './tasks/fixtures'
 
 function App() {
   const [mode, setMode] = useState<AppMode>('student')
   const [inputId, setInputId] = useState('90001')
+  // 학번 → 닉네임. 시연 학생은 미리 채워 두고, 새로 입력한 닉네임은 이 화면에서만 기억합니다(저장 안 함).
+  const [nicknames, setNicknames] = useState<Record<string, string>>(
+    () => Object.fromEntries(DEMO_STUDENTS.map((student) => [student.studentId, student.nickname])),
+  )
+  const studentId = inputId.trim()
 
   return (
     <div className="app-shell">
@@ -36,12 +42,12 @@ function App() {
         {mode === 'student' && (
           <>
             <VisitorSteps />
-            <StudentIdBox inputId={inputId} onChange={setInputId} />
+            <StudentIdBox inputId={inputId} onChange={setInputId} nickname={nicknames[studentId] ?? ''} onNicknameChange={(value) => setNicknames((current) => ({ ...current, [studentId]: value }))} />
             <ExchangeGuide />
           </>
         )}
 
-        <FestivalLive mode={mode} inputId={inputId} />
+        <FestivalLive mode={mode} inputId={inputId} nicknames={nicknames} />
 
         {mode === 'admin' && <TaskPlayground />}
 
