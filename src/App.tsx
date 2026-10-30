@@ -102,7 +102,7 @@ function App() {
         <button className="brand" onClick={() => setMode('student')} aria-label="첫 화면으로 이동">
           <span className="brand-mark">F!</span>
           <span>
-            <strong>배정고 팝팝스토어</strong>
+            <strong>배정 팝팝스토어</strong>
             <small>보드게임동아리 × 리틀엔지니어랩 × 국제이해문화탐구반</small>
           </span>
         </button>
@@ -115,7 +115,7 @@ function App() {
         <section className="hero">
           <div>
             <p className="eyebrow">{mode === 'student' ? '학생용 화면' : mode === 'admin' ? '운영진용 화면' : '실시간 코인 랭킹'}</p>
-            <h1>배정고<br /><em>팝팝스토어</em></h1>
+            <h1>배정<br /><em>팝팝스토어</em></h1>
           </div>
         </section>
 
