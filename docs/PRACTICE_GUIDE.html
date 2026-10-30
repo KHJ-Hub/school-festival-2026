@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>코딩 시작 따라하기 — 연습 과제 자세히</title>
+<style>
+  @page { size: A4; margin: 11mm 13mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size: 9.7pt; line-height: 1.45; color: #1a1a1a; }
+  h1 { font-size: 15pt; margin: 0 0 2px; }
+  .sub { margin: 0 0 6px; color: #555; }
+  h2 { font-size: 11pt; margin: 9px 0 3px; padding: 2px 7px; background: #e8f0fe; border-left: 4px solid #1a73e8; break-after: avoid; }
+  h3 { font-size: 10pt; margin: 6px 0 2px; break-after: avoid; }
+  li, p { orphans: 2; widows: 2; }
+  p { margin: 2px 0; }
+  ol, ul { margin: 2px 0; padding-left: 19px; }
+  li { margin: 1.5px 0; }
+  code { font-family: Consolas, 'Courier New', monospace; font-size: 9pt; background: #f1f3f4; padding: 0 3px; border-radius: 2px; }
+  pre { margin: 3px 0; padding: 5px 9px; background: #f1f3f4; border-radius: 4px; font-family: Consolas, 'Courier New', monospace; font-size: 8.6pt; line-height: 1.3; white-space: pre-wrap; }
+  .map { font-family: 'Malgun Gothic', Consolas, monospace; font-size: 8.8pt; line-height: 1.25; background: #fff; border: 1.5px solid #333; }
+  .ed { background: #e6f4ea; border-left: 4px solid #1e8e3e; padding: 3px 8px; margin: 3px 0; }
+  .tm { background: #fff4e5; border-left: 4px solid #e8710a; padding: 3px 8px; margin: 3px 0; }
+  .bt { background: #f3e8fd; border-left: 4px solid #9334e6; padding: 3px 8px; margin: 3px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 3px 0; }
+  th, td { border: 1px solid #bbb; padding: 2px 6px; text-align: left; vertical-align: top; }
+  th { background: #f1f3f4; }
+  .keep { break-inside: avoid; }
+</style>
+</head>
+<body>
+<h1>코딩 시작 따라하기 — 연습 과제 자세히</h1>
+<p class="sub">축제 모바일 교환권 프로젝트 · Codespace 화면이 열린 뒤부터 · 처음 코딩해도 괜찮습니다. 한 칸씩 따라 하세요.</p>
+
+<h2>0. 화면은 세 칸으로 나뉘어 있습니다</h2>
+<pre class="map">┌──────────────┬───────────────────────────────┐
+│ ① 파일 목록  │ ② 편집기 (코드가 보이는 곳)   │
+│ (왼쪽)       │                               │
+│  .devcontainer│  → 코드를 붙여 넣고 고치는 곳 │
+│  docs        ├───────────────────────────────┤
+│  src         │ ③ 터미널 (아래 까만 곳)       │
+│              │  → 명령을 입력하는 곳         │
+└──────────────┴───────────────────────────────┘</pre>
+<div class="ed"><b>② 편집기</b> = <b>코드를 붙여 넣고 고치는 곳.</b> BeAT가 준 코드는 여기에 넣습니다.</div>
+<div class="tm"><b>③ 터미널</b> = <b>명령을 입력하는 곳.</b> <code>npx vitest run warmUp</code> 같은 글자를 치고 <b>Enter</b>를 누릅니다. <b>코드는 여기에 붙여 넣지 않습니다.</b></div>
+
+<h2>1. 연습 과제가 뭔가요?</h2>
+<p><code>welcomeMessage</code>라는 함수가 별명을 받아서 <b>"안녕하세요, ○○님! 축제 모바일 교환권 프로젝트에 오신 것을 환영합니다."</b>를 돌려주게 만듭니다. 지금은 빈 글자(<code>''</code>)만 돌려줘서 테스트가 <b>빨간색(실패)</b>입니다. 이걸 <b>초록색(성공)</b>으로 바꿉니다.</p>
+
+<h2>2. 따라 하기 (7단계)</h2>
+
+<h3>단계 1 — 연습 파일 열기</h3>
+<ol>
+  <li>왼쪽 <b>파일 목록</b>에서 <code>src</code>를 누릅니다. (폴더 앞 화살표 ▶가 ▼로 바뀝니다)</li>
+  <li>그 안의 <code>warmup</code>을 누르고, <code>warmUp.ts</code> 파일을 누릅니다.</li>
+  <li>가운데 <b>편집기</b>에 코드가 열립니다. 맨 아래쪽 <code>return ''</code> 줄이 우리가 고칠 곳입니다.</li>
+</ol>
+
+<h3>단계 2 — 먼저 "빨간색"을 확인하기</h3>
+<ol>
+  <li>아래 <b>터미널의 까만 곳을 마우스로 한 번 클릭</b>합니다. (깜빡이는 줄이 보여야 합니다)</li>
+  <li>키보드가 <b>영어 상태</b>인지 확인합니다. (<b>한/영</b> 키)</li>
+  <li>아래 글자를 그대로 치고 <b>Enter</b>를 누릅니다.</li>
+</ol>
+<pre>npx vitest run warmUp</pre>
+<p>빨간 글자가 나오고 맨 아래에 <code>Tests  3 failed (3)</code>가 보이면 <b>정상</b>입니다.</p>
+
+<h3>단계 3 — BeAT에게 코드를 부탁하기</h3>
+<ol>
+  <li>크롬 위쪽 <b>＋</b>를 눌러 새 탭을 열고 <code>beat.busanedu.net</code> → <b>개인 도우미</b>로 들어갑니다.</li>
+  <li><b>Codespace 탭</b>으로 돌아와서, 편집기에서 <code>warmUp.ts</code>가 열린 상태로 <b>편집기 안을 클릭</b>하고 <code>Ctrl</code>+<code>A</code>(전체 선택) → <code>Ctrl</code>+<code>C</code>(복사)를 누릅니다.</li>
+  <li><b>BeAT 탭</b>으로 가서 아래 질문을 쓰고, 그 뒤에 <code>Ctrl</code>+<code>V</code>로 붙여 넣습니다.</li>
+  <li>같은 방법으로 왼쪽 목록의 <code>warmUp.test.ts</code>를 열어 전체 복사한 뒤, BeAT 입력칸에 이어서 붙여 넣고 보냅니다.</li>
+</ol>
+<div class="bt"><b>BeAT에 쓸 질문 (그대로 쓰세요)</b><br>
+나는 고1이고 TypeScript 초보야. 아래 ① 파일의 TODO 함수를 구현해 줘. ②의 테스트를 모두 통과해야 해.<br>
+규칙: 테스트는 바꾸지 말고, 함수 안의 코드만 써 줘. 코드를 준 뒤에 각 줄이 무슨 뜻인지 쉬운 말로 설명해 줘.<br>
+① (warmUp.ts 붙여 넣기)  ② (warmUp.test.ts 붙여 넣기)</div>
+
+<h3>단계 4 — 받은 코드를 편집기에 넣기</h3>
+<ol>
+  <li>BeAT의 답에서 <b>코드 부분</b>을 마우스로 드래그해서 선택하고 <code>Ctrl</code>+<code>C</code>로 복사합니다. (코드 상자에 복사 버튼이 있으면 눌러도 됩니다)</li>
+  <li><b>Codespace 탭</b>으로 돌아와 편집기에서 <code>return ''</code> 줄의 <b>맨 앞을 클릭</b>하고 <code>Shift</code>+<code>End</code>로 그 줄을 선택한 뒤 <code>Ctrl</code>+<code>V</code>로 붙여 넣습니다. (선택한 줄이 새 코드로 바뀝니다)</li>
+  <li>BeAT가 <b>함수 전체</b>를 줬다면, 연습 파일에서는 <code>Ctrl</code>+<code>A</code> → <code>Delete</code>로 전부 지우고 <code>Ctrl</code>+<code>V</code>로 붙여 넣어도 됩니다. 단, <code>export function welcomeMessage</code>라는 글자가 그대로 있어야 합니다.</li>
+  <li>저장은 자동입니다. 탭 이름 옆에 <b>동그란 점(●)</b>이 남아 있으면 <code>Ctrl</code>+<code>S</code>를 누릅니다.</li>
+</ol>
+
+<h3>단계 5 — 다시 확인하기</h3>
+<p>터미널을 클릭하고 단계 2와 같은 명령을 다시 입력합니다.</p>
+<pre>npx vitest run warmUp</pre>
+<p><b>초록색 ✓</b>와 <code>Tests  3 passed (3)</code>가 나오면 <b>성공!</b> 🎉</p>
+
+<h3>단계 6 — 또 빨간색이면 (실패했을 때)</h3>
+<ol>
+  <li>터미널의 <b>빨간 오류 글자</b>를 마우스로 <b>드래그해서 선택</b>하고 <code>Ctrl</code>+<code>C</code>를 누릅니다.</li>
+  <li>BeAT에 이렇게 씁니다: <b>"테스트가 실패했어. 오류 메시지는 이거야: (붙여 넣기) 고쳐 줘."</b></li>
+  <li>새로 받은 코드를 단계 4부터 다시 합니다.</li>
+</ol>
+<p><b>주의:</b> 글자를 선택하지 않고 터미널에서 <code>Ctrl</code>+<code>C</code>를 누르면 "실행 중지"입니다. 복사하려면 꼭 먼저 드래그하세요.</p>
+
+<h3>단계 7 — 내 과제로 넘어가기</h3>
+<ol>
+  <li>연습 파일은 <b>GitHub로 보내지 않습니다.</b> 연습만 하고 끝입니다. (<code>git add</code> 하지 않기)</li>
+  <li>왼쪽 목록에서 <code>src</code> → <code>tasks</code> → <b>내 담당 파일</b>을 엽니다.</li>
+  <li>똑같이 진행합니다. 다만 BeAT에 붙여 넣는 재료가 <b>3개</b>입니다: ① 내 파일 ② 내 테스트(<code>src/tasks/__tests__</code> 안) ③ <code>src/tasks/taskTypes.ts</code></li>
+  <li>내 테스트 명령은 <code>npx vitest run task0N</code> (N은 내 번호. 예: 3번이면 <code>task03</code>)</li>
+  <li><b>내 파일에서는</b> 맨 위 <code>import</code> 줄과 <code>export function</code> 이름은 <b>그대로 두고</b>, TODO가 있는 함수 <b>안의 코드만</b> 바꿉니다.</li>
+</ol>
+
+<h2 class="keep">3. 자주 하는 실수</h2>
+<table class="keep">
+  <tr><th style="width:44%">이렇게 되면</th><th>이렇게 하세요</th></tr>
+  <tr><td>코드를 <b>터미널</b>에 붙여 넣었다</td><td>코드는 <b>가운데 편집기</b>에, 터미널엔 명령만 입니다.</td></tr>
+  <tr><td>기존 <code>return ''</code>을 안 지우고 붙여 넣었다</td><td>그 줄을 지우고 새 코드로 바꿉니다. 안 지우면 오류가 납니다.</td></tr>
+  <tr><td>명령이 안 먹는다 / 이상한 글자가 나온다</td><td><b>한/영</b> 키로 영어로 바꾸고, 대소문자까지 똑같이 칩니다. <code>warmUp</code>의 <code>U</code>는 대문자.</td></tr>
+  <tr><td>터미널에 입력 줄이 없다</td><td>왼쪽 위 <b>☰ → 터미널 → 새 터미널</b>을 누릅니다.</td></tr>
+  <tr><td>다른 파일이 바뀌었다 (잘못 눌러 고침)</td><td>터미널에 <code>git status</code> → 바뀐 파일을 <code>git restore 파일경로</code>로 되돌립니다. 모르겠으면 선생님께 물어봅니다.</td></tr>
+  <tr><td>BeAT가 테스트를 고치라고 한다</td><td>테스트는 <b>고치지 않습니다.</b> "테스트는 못 바꿔, 코드만 고쳐 줘"라고 다시 부탁합니다.</td></tr>
+</table>
+
+<p style="margin-top:6px"><b>복사·붙여 넣기 키:</b> 전체 선택 <code>Ctrl</code>+<code>A</code> · 복사 <code>Ctrl</code>+<code>C</code> · 붙여 넣기 <code>Ctrl</code>+<code>V</code> · 저장 <code>Ctrl</code>+<code>S</code> · 실행 <code>Enter</code></p>
+</body>
+</html>
