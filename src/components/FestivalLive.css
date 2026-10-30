@@ -1,0 +1,35 @@
+/* 교사 관리: FestivalLive 전용 스타일 (공용 styles.css와 분리) */
+.live { display: grid; gap: 18px; }
+.live-id { display: flex; flex-wrap: wrap; gap: 18px; align-items: end; justify-content: space-between; }
+.live-id label { display: grid; gap: 6px; font-size: 14px; color: #6f5c53; }
+.live-id input, .live-row input { padding: 10px 12px; border: 1px solid #d9cdc1; border-radius: 10px; font: 18px ui-monospace, Consolas, monospace; width: 160px; background: white; }
+.live-id-result { display: grid; gap: 6px; justify-items: end; }
+.live-head { display: flex; gap: 14px; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.live-head h2, .live-head p { margin: 0; }
+.live-head h2 { font: 22px 'Jua'; }
+.live-head p { margin-top: 3px; color: #8a786e; font-size: 14px; }
+.live-badge { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.live-badge.done { background: #d9f2e7; color: #2c6b57; }
+.live-badge.todo { background: #ffe7c7; color: #9a5a0a; }
+.live-message { padding: 12px 16px; border-radius: 12px; background: #eaf3ff; color: #234b7a; font-weight: 700; }
+.live-message.todo { background: #ffe7c7; color: #8a4f06; }
+.live-numbers { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.live-numbers div { padding: 16px; border-radius: 14px; background: #f7f1ea; }
+.live-numbers small, .live-numbers strong { display: block; }
+.live-numbers small { color: #8a786e; }
+.live-numbers strong { margin-top: 4px; font: 30px 'Jua'; color: #2b211d; }
+.live-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.live-row input { width: 110px; }
+.live-list { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.live-list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: #f7f1ea; }
+.live-list button { padding: 8px 14px; border: 0; border-radius: 10px; background: #2b211d; color: white; font-weight: 700; }
+.live-list button.ghost { background: #e3d9cf; color: #2b211d; }
+.live-buttons { display: flex; gap: 6px; }
+.live-status { font-size: 13px; }
+.live-status.approved { color: #2c6b57; }
+.live-status.rejected { color: #b4412e; }
+.live-status.pending { color: #9a5a0a; }
+.live-empty { margin: 8px 0 0; color: #8a786e; font-size: 14px; }
+.live-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.live-rank { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.live-rank li { display: grid; grid-template-columns: 56px 1fr auto; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; background: #f7f1ea; }
