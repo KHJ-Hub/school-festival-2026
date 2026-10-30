@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AdminLock } from './components/AdminLock'
+import { AdminLock, AdminPasswordChange } from './components/AdminLock'
 import { AdminRoster } from './components/AdminRoster'
 import { FestivalLive, StudentIdBox } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
@@ -91,6 +91,7 @@ function App() {
               onAddWord={(word) => setExtraWords((current) => (current.includes(word) ? current : [...current, word]))}
               onRemoveWord={(word) => setExtraWords((current) => current.filter((item) => item !== word))}
             />
+            <AdminPasswordChange />
           </div>
         )}
 
