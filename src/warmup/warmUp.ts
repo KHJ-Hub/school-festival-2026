@@ -7,5 +7,5 @@ export function welcomeMessage(_nickname: string): string {
   // 예) welcomeMessage('별빛여우') → '안녕하세요, 별빛여우님! 축제 코인 프로젝트에 오신 것을 환영합니다.'
   // 별명이 비어 있거나 공백뿐이면 '별빛여우' 자리에 '손님'을 넣습니다.
   // 힌트: 문자열 안에 값을 넣는 `${...}` 표현, 앞뒤 공백을 지우는 trim()
-  return ''
+    return `안녕하세요, ${_nickname.trim() === '' ? '손님' : _nickname.trim()}님! 축제 코인 프로젝트에 오신 것을 환영합니다.`
 }
