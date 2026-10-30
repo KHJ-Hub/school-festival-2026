@@ -8,18 +8,23 @@ import type { SnackMenu } from '../tasks/taskTypes'
  * 메뉴를 지워도 이미 발급된 교환권은 그대로 남고, 교환권에 저장된 메뉴 이름으로 보입니다.
  */
 export function AdminMenus() {
-  const { menus, ready } = useMenus()
+  const { menus, status } = useMenus()
   const [name, setName] = useState('')
   const [cost, setCost] = useState(1)
   const [note, setNote] = useState('')
 
-  // Firebase에 메뉴가 아직 없으면 기본 메뉴(맛보기컵·정식 1봉지·대형 팩 세트)로 한 번 채워 둡니다.
+  // Firebase에 메뉴가 정말 없을 때만(서버에서 확인한 뒤) 기본 메뉴로 한 번 채워 둡니다.
+  // 읽는 중('loading')에 저장하면 운영진이 바꾼 메뉴를 기본값으로 덮어써 버리므로 하지 않습니다.
   useEffect(() => {
-    if (!ready) void saveMenus(menus).catch(() => undefined)
+    if (status === 'missing') void saveMenus(menus).catch(() => undefined)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready])
+  }, [status])
 
   const save = async (next: SnackMenu[], done: string) => {
+    if (status !== 'ready') {
+      setNote('메뉴를 불러오는 중이에요. 잠시 뒤 다시 눌러 주세요.')
+      return
+    }
     try {
       await saveMenus(next)
       setNote(done)

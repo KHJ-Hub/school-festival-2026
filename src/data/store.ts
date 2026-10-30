@@ -108,19 +108,24 @@ type MenuDoc = { name: string; cost: number; enabled: boolean; order: number }
 
 /**
  * 간식 메뉴(운영진이 추가·삭제·품절 처리). enabled가 false면 품절이라 교환권으로 바꿀 수 없습니다.
- * Firebase에 아직 메뉴가 없으면 기본 메뉴(fixtures)를 보여 주고, ready=false로 알려 줍니다.
+ * status: 'loading' = 아직 서버에서 못 읽음, 'missing' = 서버에 메뉴가 정말 없음, 'ready' = 읽음.
+ * 읽기 전·없을 때는 화면에 기본 메뉴(fixtures)를 보여 줍니다. 기본 메뉴를 저장하는 일은 'missing'일 때만 합니다.
  */
-export function useMenus(): { menus: SnackMenu[]; ready: boolean } {
-  const [state, setState] = useState<{ menus: SnackMenu[]; ready: boolean }>({ menus: DEMO_MENUS, ready: false })
+export function useMenus(): { menus: SnackMenu[]; ready: boolean; status: 'loading' | 'missing' | 'ready' } {
+  const [state, setState] = useState<{ menus: SnackMenu[]; status: 'loading' | 'missing' | 'ready' }>({ menus: DEMO_MENUS, status: 'loading' })
   useEffect(() => onSnapshot(doc(db, 'settings', 'menus'), (snap) => {
     const items = snap.data()?.items as Record<string, MenuDoc> | undefined
-    if (!items) return setState({ menus: DEMO_MENUS, ready: false })
+    if (!items) {
+      // 인터넷이 끊겨 기기 안의 임시 값만 본 경우(fromCache)는 "없음"으로 판단하지 않습니다.
+      if (!snap.metadata.fromCache) setState({ menus: DEMO_MENUS, status: 'missing' })
+      return
+    }
     const menus = Object.entries(items)
       .sort(([, a], [, b]) => a.order - b.order)
       .map(([id, item]) => ({ id, name: item.name, cost: item.cost, enabled: item.enabled }))
-    setState({ menus, ready: true })
-  }, () => setState({ menus: DEMO_MENUS, ready: false })), [])
-  return state
+    setState({ menus, status: 'ready' })
+  }, () => setState((current) => ({ ...current, status: current.status === 'ready' ? 'ready' : 'loading' }))), [])
+  return { menus: state.menus, ready: state.status === 'ready', status: state.status }
 }
 
 export async function saveMenus(menus: SnackMenu[]): Promise<void> {
