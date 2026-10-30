@@ -33,6 +33,7 @@ Surface Go에 아무것도 설치하지 않습니다. **GitHub Codespaces**(브�
 
 ## 학생용 1단계 — GitHub 가입
 
+0. 브라우저는 **Microsoft Edge**를 씁니다. (네이버 웨일은 가입 화면이 멈추는 것이 확인되어 쓰지 않습니다.) 이 화면이 멈추면 `Ctrl` + `Shift` + `N`으로 Edge의 InPrivate 창을 열어 다시 해 봅니다.
 1. <https://github.com> 에서 **Sign up**을 누릅니다.
 2. 이메일은 **내 학교 구글 계정 주소**를 씁니다. 비밀번호는 학교 계정 비밀번호와 **다른 새 비밀번호**로 정합니다. (`Continue with Google` 버튼은 쓰지 않고, 이메일로 가입합니다.)
 3. 사용자 이름(username)은 **학교 메일 주소·실명·학번·학교 이름이 들어가지 않는 별명**으로 정합니다. 예: `starfox-dev`
