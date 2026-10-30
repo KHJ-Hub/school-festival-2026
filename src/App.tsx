@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { onAuthStateChanged, signInAnonymously, signOut, type User } from 'firebase/auth'
 import { AdminLock, AdminPasswordChange } from './components/AdminLock'
+import { AdminMenus } from './components/AdminMenus'
 import { AdminRoster } from './components/AdminRoster'
 import { AdminRankingSync, FestivalLive, RankingBoard, StudentIdBox } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
@@ -134,6 +135,7 @@ function App() {
         {mode === 'admin' && isAdmin && (
           <div className="admin-tools">
             <button className="live-reset" onClick={() => void signOut(auth)}>운영진 화면 잠그기</button>
+            <AdminMenus />
             <AdminRoster
               roster={admin.roster}
               accounts={admin.accounts}

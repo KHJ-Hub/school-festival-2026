@@ -13,7 +13,8 @@ import {
   rankByTotalEarned,
   resolveCoinRequest,
 } from '../studentTasks'
-import { DEMO_GRANTS, DEMO_MENUS, DEMO_STUDENTS } from '../tasks/fixtures'
+import { DEMO_GRANTS, DEMO_STUDENTS } from '../tasks/fixtures'
+import type { SnackMenu } from '../tasks/taskTypes'
 import {
   saveNewRequest,
   saveNewVoucher,
@@ -21,7 +22,9 @@ import {
   saveResolution,
   saveVoucherUse,
   useAdminData,
+  useMenus,
   useRanking,
+  type StoredVoucher,
   useStudentData,
 } from '../data/store'
 import { Barcode } from './Barcode'
@@ -51,8 +54,9 @@ function adminLabel(studentId: string, accounts: Account[]): string {
   return account ? `${account.nickname} (${account.studentId} ${account.name})` : `${studentId} (미등록)`
 }
 
-function menuName(menuId: string): string {
-  return DEMO_MENUS.find((menu) => menu.id === menuId)?.name ?? '메뉴'
+/** 교환권에 저장된 메뉴 이름을 먼저 쓰고(메뉴를 지워도 남음), 없으면 지금 메뉴 목록에서 찾습니다. */
+function voucherMenuName(voucher: StoredVoucher, menus: SnackMenu[]): string {
+  return voucher.menuName ?? menus.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'
 }
 
 function Section({ no, title, desc, built = true, children }: { no: number; title: string; desc: string; built?: boolean; children: ReactNode }) {
@@ -169,6 +173,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   const studentId = me?.studentId ?? ''
   const mine = useStudentData(studentId || null)
   const all = useAdminData(isAdmin)
+  const { menus } = useMenus()
   const [amount, setAmount] = useState(3)
   const [message, setMessage] = useState('')
   const [scanCode, setScanCode] = useState('')
@@ -198,14 +203,14 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   }
 
   const exchange = async (menuId: string) => {
-    const menu = safe(() => findEnabledMenu(DEMO_MENUS, menuId), undefined)
-    if (!menu) return report(1, '지금은 판매하지 않는 메뉴예요.', false)
+    const menu = safe(() => findEnabledMenu(menus, menuId), undefined)
+    if (!menu) return report(1, '품절된 메뉴예요. 다른 메뉴를 골라 주세요.', false)
     if (!safe(() => canAffordMenu(balance, menu), false)) return report(1, '코인이 부족해요.', false)
     const result = safe(() => issueVoucher(mine.vouchers, studentId, menu, balance), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', vouchers: mine.vouchers })
     const created = result.ok ? result.vouchers.find((voucher) => !mine.vouchers.some((old) => old.id === voucher.id)) : undefined
     if (created) {
       try {
-        await saveNewVoucher(studentId, created)
+        await saveNewVoucher(studentId, created, menu.name)
       } catch {
         return report(5, SAVE_FAILED, false)
       }
@@ -273,12 +278,13 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
 
           <Section no={5} title="간식 교환" desc="모은 코인으로 팝콘 교환권을 받아요." built={!lastNotBuilt[5]}>
             <ul className="live-list">
-              {DEMO_MENUS.map((menu) => (
-                <li key={menu.id}>
-                  <span>{menu.name} · {menu.cost} coin{!menu.enabled && ' (판매 중지)'}</span>
-                  <button onClick={() => void exchange(menu.id)}>교환하기</button>
+              {menus.map((menu) => (
+                <li key={menu.id} className={menu.enabled ? '' : 'sold-out'}>
+                  <span>{menu.name} · {menu.cost} coin</span>
+                  {menu.enabled ? <button onClick={() => void exchange(menu.id)}>교환하기</button> : <button disabled>품절</button>}
                 </li>
               ))}
+              {menus.length === 0 && <li><span>아직 메뉴가 없어요.</span></li>}
             </ul>
           </Section>
 
@@ -287,7 +293,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
               <div className="live-cards">
                 {mine.vouchers.map((voucher) => (
                   <div key={voucher.id} className={`gifticon ${voucher.status}`}>
-                    <StudentVoucherCard voucher={voucher} menuName={menuName(voucher.menuId)} />
+                    <StudentVoucherCard voucher={voucher} menuName={voucherMenuName(voucher, menus)} />
                     <div className="gifticon-code">
                       <Barcode value={voucher.id} />
                       <small>{voucher.id}</small>
@@ -326,7 +332,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
               <ul className="live-list">
                 {issued.map((voucher) => (
                   <li key={voucher.id}>
-                    <span>{adminLabel(voucher.studentId, all.accounts)} · {menuName(voucher.menuId)} · <code>{voucher.id}</code></span>
+                    <span>{adminLabel(voucher.studentId, all.accounts)} · {voucherMenuName(voucher, menus)} · <code>{voucher.id}</code></span>
                     <button onClick={() => void scanVoucher(voucher.id)}>스캔해 보기</button>
                   </li>
                 ))}

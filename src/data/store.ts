@@ -14,7 +14,8 @@ import {
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { normalizeForCheck, type Account, type RosterEntry } from '../components/nicknameRules'
-import type { CoinGrant, CoinRequest, TaskVoucher } from '../tasks/taskTypes'
+import { DEMO_MENUS } from '../tasks/fixtures'
+import type { CoinGrant, CoinRequest, SnackMenu, TaskVoucher } from '../tasks/taskTypes'
 
 /**
  * 교사 관리 파일: Firestore에 읽고 쓰는 함수 모음. 화면(App, FestivalLive)은 여기만 부릅니다.
@@ -28,9 +29,13 @@ import type { CoinGrant, CoinRequest, TaskVoucher } from '../tasks/taskTypes'
  *   students/{학번}/vouchers/{코드}   교환권(코드 = 바코드 값)           본인·운영진
  *   public/ranking                    { rows: [{ rank, nickname, total }] } 모두 읽기
  *   settings/bannedWords              { words: [] }                    모두 읽기·운영진
+ *   settings/menus                    { items: { 메뉴id: { name, cost, enabled, order } } } 모두 읽기·운영진
  */
 
 export type RankingRow = { rank: number; nickname: string; total: number }
+
+/** 교환권에는 메뉴 이름도 같이 저장합니다(나중에 메뉴를 지워도 교환권에 이름이 남도록). */
+export type StoredVoucher = TaskVoucher & { menuName?: string }
 
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 
@@ -48,7 +53,7 @@ function withStudent<T>(snapshot: QuerySnapshot<DocumentData>): T[] {
 // ───── 학생 본인 데이터 ─────
 
 export function useStudentData(studentId: string | null) {
-  const [data, setData] = useState<{ requests: CoinRequest[]; grants: CoinGrant[]; vouchers: TaskVoucher[] }>({ requests: [], grants: [], vouchers: [] })
+  const [data, setData] = useState<{ requests: CoinRequest[]; grants: CoinGrant[]; vouchers: StoredVoucher[] }>({ requests: [], grants: [], vouchers: [] })
   useEffect(() => {
     setData({ requests: [], grants: [], vouchers: [] })
     if (!studentId) return
@@ -56,7 +61,7 @@ export function useStudentData(studentId: string | null) {
     const stop = [
       onSnapshot(collection(db, ...base, 'requests'), (snap) => setData((d) => ({ ...d, requests: withStudent<CoinRequest>(snap) })), () => undefined),
       onSnapshot(collection(db, ...base, 'grants'), (snap) => setData((d) => ({ ...d, grants: withStudent<CoinGrant>(snap) })), () => undefined),
-      onSnapshot(collection(db, ...base, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<TaskVoucher>(snap) })), () => undefined),
+      onSnapshot(collection(db, ...base, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<StoredVoucher>(snap) })), () => undefined),
     ]
     return () => stop.forEach((unsubscribe) => unsubscribe())
   }, [studentId])
@@ -66,7 +71,7 @@ export function useStudentData(studentId: string | null) {
 // ───── 운영진 전체 데이터 ─────
 
 export function useAdminData(enabled: boolean) {
-  const empty = { requests: [] as CoinRequest[], grants: [] as CoinGrant[], vouchers: [] as TaskVoucher[], accounts: [] as Account[], roster: [] as RosterEntry[] }
+  const empty = { requests: [] as CoinRequest[], grants: [] as CoinGrant[], vouchers: [] as StoredVoucher[], accounts: [] as Account[], roster: [] as RosterEntry[] }
   const [data, setData] = useState(empty)
   useEffect(() => {
     setData(empty)
@@ -74,7 +79,7 @@ export function useAdminData(enabled: boolean) {
     const stop = [
       onSnapshot(collectionGroup(db, 'requests'), (snap) => setData((d) => ({ ...d, requests: withStudent<CoinRequest>(snap) })), () => undefined),
       onSnapshot(collectionGroup(db, 'grants'), (snap) => setData((d) => ({ ...d, grants: withStudent<CoinGrant>(snap) })), () => undefined),
-      onSnapshot(collectionGroup(db, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<TaskVoucher>(snap) })), () => undefined),
+      onSnapshot(collectionGroup(db, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<StoredVoucher>(snap) })), () => undefined),
       onSnapshot(collection(db, 'accounts'), (snap) => setData((d) => ({ ...d, accounts: snap.docs.map((item) => ({ studentId: item.id, name: item.data().name, nickname: item.data().nickname })) })), () => undefined),
       onSnapshot(collection(db, 'roster'), (snap) => setData((d) => ({ ...d, roster: snap.docs.map((item) => ({ studentId: item.id, name: item.data().name })) })), () => undefined),
     ]
@@ -90,6 +95,34 @@ export function useRanking(): RankingRow[] {
   const [rows, setRows] = useState<RankingRow[]>([])
   useEffect(() => onSnapshot(doc(db, 'public', 'ranking'), (snap) => setRows((snap.data()?.rows as RankingRow[]) ?? []), () => setRows([])), [])
   return rows
+}
+
+type MenuDoc = { name: string; cost: number; enabled: boolean; order: number }
+
+/**
+ * 간식 메뉴(운영진이 추가·삭제·품절 처리). enabled가 false면 품절이라 교환권으로 바꿀 수 없습니다.
+ * Firebase에 아직 메뉴가 없으면 기본 메뉴(fixtures)를 보여 주고, ready=false로 알려 줍니다.
+ */
+export function useMenus(): { menus: SnackMenu[]; ready: boolean } {
+  const [state, setState] = useState<{ menus: SnackMenu[]; ready: boolean }>({ menus: DEMO_MENUS, ready: false })
+  useEffect(() => onSnapshot(doc(db, 'settings', 'menus'), (snap) => {
+    const items = snap.data()?.items as Record<string, MenuDoc> | undefined
+    if (!items) return setState({ menus: DEMO_MENUS, ready: false })
+    const menus = Object.entries(items)
+      .sort(([, a], [, b]) => a.order - b.order)
+      .map(([id, item]) => ({ id, name: item.name, cost: item.cost, enabled: item.enabled }))
+    setState({ menus, ready: true })
+  }, () => setState({ menus: DEMO_MENUS, ready: false })), [])
+  return state
+}
+
+export async function saveMenus(menus: SnackMenu[]): Promise<void> {
+  const items = Object.fromEntries(menus.map((menu, order) => [menu.id, { name: menu.name, cost: menu.cost, enabled: menu.enabled, order }]))
+  await setDoc(doc(db, 'settings', 'menus'), { items })
+}
+
+export function newMenuId(): string {
+  return `menu-${Date.now().toString(36)}`
 }
 
 export function useBannedWords(): string[] {
@@ -211,9 +244,9 @@ export async function saveNewRequest(studentId: string, request: CoinRequest): P
 }
 
 /** 5번 학생 함수가 만든 새 교환권을 저장합니다(바코드 코드를 새로 정함). 저장된 코드를 돌려줍니다. */
-export async function saveNewVoucher(studentId: string, voucher: TaskVoucher): Promise<string> {
+export async function saveNewVoucher(studentId: string, voucher: TaskVoucher, menuName: string): Promise<string> {
   const code = newVoucherCode()
-  await setDoc(doc(db, 'students', studentId, 'vouchers', code), { menuId: voucher.menuId, cost: voucher.cost, status: 'issued', uid: auth.currentUser?.uid ?? '' })
+  await setDoc(doc(db, 'students', studentId, 'vouchers', code), { menuId: voucher.menuId, menuName, cost: voucher.cost, status: 'issued', uid: auth.currentUser?.uid ?? '' })
   return code
 }
 

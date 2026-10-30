@@ -5,6 +5,7 @@ rules_version = '2';
 // - 학번·이름(명단, 계정)은 운영진과 본인만 읽을 수 있습니다. 랭킹은 닉네임과 코인만 공개합니다.
 // - 운영진 = Authentication에 만든 admin 계정(src/firebase.ts의 ADMIN_EMAIL과 같아야 함).
 // - 학생은 화면에 안 보이는 익명 로그인으로 기기마다 구분합니다.
+// - 교환권은 운영진 메뉴 목록(settings/menus)에 있고 품절이 아닌 메뉴만, 그 가격으로만 만들 수 있습니다.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -28,6 +29,11 @@ service cloud.firestore {
     }
     function validNickname(nickname) {
       return nickname is string && nickname.size() >= 2 && nickname.size() <= 12;
+    }
+    // 교환권 메뉴가 운영진 메뉴 목록에 있고, 판매 중(품절 아님)이고, 가격이 맞는지
+    function menuOnSale(menuId, cost) {
+      let items = get(docPath('settings', 'menus')).data.items;
+      return menuId in items && items[menuId].enabled == true && items[menuId].cost == cost;
     }
     // 같은 요청 안에서 닉네임 문서가 이 학생·이 기기 것으로 만들어졌는지(닉네임 중복 방지)
     function nicknameClaimed(key, sid) {
@@ -122,11 +128,11 @@ service cloud.firestore {
     match /students/{sid}/vouchers/{code} {
       allow read: if isAdmin() || ownerOf(sid);
       allow create: if ownerOf(sid)
-        && request.resource.data.keys().hasOnly(['menuId', 'cost', 'status', 'uid'])
+        && request.resource.data.keys().hasOnly(['menuId', 'menuName', 'cost', 'status', 'uid'])
         && request.resource.data.status == 'issued'
         && request.resource.data.uid == request.auth.uid
-        && ((request.resource.data.menuId == 'popcorn-cup' && request.resource.data.cost == 1)
-          || (request.resource.data.menuId == 'popcorn-bag' && request.resource.data.cost == 3));
+        && request.resource.data.menuName is string
+        && menuOnSale(request.resource.data.menuId, request.resource.data.cost);
       allow update, delete: if isAdmin();
     }
 
@@ -147,6 +153,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     match /settings/bannedWords {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    // ── 간식 메뉴(운영진이 추가·삭제·품절 처리) ──
+    match /settings/menus {
       allow read: if true;
       allow write: if isAdmin();
     }
