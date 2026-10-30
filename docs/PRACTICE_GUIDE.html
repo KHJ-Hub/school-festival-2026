@@ -30,6 +30,7 @@
   table { border-collapse: collapse; width: 100%; margin: 3px 0; }
   th, td { border: 1px solid #bbb; padding: 2px 6px; text-align: left; vertical-align: top; }
   th { background: #f1f3f4; }
+  .newpage { break-before: page; margin-top: 0; }
   .keep { break-inside: avoid; }
 </style>
 </head>
@@ -78,7 +79,7 @@
   <li>같은 방법으로 왼쪽 목록의 <code>warmUp.test.ts</code>를 열어 전체 복사한 뒤, BeAT 입력칸에 <b>이어서 붙여 넣고</b> 그때 <b>Enter</b>(전송)를 누릅니다. 줄을 바꾸고 싶으면 <code>Shift</code>+<code>Enter</code>.</li>
 </ol>
 
-<h3>단계 4 — 받은 코드를 편집기에 넣기</h3>
+<h3 class="newpage">단계 4 — 받은 코드를 편집기에 넣기</h3>
 <ol>
   <li>BeAT의 답에서 <b>코드 부분</b>을 마우스로 드래그해서 선택하고 <code>Ctrl</code>+<code>C</code>로 복사합니다. (코드 상자에 복사 버튼이 있으면 눌러도 됩니다)</li>
   <li><b>Codespace 탭</b>으로 돌아와 편집기에서 <code>return ''</code> 줄의 <b>맨 앞을 클릭</b>하고 <code>Shift</code>+<code>End</code>로 그 줄을 선택한 뒤 <code>Ctrl</code>+<code>V</code>로 붙여 넣습니다. (선택한 줄이 새 코드로 바뀝니다)</li>
