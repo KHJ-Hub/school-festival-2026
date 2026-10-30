@@ -181,3 +181,17 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .live-id > .live-head { display: block; width: 100%; margin-bottom: 0; }
 .live-numbers div.done { background: #e4f5ec; }
 .live-numbers div.done strong { color: #1f7a4f; }
+
+/* 머리 줄: 로고 옆에 세 동아리 이름 */
+.brand-clubs { display: flex; flex-wrap: wrap; gap: 4px 6px; min-width: 0; }
+.brand-clubs span { padding: 3px 8px; border-radius: 99px; background: #ede6df; color: #63534b; font-size: 12px; white-space: nowrap; }
+.brand-clubs i { margin-right: 4px; color: #d35a45; font-style: normal; }
+@media (max-width: 500px) {
+  .topbar { height: auto; min-height: 70px; padding-top: 8px; padding-bottom: 8px; }
+  .brand { gap: 8px; }
+  .brand-clubs { flex-direction: column; gap: 2px; }
+  .brand-clubs span { padding: 0; background: none; font-size: 11px; line-height: 1.35; }
+}
+/* 큰 제목 한 줄 */
+.app-shell .hero h1 { white-space: nowrap; }
+@media (max-width: 400px) { .app-shell .hero h1 { font-size: 32px; } }

@@ -99,11 +99,11 @@ function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <button className="brand" onClick={() => setMode('student')} aria-label="첫 화면으로 이동">
+        <button className="brand" onClick={() => setMode('student')} aria-label="배정 팝팝스토어 첫 화면으로 이동">
           <span className="brand-mark">F!</span>
-          <span>
-            <strong>배정 팝팝스토어</strong>
-            <small>보드게임동아리 × 리틀엔지니어랩 × 국제이해문화탐구반</small>
+          {/* 로고 옆에는 함께 만드는 세 동아리(사이트 이름은 아래 큰 제목에) */}
+          <span className="brand-clubs">
+            {CLUBS.map((club, index) => <span key={club}><i>{['♟', '⚙', '◎'][index]}</i>{club}</span>)}
           </span>
         </button>
         <div className="header-actions">
@@ -115,7 +115,7 @@ function App() {
         <section className="hero">
           <div>
             <p className="eyebrow">{mode === 'student' ? '학생용 화면' : mode === 'admin' ? '운영진용 화면' : '실시간 코인 랭킹'}</p>
-            <h1>배정<br /><em>팝팝스토어</em></h1>
+            <h1>배정 <em>팝팝스토어</em></h1>
           </div>
         </section>
 
@@ -161,10 +161,6 @@ function App() {
           </div>
         )}
 
-        <section className="clubs">
-          <span>함께 만드는 동아리</span>
-          <div>{CLUBS.map((club, index) => <span key={club}><i>{['♟', '⚙', '◎'][index]}</i>{club}</span>)}</div>
-        </section>
       </main>
 
       <footer>

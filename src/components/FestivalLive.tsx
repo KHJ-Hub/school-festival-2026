@@ -89,7 +89,7 @@ function scanTime(voucher: StoredVoucher): string {
 
 /** 교환권에 저장된 메뉴 이름을 먼저 쓰고(메뉴를 지워도 남음), 없으면 지금 메뉴 목록에서 찾습니다. */
 function voucherMenuName(voucher: StoredVoucher, menus: SnackMenu[]): string {
-  return voucher.menuName ?? menus.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'
+  return voucher.menuName ?? menus.find((menu) => menu.id === voucher.menuId)?.name ?? DEMO_MENUS.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'
 }
 
 function Section({ no, title, desc, built = true, children }: { no: number; title: string; desc: string; built?: boolean; children: ReactNode }) {
