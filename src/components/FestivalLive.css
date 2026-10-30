@@ -33,3 +33,22 @@
 .live-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
 .live-rank { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
 .live-rank li { display: grid; grid-template-columns: 56px 1fr auto; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; background: #f7f1ea; }
+
+/* 폰(좁은 화면): 손가락으로 누르기 쉽게, 입력칸 확대(iOS 자동 확대 방지) */
+.live-id input, .live-row input { font-size: 16px; }
+.live-list button, .live .primary-button { min-height: 44px; }
+@media (max-width: 600px) {
+  .live { gap: 14px; }
+  .live-id { display: grid; gap: 12px; }
+  .live-id input { width: 100%; }
+  .live-id-result { justify-items: start; }
+  .live-head { flex-direction: column; gap: 8px; }
+  .live-row input { flex: 1; min-width: 0; width: auto; }
+  .live-row .primary-button { flex: 1 1 100%; justify-content: center; }
+  .live-list li { flex-wrap: wrap; }
+  .live-list li > span:first-child { flex: 1 1 100%; }
+  .live-list li button, .live-buttons { width: 100%; }
+  .live-buttons button { flex: 1; }
+  .live-rank li { grid-template-columns: 48px 1fr auto; padding: 10px; }
+  .live-cards { grid-template-columns: 1fr; }
+}
