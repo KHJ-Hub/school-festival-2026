@@ -133,7 +133,7 @@ export function FestivalLive({ mode }: { mode: AppMode }) {
           <input value={inputId} onChange={(event) => setInputId(event.target.value)} inputMode="numeric" maxLength={5} />
         </label>
         <div className="live-id-result">
-          <span className={`live-badge ${student || idCheck ? 'done' : 'todo'}`}>1번 학생이 만든 기능</span>
+          <span className={`live-badge ${student || idCheck ? 'done' : 'todo'}`}>{student || idCheck ? '1번 학생이 만든 기능' : '1번 학생이 만드는 중'}</span>
           {student ? <strong>{student.nickname}님, 반가워요!</strong> : idCheck ? <strong>5자리 학번이에요. 등록된 학생은 아니에요.</strong> : <strong>학번은 숫자 5자리예요.</strong>}
         </div>
       </section>

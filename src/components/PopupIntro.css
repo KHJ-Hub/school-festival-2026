@@ -1,0 +1,19 @@
+/* 교사 관리: PopupIntro 전용 스타일 */
+.popup-intro { margin: 22px 0; display: grid; gap: 16px; }
+.popup-card { padding: 24px; background: rgba(255,255,255,.9); border: 1px solid #e4dbd0; border-radius: 22px; box-shadow: 0 12px 35px #5c44340d; }
+.popup-card h2 { margin: 0 0 16px; font: 24px 'Jua'; }
+.popup-card h2 small { margin-left: 8px; font: 14px 'Gowun Dodum'; color: #8a786e; }
+.popup-steps { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.popup-steps li { padding: 14px; border-radius: 14px; border: 2px solid transparent; display: grid; gap: 4px; align-content: start; font-size: 14px; }
+.popup-steps li b { font-size: 11px; letter-spacing: .08em; }
+.popup-steps li strong { font: 17px 'Jua'; }
+.popup-steps li span { color: #5d4c44; line-height: 1.5; }
+.popup-steps .green { background: #e4f5ec; border-color: #9fd6b8; } .popup-steps .green b { color: #1f7a4f; }
+.popup-steps .orange { background: #fff1de; border-color: #f2c48a; } .popup-steps .orange b { color: #b4650b; }
+.popup-steps .blue { background: #e6efff; border-color: #a9c4f3; } .popup-steps .blue b { color: #2a5bb8; }
+.popup-steps .purple { background: #f0e8ff; border-color: #c7b0ee; } .popup-steps .purple b { color: #6b3fb5; }
+.popup-menus { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.popup-menus li { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: #f7f1ea; }
+.popup-menus li span { flex: 1; }
+.popup-menus li em { font-style: normal; font-size: 12px; color: #9a5a0a; background: #ffe7c7; padding: 2px 8px; border-radius: 999px; }
+.popup-eco { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: #e4f5ec; color: #1f5f40; font-size: 14px; }
