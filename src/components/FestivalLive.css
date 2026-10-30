@@ -75,3 +75,12 @@
 .gifticon-code span { font-size: 13px; color: #8a786e; }
 .gifticon.used, .gifticon.cancelled { opacity: .55; filter: grayscale(.7); }
 .live-list code { font: 13px ui-monospace, Consolas, monospace; background: #fff; padding: 1px 6px; border-radius: 6px; }
+
+/* 운영진: 명단·금지어·잠금 */
+.admin-tools { display: grid; gap: 14px; margin-bottom: 18px; justify-items: start; }
+.admin-tools > .panel { width: 100%; }
+.admin-roster h3 { margin: 18px 0 8px; font: 17px 'Jua'; }
+.admin-roster .live-row input { width: 140px; }
+.admin-paste { width: 100%; padding: 10px 12px; border: 1px solid #d9cdc1; border-radius: 10px; font: 15px ui-monospace, Consolas, monospace; margin-bottom: 10px; box-sizing: border-box; }
+.admin-lock { margin: 22px 0; }
+.live-id.registered .live-row input { width: 160px; }
