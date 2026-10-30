@@ -13,7 +13,7 @@
 
 ## 코딩하기 = 빈칸 숙제를 AI와 함께 채우고, 자동 채점기로 확인하기
 
-**처음 한 번은 연습!** **(연습 안내서를 보면서 따라 하세요: `docs/PRACTICE_GUIDE.md`)** `src/warmup/warmUp.ts` → `npx vitest run warmUp` 이 초록색이 되게 (**연습용이라 GitHub에 안 보냄**, `git add` 하지 않기)
+**처음 한 번은 연습!** **(두 번째 종이, 연습 안내서를 보면서 따라 하세요. 파일: `docs/PRACTICE_GUIDE.md`)** `src/warmup/warmUp.ts` → `npx vitest run warmUp` 이 초록색이 되게 (**연습용이라 GitHub에 안 보냄**, `git add` 하지 않기)
 
 1. **숙제지 열기**: 왼쪽 목록 `src` → `tasks` → **내 번호 파일**. 안에 `TODO`라고 적힌 곳이 내가 채울 **빈칸**입니다.
 2. **채점기 돌리기**: 터미널에 `npx vitest run task0N` (N = 내 번호) → **빨간색이면 정상** (아직 빈칸이라서)
@@ -43,4 +43,4 @@ git push
 
 `403` 오류 → 초대 수락 안 함 / 화면이 안 열림 → 선생님께 / 터미널 명령이 낯설면 → 옆 친구와 한 줄씩
 
-**연습 과제를 화면 클릭 단위로 자세히 보려면** → `docs/PRACTICE_GUIDE.md` (출력본: 연습 안내서 2쪽)
+**연습 과제를 화면 클릭 단위로 자세히 보려면** → **두 번째 종이, 연습 안내서** (파일: `docs/PRACTICE_GUIDE.md`)
