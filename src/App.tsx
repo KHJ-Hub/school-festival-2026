@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { FestivalLive } from './components/FestivalLive'
+import { FestivalLive, StudentIdBox } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
-import { PopupIntro } from './components/PopupIntro'
+import { ExchangeGuide, VisitorSteps } from './components/PopupIntro'
 import { TaskPlayground } from './components/TaskPlayground'
 import './components/TaskPlayground.css'
 import { CLUBS } from './mockData'
 
 function App() {
   const [mode, setMode] = useState<AppMode>('student')
+  const [inputId, setInputId] = useState('90001')
 
   return (
     <div className="app-shell">
@@ -32,9 +33,15 @@ function App() {
           </div>
         </section>
 
-        {mode === 'student' && <PopupIntro />}
+        {mode === 'student' && (
+          <>
+            <VisitorSteps />
+            <StudentIdBox inputId={inputId} onChange={setInputId} />
+            <ExchangeGuide />
+          </>
+        )}
 
-        <FestivalLive mode={mode} />
+        <FestivalLive mode={mode} inputId={inputId} />
 
         {mode === 'admin' && <TaskPlayground />}
 

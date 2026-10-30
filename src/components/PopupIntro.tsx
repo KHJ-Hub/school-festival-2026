@@ -10,9 +10,9 @@ const STEPS = [
   { no: 5, title: '실시간 랭킹 & 시크릿', desc: '코인 랭킹에 이름이 오르고, 1위는 시크릿 박스에 도전해요.', tone: 'purple' },
 ]
 
-export function PopupIntro() {
+export function VisitorSteps() {
   return (
-    <section className="popup-intro" aria-label="팝업스토어 안내">
+    <section className="popup-intro" aria-label="관람객 체험 단계">
       <div className="popup-card">
         <h2>이렇게 즐겨요 <small>관람객 체험 5단계</small></h2>
         <ol className="popup-steps">
@@ -25,6 +25,13 @@ export function PopupIntro() {
           ))}
         </ol>
       </div>
+    </section>
+  )
+}
+
+export function ExchangeGuide() {
+  return (
+    <section className="popup-intro" aria-label="팝콘 교환 안내">
       <div className="popup-card">
         <h2>코인으로 바꿔요 <small>팝콘 교환 기준</small></h2>
         <ul className="popup-menus">

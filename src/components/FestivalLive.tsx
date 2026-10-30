@@ -52,8 +52,27 @@ function Section({ no, title, desc, built = true, children }: { no: number; titl
   )
 }
 
-export function FestivalLive({ mode }: { mode: AppMode }) {
-  const [inputId, setInputId] = useState('90001')
+/** 학번 입력칸: 1번 학생의 함수로 학번을 검사하고, 찾은 학생의 별명을 보여 줍니다. */
+export function StudentIdBox({ inputId, onChange }: { inputId: string; onChange: (value: string) => void }) {
+  const studentId = inputId.trim()
+  const idCheck = safe(() => isDemoStudentId(studentId), false)
+  const student = safe(() => findDemoStudent(DEMO_STUDENTS, studentId), undefined)
+  const built = Boolean(student) || idCheck
+  return (
+    <section className="panel live-id">
+      <label>
+        내 학번 (연습용 학번만: 90001, 90002, 90003)
+        <input value={inputId} onChange={(event) => onChange(event.target.value)} inputMode="numeric" maxLength={5} />
+      </label>
+      <div className="live-id-result">
+        <span className={`live-badge ${built ? 'done' : 'todo'}`}>{built ? '1번 학생이 만든 기능' : '1번 학생이 만드는 중'}</span>
+        {student ? <strong>{student.nickname}님, 반가워요!</strong> : idCheck ? <strong>5자리 학번이에요. 등록된 학생은 아니에요.</strong> : <strong>학번은 숫자 5자리예요.</strong>}
+      </div>
+    </section>
+  )
+}
+
+export function FestivalLive({ mode, inputId }: { mode: AppMode; inputId: string }) {
   const [amount, setAmount] = useState(3)
   const [requests, setRequests] = useState<CoinRequest[]>(DEMO_REQUESTS)
   const [grants, setGrants] = useState<CoinGrant[]>(DEMO_GRANTS)
@@ -63,8 +82,6 @@ export function FestivalLive({ mode }: { mode: AppMode }) {
 
   const studentId = inputId.trim()
   const knownId = DEMO_STUDENTS.some((student) => student.studentId === studentId)
-  const idCheck = safe(() => isDemoStudentId(studentId), false)
-  const student = safe(() => findDemoStudent(DEMO_STUDENTS, studentId), undefined)
   const balance = safe(() => calculateCoinBalance(studentId, grants, vouchers), 0)
   const earned = safe(() => calculateTotalEarned(studentId, grants), 0)
   const ranking = safe(() => rankByTotalEarned(grants, 5), [])
@@ -127,17 +144,6 @@ export function FestivalLive({ mode }: { mode: AppMode }) {
 
   return (
     <div className="live">
-      <section className="panel live-id">
-        <label>
-          내 학번 (연습용 학번만: 90001, 90002, 90003)
-          <input value={inputId} onChange={(event) => setInputId(event.target.value)} inputMode="numeric" maxLength={5} />
-        </label>
-        <div className="live-id-result">
-          <span className={`live-badge ${student || idCheck ? 'done' : 'todo'}`}>{student || idCheck ? '1번 학생이 만든 기능' : '1번 학생이 만드는 중'}</span>
-          {student ? <strong>{student.nickname}님, 반가워요!</strong> : idCheck ? <strong>5자리 학번이에요. 등록된 학생은 아니에요.</strong> : <strong>학번은 숫자 5자리예요.</strong>}
-        </div>
-      </section>
-
       {message && <div className={`live-message ${Object.values(lastNotBuilt).some(Boolean) ? 'todo' : ''}`} role="status">{message}</div>}
 
       {mode === 'student' && (
