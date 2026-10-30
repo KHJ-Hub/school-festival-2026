@@ -4,7 +4,7 @@ import './PopupIntro.css'
 /** 교사 관리 파일: 연합 부스 기획서(친환경 스마트 팝업스토어)의 안내 내용을 화면에 보여 줍니다. */
 const STEPS = [
   { no: 1, title: '입장 & 코인 파밍', desc: '글로벌 OX 퀴즈를 통과하면 기본 코인을 받아요.', tone: 'green' },
-  { no: 2, title: '3분 보드게임 맞짱', desc: '블리츠·세관원 배팅 게임으로 코인을 걸고 겨뤄요.', tone: 'orange' },
+  { no: 2, title: '5분 보드게임 맞짱', desc: '게임으로 코인을 걸고 겨뤄요.', tone: 'orange' },
   { no: 3, title: '모바일 교환권 발급', desc: '모은 코인을 정산하면 모바일 교환권이 만들어져요.', tone: 'blue' },
   { no: 4, title: '친환경 팝콘 라운지', desc: '교환권을 보여 주고 갓 튀긴 Non-GMO 팝콘을 받아요.', tone: 'green' },
   { no: 5, title: '실시간 랭킹 & 시크릿', desc: '코인 랭킹에 이름이 오르고, 1위는 시크릿 박스에 도전해요.', tone: 'purple' },
