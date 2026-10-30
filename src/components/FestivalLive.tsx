@@ -257,7 +257,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
               <input type="number" min={1} value={amount} onChange={(event) => setAmount(Number(event.target.value))} aria-label="신청할 코인 수" />
               <button className="primary-button" onClick={() => void submitRequest()}>신청하기 <span>→</span></button>
             </div>
-            <ul className="live-list">
+            <ul className="live-list one-line">
               {mine.requests.map((request) => (
                 <li key={request.id}><span>{request.claimedAmount} coin 신청</span><b className={`live-status ${request.status}`}>{{ pending: '기다리는 중', approved: `승인됨${request.approvedAmount !== undefined && request.approvedAmount !== request.claimedAmount ? ` (${request.approvedAmount} coin)` : ''}`, rejected: '거절됨' }[request.status]}</b></li>
               ))}
