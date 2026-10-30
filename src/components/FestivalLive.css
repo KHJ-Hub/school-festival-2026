@@ -133,3 +133,7 @@
   .app-shell .hero::before { top: 14px; }
   .app-shell .popup-intro, .app-shell .board { margin-top: 12px; }
 }
+
+/* 등록 칸(초록 반가워요 칸)과 아래 코인 적립 신청 칸 사이 간격 */
+main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
+@media (max-width: 600px) { main > .live-id:not(.admin-lock) { margin-bottom: 14px; } }
