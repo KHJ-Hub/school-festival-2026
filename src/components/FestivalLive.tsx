@@ -176,6 +176,12 @@ export function StudentIdBox({ me, busy, onEnter, onRename, onLeave }: {
 
   return (
     <section className="panel live-id">
+      <div className="live-head">
+        <div className="live-title-row">
+          <h2>학생 등록</h2>
+          <span className={`live-badge ${built ? 'done' : 'todo'}`}>{creditLabel(1, built)}</span>
+        </div>
+      </div>
       <div className="live-id-fields">
         <label>
           학번 (숫자 5자리)
@@ -192,7 +198,6 @@ export function StudentIdBox({ me, busy, onEnter, onRename, onLeave }: {
       </div>
       <div className="live-id-action">
         <button className="primary-button" onClick={() => void submit()} disabled={busy || working}>{busy ? '연결 중…' : working ? '확인 중…' : '등록 / 다시 들어오기'} <span>→</span></button>
-        <span className={`live-badge ${built ? 'done' : 'todo'}`}>{`학번 확인: ${creditLabel(1, built)}`}</span>
       </div>
       <p className="live-empty">이미 등록했다면 학번과 이름만 쓰고 누르면 다시 들어와요.</p>
       {error && <p className="live-error" role="alert">{error}</p>}
