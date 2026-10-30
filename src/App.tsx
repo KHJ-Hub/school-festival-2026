@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { FestivalLive, StudentIdBox } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
-import { ExchangeGuide, VisitorSteps } from './components/PopupIntro'
+import { VisitorSteps } from './components/PopupIntro'
 import { TaskPlayground } from './components/TaskPlayground'
 import './components/TaskPlayground.css'
 import { CLUBS } from './mockData'
@@ -34,14 +34,14 @@ function App() {
         <section className="hero">
           <div>
             <p className="eyebrow">{mode === 'student' ? '학생용 화면' : '운영진용 화면'}</p>
-            <h1>배정고<br /><em>친환경 팝업스토어</em></h1>          </div>
+            <h1>배정고<br /><em>친환경 팝업스토어</em></h1>
+          </div>
         </section>
 
         {mode === 'student' && (
           <>
             <VisitorSteps />
             <StudentIdBox inputId={inputId} onChange={setInputId} nickname={nicknames[studentId] ?? ''} onNicknameChange={(value) => setNicknames((current) => ({ ...current, [studentId]: value }))} />
-            <ExchangeGuide />
           </>
         )}
 

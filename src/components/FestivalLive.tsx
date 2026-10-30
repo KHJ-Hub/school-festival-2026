@@ -159,14 +159,6 @@ export function FestivalLive({ mode, inputId, nicknames }: { mode: AppMode; inpu
 
       {mode === 'student' && (
         <>
-          <Section no={3} title="내 코인" desc="받은 코인과 지금 쓸 수 있는 코인이에요." built={earned > 0 || balance > 0 || !knownId}>
-            <div className="live-numbers">
-              <div><small>지금 쓸 수 있는 코인</small><strong>{balance} coin</strong></div>
-              <div><small>지금까지 모은 코인</small><strong>{earned} coin</strong></div>
-            </div>
-            {knownId && earned === 0 && balance === 0 && <p className="live-empty">0이면 3번 학생 코드가 아직 계산하지 않는 거예요.</p>}
-          </Section>
-
           <Section no={2} title="코인 적립 신청" desc="내가 가진 코인 수를 신청하면 운영진이 확인해요." built={!lastNotBuilt[2]}>
             <div className="live-row">
               <input type="number" min={1} value={amount} onChange={(event) => setAmount(Number(event.target.value))} aria-label="신청할 코인 수" />
@@ -177,6 +169,14 @@ export function FestivalLive({ mode, inputId, nicknames }: { mode: AppMode; inpu
                 <li key={request.id}><span>{request.claimedAmount} coin 신청</span><b className={`live-status ${request.status}`}>{{ pending: '기다리는 중', approved: '승인됨', rejected: '거절됨' }[request.status]}</b></li>
               ))}
             </ul>
+          </Section>
+
+          <Section no={3} title="내 코인" desc="받은 코인과 지금 쓸 수 있는 코인이에요." built={earned > 0 || balance > 0 || !knownId}>
+            <div className="live-numbers">
+              <div><small>지금 쓸 수 있는 코인</small><strong>{balance} coin</strong></div>
+              <div><small>지금까지 모은 코인</small><strong>{earned} coin</strong></div>
+            </div>
+            {knownId && earned === 0 && balance === 0 && <p className="live-empty">0이면 3번 학생 코드가 아직 계산하지 않는 거예요.</p>}
           </Section>
 
           <Section no={5} title="간식 교환" desc="모은 코인으로 팝콘 교환권을 받아요." built={!lastNotBuilt[5]}>

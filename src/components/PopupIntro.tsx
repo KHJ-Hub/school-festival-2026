@@ -1,4 +1,3 @@
-import { DEMO_MENUS } from '../tasks/fixtures'
 import './PopupIntro.css'
 
 /** 교사 관리 파일: 연합 부스 기획서(친환경 스마트 팝업스토어)의 안내 내용을 화면에 보여 줍니다. */
@@ -24,26 +23,6 @@ export function VisitorSteps() {
             </li>
           ))}
         </ol>
-      </div>
-    </section>
-  )
-}
-
-export function ExchangeGuide() {
-  return (
-    <section className="popup-intro" aria-label="팝콘 교환 안내">
-      <div className="popup-card">
-        <h2>코인으로 바꿔요 <small>팝콘 교환 기준</small></h2>
-        <ul className="popup-menus">
-          {DEMO_MENUS.map((menu) => (
-            <li key={menu.id}>
-              <span>{menu.name}</span>
-              <b>{menu.cost} coin</b>
-              {!menu.enabled && <em>준비 중</em>}
-            </li>
-          ))}
-        </ul>
-        <p className="popup-eco">🌱 <b>용기내 캠페인</b> — 텀블러·다회용기를 가져오면 1코인 할인! 일회용 비닐 대신 종이봉투를 써요.</p>
       </div>
     </section>
   )
