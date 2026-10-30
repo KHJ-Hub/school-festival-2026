@@ -21,7 +21,7 @@ function App() {
         </button>
         <div className="header-actions">
           <ModeSwitcher mode={mode} onChange={setMode} />
-          <div className="festival-date"><span>축제까지</span><strong>12월 29일</strong></div>
+          <div className="festival-date"><strong>12월 29일</strong></div>
         </div>
       </header>
 
