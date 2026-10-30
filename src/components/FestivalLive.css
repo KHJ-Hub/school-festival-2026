@@ -126,3 +126,10 @@
   .brand-mark { flex: none; }
   .mode-switcher button { padding: 7px 7px; font-size: 11px; }
 }
+
+/* 폰: 큰 제목(배정고 친환경 팝업스토어) 위아래 여백 줄이기 */
+@media (max-width: 780px) {
+  .app-shell .hero { padding: 22px 0 6px; }
+  .app-shell .hero::before { top: 14px; }
+  .app-shell .popup-intro, .app-shell .board { margin-top: 12px; }
+}
