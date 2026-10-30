@@ -25,11 +25,13 @@ npm run build
 
 새로고침하면 모든 값이 초기화됩니다. 브라우저 저장소에도 데이터를 남기지 않습니다.
 
-## 실습에서 학생들이 수정하기 좋은 곳
+## 실습에서 학생들이 수정하는 곳
 
-- `src/mockData.ts`: 부스, 교환권, 랭킹 예시 바꾸기
-- `src/App.tsx`: 화면 문구와 동작 바꾸기
-- `src/styles.css`: 색상, 간격, 카드 모양 바꾸기
+학생 8명은 각자 **자기 번호의 파일 하나**만 수정합니다. 번호별 파일과 완료 기준은 `docs/STUDENT_TASKS.md`에 있고, 설치 없이 브라우저(GitHub Codespaces)에서 시작하는 방법은 `docs/DAY1_GUIDE.md`에 있습니다.
+
+- 개인 과제: `src/tasks/task0N...` (N은 내 번호)
+- 테스트: `npm test` 또는 `npx vitest run task0N`
+- 공용 파일(`src/App.tsx`, `src/styles.css`, `src/mockData.ts`, `src/tasks/taskTypes.ts`, `src/tasks/fixtures.ts`)은 **선생님만** 수정합니다. 학생은 고치지 않습니다.
 
 ## 서버 연동 전 지켜야 할 경계
 
@@ -43,7 +45,7 @@ npm run build
 
 ## 다음 단계 제안
 
-1. 10월 30일: 세 혼합팀이 가상 데이터와 화면을 나누어 수정
+1. 10월 30일: 학생 8명이 개인 과제 하나씩 구현(가입, Codespace, 연습, 첫 테스트 통과)
 2. 11월 27일: API 규격 합의 후 테스트 서버 연결
 3. 12월 18일: 기기별 점검, 운영자 연습, 장애 시 수기 대안 확인
 4. 12월 29일: 축제 운영

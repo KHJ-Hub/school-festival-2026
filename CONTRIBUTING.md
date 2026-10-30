@@ -36,17 +36,25 @@
 
 ### 규칙 ② 개인 작업 브랜치 사용
 
-브랜치 이름은 다음 형식을 권장합니다.
+브랜치 이름은 다음 형식을 사용합니다.
 
-`feature/기능명-이니셜`
+`feature/student-번호-기능`
 
-예시:
-- `feature/coin-kim` : 코인 관리
-- `feature/voucher-lee` : 교환권 발급
-- `feature/ranking-park` : 게임 랭킹
-- `feature/admin-choi` : 관리자 화면
+- 이름이나 이니셜 등 개인을 알아볼 수 있는 글자는 브랜치 이름에 넣지 않습니다.
+- 학생 번호(1~8)와 담당 기능은 선생님이 정해 주고, 아래 브랜치는 미리 만들어져 있습니다.
 
-실제 브랜치 이름은 담당 업무가 정해지면 결정합니다.
+| 번호 | 브랜치 | 담당 기능 |
+|---|---|---|
+| 1 | `feature/student-1-lookup-menu` | 학번 검사·학생 찾기, 간식 메뉴 조회 |
+| 2 | `feature/student-2-coin-request` | 코인 적립 신청 만들기 |
+| 3 | `feature/student-3-coin-summary` | 코인 잔액·누적 적립 계산 |
+| 4 | `feature/student-4-coin-approval` | 운영진 승인·거절 처리 |
+| 5 | `feature/student-5-voucher-issue` | 모바일 교환권 발급 |
+| 6 | `feature/student-6-voucher-use` | 교환권 사용 처리 |
+| 7 | `feature/student-7-coin-ranking` | 누적 코인 랭킹 |
+| 8 | `feature/student-8-voucher-card` | 학생용 교환권 카드 화면 |
+
+자세한 과제 설명은 `docs/STUDENT_TASKS.md`, 처음 시작하는 방법은 `docs/DAY1_GUIDE.md`를 봅니다.
 
 ### 규칙 ③ 작업 전 Issue 확인
 
