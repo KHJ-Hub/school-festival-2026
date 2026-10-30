@@ -24,3 +24,7 @@
   .popup-card h2 small { display: block; margin: 2px 0 0; }
   .popup-steps { grid-template-columns: 1fr; }
 }
+
+/* 설명이 단어 중간에서 끊기지 않게(한국어 어절 단위), 좁은 폰에서는 글자를 조금 작게 */
+.popup-steps li span { word-break: keep-all; }
+@media (max-width: 400px) { .popup-steps li span { font-size: 13px; } }
