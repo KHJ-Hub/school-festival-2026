@@ -32,7 +32,7 @@ function App() {
           </div>
         </section>
 
-        <PopupIntro />
+        {mode === 'student' && <PopupIntro />}
 
         <FestivalLive mode={mode} />
 
