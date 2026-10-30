@@ -24,6 +24,7 @@ import {
   useAdminData,
   useMenus,
   useRanking,
+  useRankingState,
   type StoredVoucher,
   useStudentData,
 } from '../data/store'
@@ -401,14 +402,17 @@ export function RankingBoard() {
  */
 export function AdminRankingSync() {
   const all = useAdminData(true)
-  const ranking = useRanking()
+  const { rows: ranking, loaded } = useRankingState()
   useEffect(() => {
+    // 덮어쓰기 사고 막기: ① 지급 내역·계정·랭킹을 서버에서 다 읽기 전, ② 7번 학생 함수가 아직 없는 화면(예: 학생 코드가 안 합쳐진 시험 화면)에서는 저장하지 않습니다.
+    if (!all.grantsLoaded || !all.accountsLoaded || !loaded) return
+    if (!safe(() => rankByTotalEarned(DEMO_GRANTS, 5).length > 0, false)) return
     const rows = safe(() => rankByTotalEarned(all.grants, 10), []).map((row) => ({
       rank: row.rank,
       nickname: all.accounts.find((account) => account.studentId === row.studentId)?.nickname ?? '닉네임 없음',
       total: row.total,
     }))
     if (JSON.stringify(rows) !== JSON.stringify(ranking)) void saveRanking(rows).catch(() => undefined)
-  }, [all.grants, all.accounts, ranking])
+  }, [all.grants, all.accounts, all.grantsLoaded, all.accountsLoaded, ranking, loaded])
   return null
 }

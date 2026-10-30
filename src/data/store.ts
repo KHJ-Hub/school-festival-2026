@@ -71,16 +71,16 @@ export function useStudentData(studentId: string | null) {
 // ───── 운영진 전체 데이터 ─────
 
 export function useAdminData(enabled: boolean) {
-  const empty = { requests: [] as CoinRequest[], grants: [] as CoinGrant[], vouchers: [] as StoredVoucher[], accounts: [] as Account[], roster: [] as RosterEntry[] }
+  const empty = { requests: [] as CoinRequest[], grants: [] as CoinGrant[], vouchers: [] as StoredVoucher[], accounts: [] as Account[], roster: [] as RosterEntry[], grantsLoaded: false, accountsLoaded: false }
   const [data, setData] = useState(empty)
   useEffect(() => {
     setData(empty)
     if (!enabled) return
     const stop = [
       onSnapshot(collectionGroup(db, 'requests'), (snap) => setData((d) => ({ ...d, requests: withStudent<CoinRequest>(snap) })), () => undefined),
-      onSnapshot(collectionGroup(db, 'grants'), (snap) => setData((d) => ({ ...d, grants: withStudent<CoinGrant>(snap) })), () => undefined),
+      onSnapshot(collectionGroup(db, 'grants'), (snap) => setData((d) => ({ ...d, grants: withStudent<CoinGrant>(snap), grantsLoaded: true })), () => undefined),
       onSnapshot(collectionGroup(db, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<StoredVoucher>(snap) })), () => undefined),
-      onSnapshot(collection(db, 'accounts'), (snap) => setData((d) => ({ ...d, accounts: snap.docs.map((item) => ({ studentId: item.id, name: item.data().name, nickname: item.data().nickname })) })), () => undefined),
+      onSnapshot(collection(db, 'accounts'), (snap) => setData((d) => ({ ...d, accounts: snap.docs.map((item) => ({ studentId: item.id, name: item.data().name, nickname: item.data().nickname })), accountsLoaded: true })), () => undefined),
       onSnapshot(collection(db, 'roster'), (snap) => setData((d) => ({ ...d, roster: snap.docs.map((item) => ({ studentId: item.id, name: item.data().name })) })), () => undefined),
     ]
     return () => stop.forEach((unsubscribe) => unsubscribe())
@@ -92,9 +92,14 @@ export function useAdminData(enabled: boolean) {
 // ───── 모두 읽는 데이터 ─────
 
 export function useRanking(): RankingRow[] {
-  const [rows, setRows] = useState<RankingRow[]>([])
-  useEffect(() => onSnapshot(doc(db, 'public', 'ranking'), (snap) => setRows((snap.data()?.rows as RankingRow[]) ?? []), () => setRows([])), [])
-  return rows
+  return useRankingState().rows
+}
+
+/** 랭킹과 함께 "서버에서 한 번이라도 읽었는지"를 돌려줍니다(읽기 전 빈 값으로 덮어쓰지 않으려고). */
+export function useRankingState(): { rows: RankingRow[]; loaded: boolean } {
+  const [state, setState] = useState<{ rows: RankingRow[]; loaded: boolean }>({ rows: [], loaded: false })
+  useEffect(() => onSnapshot(doc(db, 'public', 'ranking'), (snap) => setState({ rows: (snap.data()?.rows as RankingRow[]) ?? [], loaded: true }), () => setState({ rows: [], loaded: false })), [])
+  return state
 }
 
 type MenuDoc = { name: string; cost: number; enabled: boolean; order: number }
