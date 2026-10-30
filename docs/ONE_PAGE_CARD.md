@@ -6,9 +6,10 @@
 
 1. **Edge 브라우저**로 github.com 가입 (웨일은 안 됨) → **학교 구글 메일**로 가입, 사용자 이름은 **별명**
 2. Settings → Emails → **Keep my email addresses private** 켜기
-3. 사용자 이름을 선생님께 알려 주고, 메일의 **초대 수락**
-4. 저장소 페이지에서 **내 브랜치 선택 → Code → Codespaces → Create codespace**
-5. 아래 터미널에 `npm test` → **빨간색이 정상**
+3. 사용자 이름을 선생님께 알려 주고, 메일의 **초대 수락** (메일 제목에 `school-festival-2026`이 있는지 확인)
+4. 저장소 페이지에서 **내 브랜치 선택 → Code → Codespaces → Create codespace** (처음엔 **몇 분** 걸림, 기다리기)
+5. "작성자를 신뢰합니까?" 창이 뜨면 **예, 신뢰합니다**. 터미널에 입력 줄이 안 나오면 **☰ → 터미널 → 새 터미널**
+6. 터미널에 `npm test` → **빨간색이 정상** (`29 failed | 28 passed` 정도, 숫자는 항목 수)
 
 ## 코딩하기 (AI에게 설명 → AI가 코드 → 내가 확인)
 
@@ -31,6 +32,7 @@ git push
 ## 꼭 지킬 것
 
 - 테스트 파일·타입 파일·다른 사람 파일은 **고치지 않기**, `main`에는 **올리지 않기**
+- 실수로 다른 파일을 고쳤으면(`git status`에 `modified`로 보임) `git restore 파일경로`로 **되돌리기**
 - `npm install`로 새 라이브러리 설치하지 않기
 - 실제 학번·이름·전화번호·비밀번호를 BeAT나 코드에 **쓰지 않기** (가상 학번은 9로 시작하는 5자리)
 - 끝나면 **활동 기록 쓰기**, 왼쪽 아래 **Codespaces → Stop Current Codespace**
