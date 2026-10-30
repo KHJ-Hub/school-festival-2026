@@ -40,6 +40,8 @@ import './FestivalLive.css'
  * 학생 코드에서 오류가 나도 화면이 멈추지 않도록 호출마다 감쌉니다.
  */
 const NOT_BUILT = '아직 구현되지 않은 교육용 기능입니다.'
+/** 학생 1명이 받을 수 있는 교환권 수(취소된 교환권은 세지 않음). 기획서: 모은 코인으로 메뉴 하나를 고르는 방식. */
+const VOUCHERS_PER_STUDENT = 1
 
 /**
  * 이름표("N번 학생이 만든 기능 / 만드는 중")를 정하려고, 화면을 열 때 연습 데이터로 학생 함수를 한 번씩 돌려 봅니다.
@@ -216,6 +218,8 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   const [lastNotBuilt, setLastNotBuilt] = useState<Record<number, boolean>>({})
 
   const balance = safe(() => calculateCoinBalance(studentId, mine.grants, mine.vouchers), 0)
+  // 취소되지 않은 교환권이 이미 한 장 있으면 더 바꿀 수 없습니다.
+  const exchangedAll = mine.vouchers.filter((voucher) => voucher.status !== 'cancelled').length >= VOUCHERS_PER_STUDENT
   const earned = safe(() => calculateTotalEarned(studentId, mine.grants), 0)
   const pending = all.requests.filter((request) => request.status === 'pending')
   const issued = all.vouchers.filter((voucher) => voucher.status === 'issued')
@@ -243,6 +247,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   }
 
   const exchange = async (menuId: string) => {
+    if (exchangedAll) return report(5, '교환권은 한 사람당 한 번만 받을 수 있어요.', false)
     const menu = safe(() => findEnabledMenu(menus, menuId), undefined)
     if (!menu) return report(1, '품절된 메뉴예요. 다른 메뉴를 골라 주세요.', false)
     if (!safe(() => canAffordMenu(balance, menu), false)) return report(1, '코인이 부족해요.', false)
@@ -316,12 +321,13 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
             </div>
           </Section>
 
-          <Section no={5} title="간식 교환" desc="모은 코인으로 팝콘 교환권을 받아요." built={BUILT[5]}>
+          <Section no={5} title="간식 교환" desc="모은 코인으로 원하는 팝콘 하나를 골라요. 교환은 한 번만 할 수 있어요." built={BUILT[5]}>
+            {exchangedAll && <p className="live-message">교환을 마쳤어요. 아래 교환권을 부스에서 보여 주세요.</p>}
             <ul className="live-list">
               {menus.map((menu) => (
                 <li key={menu.id} className={menu.enabled ? '' : 'sold-out'}>
                   <span>{menu.name} · {menu.cost} coin</span>
-                  {menu.enabled ? <button onClick={() => void exchange(menu.id)}>교환하기</button> : <button disabled>품절</button>}
+                  {!menu.enabled ? <button disabled>품절</button> : exchangedAll ? <button disabled>교환 완료</button> : <button onClick={() => void exchange(menu.id)}>교환하기</button>}
                 </li>
               ))}
               {menus.length === 0 && <li><span>아직 메뉴가 없어요.</span></li>}
