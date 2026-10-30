@@ -13,7 +13,7 @@ import {
   rankByTotalEarned,
   resolveCoinRequest,
 } from '../studentTasks'
-import { DEMO_GRANTS, DEMO_STUDENTS } from '../tasks/fixtures'
+import { DEMO_GRANTS, DEMO_MENUS, DEMO_REQUESTS, DEMO_STUDENTS, DEMO_VOUCHERS } from '../tasks/fixtures'
 import type { SnackMenu } from '../tasks/taskTypes'
 import {
   saveNewRequest,
@@ -40,6 +40,28 @@ import './FestivalLive.css'
  * 학생 코드에서 오류가 나도 화면이 멈추지 않도록 호출마다 감쌉니다.
  */
 const NOT_BUILT = '아직 구현되지 않은 교육용 기능입니다.'
+
+/**
+ * 이름표("N번 학생이 만든 기능 / 만드는 중")를 정하려고, 화면을 열 때 연습 데이터로 학생 함수를 한 번씩 돌려 봅니다.
+ * 테스트(src/tasks/__tests__)의 대표 경우 하나만 확인하므로, 정확한 채점은 npm test로 합니다.
+ * 학생 코드가 연습 데이터를 고쳐도 다른 화면에 영향이 없게 복사본을 넘깁니다.
+ */
+function probeBuilt(): Record<number, boolean> {
+  const copy = <T,>(value: T): T => structuredClone(value)
+  const bag = DEMO_MENUS[1]!
+  const card = safe(() => JSON.stringify(StudentVoucherCard({ voucher: copy(DEMO_VOUCHERS[0]!), menuName: '확인' })), '')
+  return {
+    1: safe(() => isDemoStudentId('90001') === true && findDemoStudent(copy(DEMO_STUDENTS), '90001')?.nickname === '별빛여우', false),
+    2: safe(() => createCoinRequest(copy(DEMO_REQUESTS), '90001', 3).ok === true, false),
+    3: safe(() => calculateTotalEarned('90001', copy(DEMO_GRANTS)) === 5, false),
+    4: safe(() => resolveCoinRequest(copy(DEMO_REQUESTS), copy(DEMO_GRANTS), 'r-3', 'approve').ok === true, false),
+    5: safe(() => issueVoucher(copy(DEMO_VOUCHERS), '90001', copy(bag), 5).ok === true, false),
+    6: safe(() => markVoucherUsed(copy(DEMO_VOUCHERS), 'v-1').ok === true, false),
+    7: safe(() => rankByTotalEarned(copy(DEMO_GRANTS), 5).length > 0, false),
+    8: card !== '' && !card.includes('TODO'),
+  }
+}
+const BUILT = probeBuilt()
 const SAVE_FAILED = '저장하지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.'
 
 function safe<T>(run: () => T, fallback: T): T {
@@ -100,7 +122,7 @@ export function StudentIdBox({ me, busy, onEnter, onRename, onLeave }: {
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
   // 1번 학생 함수가 만들어졌는지: 올바른 연습 학번을 넣어 보고 확인합니다.
-  const built = safe(() => isDemoStudentId('90001'), false) || Boolean(safe(() => findDemoStudent(DEMO_STUDENTS, '90001'), undefined))
+  const built = BUILT[1]!
 
   const submit = async () => {
     setWorking(true)
@@ -270,7 +292,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
 
       {mode === 'student' && studentId && (
         <>
-          <Section no={2} title="코인 적립 신청" desc="받은 실물 코인 수를 신청하면 운영진이 코인을 회수하고 승인해요." built={!lastNotBuilt[2]}>
+          <Section no={2} title="코인 적립 신청" desc="받은 실물 코인 수를 신청하면 운영진이 코인을 회수하고 승인해요." built={BUILT[2]}>
             <div className="live-row">
               <input type="number" min={1} value={amount} onChange={(event) => setAmount(Number(event.target.value))} aria-label="신청할 코인 수" />
               <button className="primary-button" onClick={() => void submitRequest()}>신청하기 <span>→</span></button>
@@ -282,14 +304,14 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
             </ul>
           </Section>
 
-          <Section no={3} title="내 코인" desc="받은 코인과 지금 쓸 수 있는 코인이에요." built={!(mine.grants.length > 0 && earned === 0)}>
+          <Section no={3} title="내 코인" desc="받은 코인과 지금 쓸 수 있는 코인이에요." built={BUILT[3]}>
             <div className="live-numbers">
               <div><small>지금 쓸 수 있는 코인</small><strong>{balance} coin</strong></div>
               <div><small>지금까지 모은 코인</small><strong>{earned} coin</strong></div>
             </div>
           </Section>
 
-          <Section no={5} title="간식 교환" desc="모은 코인으로 팝콘 교환권을 받아요." built={!lastNotBuilt[5]}>
+          <Section no={5} title="간식 교환" desc="모은 코인으로 팝콘 교환권을 받아요." built={BUILT[5]}>
             <ul className="live-list">
               {menus.map((menu) => (
                 <li key={menu.id} className={menu.enabled ? '' : 'sold-out'}>
@@ -301,7 +323,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
             </ul>
           </Section>
 
-          <Section no={8} title="내 모바일 교환권" desc="부스에서 바코드를 보여 주면 운영진이 스캔해요.">
+          <Section no={8} title="내 모바일 교환권" desc="부스에서 바코드를 보여 주면 운영진이 스캔해요." built={BUILT[8]}>
             {mine.vouchers.length === 0 ? <p className="live-empty">아직 받은 교환권이 없어요.</p> : (
               <div className="live-cards">
                 {mine.vouchers.map((voucher) => (
@@ -322,7 +344,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
 
       {mode === 'admin' && isAdmin && (
         <>
-          <Section no={4} title="적립 신청 승인" desc="실물 코인을 회수한 뒤 승인해요. 학번·이름으로 중복 수령을 확인하세요." built={!lastNotBuilt[4]}>
+          <Section no={4} title="적립 신청 승인" desc="실물 코인을 회수한 뒤 승인해요. 학번·이름으로 중복 수령을 확인하세요." built={BUILT[4]}>
             {pending.length === 0 ? <p className="live-empty">기다리는 신청이 없어요.</p> : (
               <ul className="live-list">
                 {pending.map((request) => (
@@ -335,7 +357,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
             )}
           </Section>
 
-          <Section no={6} title="교환권 바코드 스캔" desc="손님 폰의 바코드를 스캔하면 자동으로 사용 처리돼요. 스캐너가 없으면 코드를 직접 입력해도 돼요." built={!lastNotBuilt[6]}>
+          <Section no={6} title="교환권 바코드 스캔" desc="손님 폰의 바코드를 스캔하면 자동으로 사용 처리돼요. 스캐너가 없으면 코드를 직접 입력해도 돼요." built={BUILT[6]}>
             <form className="live-row" onSubmit={(event) => { event.preventDefault(); if (scanCode.trim()) void scanVoucher(scanCode) }}>
               <input value={scanCode} onChange={(event) => setScanCode(event.target.value)} placeholder="여기에 스캔 (예: K7F2Q9AB)" aria-label="교환권 바코드 값" autoComplete="off" />
               <button className="primary-button" type="submit">스캔 <span>→</span></button>
@@ -380,7 +402,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
  */
 export function RankingBoard() {
   const ranking = useRanking()
-  const built = safe(() => rankByTotalEarned(DEMO_GRANTS, 5).length > 0, false)
+  const built = BUILT[7]!
   const [first, second, third, ...rest] = ranking
   // 가운데가 1위가 되도록 [2위, 1위, 3위] 자리를 고정하고, 비어 있는 자리는 빈칸으로 둡니다.
   const podium = [second, first, third]
