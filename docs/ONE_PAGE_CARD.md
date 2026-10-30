@@ -13,7 +13,7 @@
 
 ## 코딩하기 = 빈칸 숙제를 AI와 함께 채우고, 자동 채점기로 확인하기
 
-**처음 한 번은 연습!** `src/warmup/warmUp.ts` → `npx vitest run warmUp` 이 초록색이 되게 (**연습용이라 GitHub에 안 보냄**, `git add` 하지 않기)
+**처음 한 번은 연습!** **(연습 안내서를 보면서 따라 하세요: `docs/PRACTICE_GUIDE.md`)** `src/warmup/warmUp.ts` → `npx vitest run warmUp` 이 초록색이 되게 (**연습용이라 GitHub에 안 보냄**, `git add` 하지 않기)
 
 1. **숙제지 열기**: 왼쪽 목록 `src` → `tasks` → **내 번호 파일**. 안에 `TODO`라고 적힌 곳이 내가 채울 **빈칸**입니다.
 2. **채점기 돌리기**: 터미널에 `npx vitest run task0N` (N = 내 번호) → **빨간색이면 정상** (아직 빈칸이라서)
