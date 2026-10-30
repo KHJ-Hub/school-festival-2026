@@ -149,3 +149,7 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .live-list li.sold-out { opacity: .6; }
 .live-list li.sold-out button:disabled, .live-list button:disabled { background: #cbbfb5; color: #fff; cursor: not-allowed; }
 .admin-roster .live-row input[type='number'] { width: 90px; }
+.admin-file { display: inline-block; }
+.admin-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.admin-file span { cursor: pointer; display: inline-flex; }
+.admin-file input:focus-visible + span { outline: 3px solid #f3bd3f; }

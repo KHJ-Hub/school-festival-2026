@@ -65,3 +65,40 @@ export function parseRosterText(text: string): { entries: RosterEntry[]; skipped
   }
   return { entries, skipped }
 }
+
+/**
+ * 엑셀·CSV 표를 명단으로 바꿉니다. 위쪽 10줄 안에 "학번"·"이름" 제목 칸이 있으면 그 열을 쓰고,
+ * 없으면 첫째 열 = 학번, 둘째 열 = 이름으로 봅니다. 학번이 숫자 5자리가 아닌 줄은 건너뜁니다.
+ */
+export function rowsToRoster(rows: unknown[][]): { entries: RosterEntry[]; skipped: number } {
+  const text = (cell: unknown) => (cell === null || cell === undefined ? '' : String(cell).trim())
+  let idCol = 0
+  let nameCol = 1
+  let start = 0
+  for (let index = 0; index < Math.min(rows.length, 10); index += 1) {
+    const cells = (rows[index] ?? []).map(text)
+    const id = cells.findIndex((cell) => cell.replace(/\s/g, '').includes('학번'))
+    const name = cells.findIndex((cell) => cell.replace(/\s/g, '').includes('이름') || cell.replace(/\s/g, '') === '성명')
+    if (id >= 0 && name >= 0) {
+      idCol = id
+      nameCol = name
+      start = index + 1
+      break
+    }
+  }
+  const entries: RosterEntry[] = []
+  let skipped = 0
+  for (const row of rows.slice(start)) {
+    const studentId = text(row?.[idCol]).replace(/\.0+$/, '')
+    const name = text(row?.[nameCol])
+    if (!studentId && !name) continue
+    if (/^\d{5}$/.test(studentId) && name) entries.push({ studentId, name })
+    else skipped += 1
+  }
+  return { entries, skipped }
+}
+
+/** CSV 글자를 표로 나눕니다(쉼표 또는 탭). 엑셀에서 "CSV UTF-8"로 저장한 파일을 기준으로 합니다. */
+export function csvToRows(textContent: string): string[][] {
+  return textContent.replace(/^\uFEFF/, '').split(/\r?\n/).map((line) => line.split(/[,\t]/).map((cell) => cell.replace(/^"|"$/g, '').trim()))
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BASE_BANNED_WORDS, normalizeForCheck, parseRosterText, type Account, type RosterEntry } from './nicknameRules'
+import { BASE_BANNED_WORDS, csvToRows, normalizeForCheck, parseRosterText, rowsToRoster, type Account, type RosterEntry } from './nicknameRules'
 
 /**
  * 교사 관리 파일: 운영진 화면의 학생 명단(학번·이름)과 금지어 관리.
@@ -50,6 +50,39 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
     setNote(`${entries.length}명을 명단에 넣었어요.${skipped.length ? ` 형식이 맞지 않는 ${skipped.length}줄은 칸에 남겨 두었어요.` : ''}`)
   }
 
+  /** 엑셀(.xlsx)·CSV 파일에서 학번·이름을 읽어 명단에 넣습니다. 파일은 이 기기에서만 읽고, 학번·이름만 저장합니다. */
+  const addFile = async (file: File | undefined) => {
+    if (!file) return
+    let rows: unknown[][]
+    try {
+      if (/\.csv$/i.test(file.name)) {
+        rows = csvToRows(await file.text())
+      } else if (/\.xlsx$/i.test(file.name)) {
+        const { readSheet } = await import('read-excel-file/browser')
+        rows = (await readSheet(file)) as unknown[][]
+      } else {
+        setNote('엑셀(.xlsx) 또는 CSV 파일만 넣을 수 있어요. 예전 엑셀(.xls)은 "다른 이름으로 저장 → Excel 통합 문서(.xlsx)"로 바꿔 주세요.')
+        return
+      }
+    } catch {
+      setNote('파일을 읽지 못했어요. 엑셀에서 다시 저장한 뒤 넣어 주세요.')
+      return
+    }
+    const { entries, skipped } = rowsToRoster(rows)
+    if (entries.length === 0) {
+      setNote('파일에서 학번(숫자 5자리)과 이름을 찾지 못했어요. 첫 줄에 "학번", "이름" 제목을 넣어 주세요.')
+      return
+    }
+    if (!window.confirm(`${file.name}에서 ${entries.length}명을 찾았어요.${skipped ? ` (형식이 맞지 않는 ${skipped}줄은 건너뜀)` : ''} 명단에 넣을까요? 같은 학번은 새 이름으로 바뀌어요.`)) return
+    try {
+      await onAddRoster(entries)
+    } catch {
+      setNote('저장하지 못했어요. 인터넷 연결을 확인해 주세요.')
+      return
+    }
+    setNote(`${entries.length}명을 명단에 넣었어요.${skipped ? ` 형식이 맞지 않는 ${skipped}줄은 건너뛰었어요.` : ''}`)
+  }
+
   const addWord = async () => {
     const value = word.trim()
     if (!normalizeForCheck(value)) {
@@ -76,6 +109,13 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
       </div>
 
       {note && <p className="live-message" role="status">{note}</p>}
+
+      <h3>엑셀 파일로 넣기</h3>
+      <p className="live-empty">첫 줄에 "학번", "이름" 제목이 있는 엑셀(.xlsx)이나 CSV 파일을 골라요. 한글(.hwp) 표는 표를 복사해서 아래 "여러 명 붙여넣기" 칸에 붙여 넣어요.</p>
+      <label className="admin-file">
+        <input type="file" accept=".xlsx,.csv" onChange={(event) => { void addFile(event.target.files?.[0]); event.target.value = '' }} />
+        <span className="primary-button">파일 고르기</span>
+      </label>
 
       <h3>한 명씩 넣기</h3>
       <div className="live-row">
