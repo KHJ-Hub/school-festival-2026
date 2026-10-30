@@ -9,7 +9,6 @@ import { checkNickname, type Account } from './components/nicknameRules'
 import { VisitorSteps } from './components/PopupIntro'
 import { enterStudent, isNicknameTaken, loadOwnAccount, renameStudent, saveBannedWords, saveRoster, useAdminData, useBannedWordsState } from './data/store'
 import { ADMIN_EMAIL, auth } from './firebase'
-import { CLUBS } from './mockData'
 
 /** 이 기기에서 마지막으로 들어온 학번(새로고침해도 다시 들어오기). 학번만 저장하고 이름은 저장하지 않습니다. */
 const ME_KEY = 'festival-me'
@@ -101,9 +100,8 @@ function App() {
       <header className="topbar">
         <button className="brand" onClick={() => setMode('student')} aria-label="배정 팝팝스토어 첫 화면으로 이동">
           <span className="brand-mark">F!</span>
-          {/* 로고 옆에는 함께 만드는 세 동아리(사이트 이름은 아래 큰 제목에) */}
-          <span className="brand-clubs">
-            {CLUBS.map((club, index) => <span key={club}><i>{['♟', '⚙', '◎'][index]}</i>{club}</span>)}
+          <span>
+            <strong>배정 팝팝스토어</strong>
           </span>
         </button>
         <div className="header-actions">
@@ -114,7 +112,7 @@ function App() {
       <main>
         <section className="hero">
           <div>
-            <p className="eyebrow">{mode === 'student' ? '학생용 화면' : mode === 'admin' ? '운영진용 화면' : '실시간 코인 랭킹'}</p>
+            <p className="eyebrow hero-clubs">보드게임 동아리 <span>×</span> 리틀엔지니어랩 <span>×</span> 국제 이해 문화 탐구반</p>
             <h1>배정 <em>팝팝스토어</em></h1>
           </div>
         </section>
