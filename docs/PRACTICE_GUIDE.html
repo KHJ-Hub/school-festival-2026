@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <title>코딩 시작 따라하기 — 연습 과제 자세히</title>
 <style>
-  @page { size: A4; margin: 11mm 13mm; }
+  @page { size: A4; margin: 9mm 13mm; }
   * { box-sizing: border-box; }
-  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size: 9.7pt; line-height: 1.45; color: #1a1a1a; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; font-size: 9.3pt; line-height: 1.45; color: #1a1a1a; }
   h1 { font-size: 15pt; margin: 0 0 2px; }
   .sub { margin: 0 0 6px; color: #555; }
   h2 { font-size: 11pt; margin: 9px 0 3px; padding: 2px 7px; background: #e8f0fe; border-left: 4px solid #1a73e8; break-after: avoid; }
-  h3 { font-size: 10.4pt; margin: 15pt 0 3px; padding-top: 6pt; border-top: 1px dashed #bbb; break-after: avoid; }
+  h3 { font-size: 10.4pt; margin: 8pt 0 3px; padding-top: 4pt; border-top: 1px dashed #bbb; break-after: avoid; }
   h2 + h3 { margin-top: 4pt; border-top: none; padding-top: 0; }
   li, p { orphans: 2; widows: 2; }
   p { margin: 2px 0; }
@@ -32,6 +32,8 @@
   th, td { border: 1px solid #bbb; padding: 2px 6px; text-align: left; vertical-align: top; }
   th { background: #f1f3f4; }
   .newpage { break-before: page; margin-top: 0 !important; border-top: none !important; padding-top: 0 !important; }
+  table.files { font-size: 8.8pt; } table.files th, table.files td { padding: 1px 6px; }
+  table.files code { font-size: 8.4pt; }
   .keep { break-inside: avoid; }
 </style>
 </head>
@@ -106,9 +108,21 @@
   <li>연습 파일은 <b>GitHub로 보내지 않습니다.</b> 연습만 하고 끝입니다. (요약 카드 <b>"올리기"의 <code>git add</code></b>(보낼 파일 고르기)에 이 파일을 넣지 않습니다)</li>
   <li>왼쪽 목록에서 <code>src</code> → <code>tasks</code> → <b>내 담당 파일</b>을 엽니다.</li>
   <li>똑같이 진행합니다. 다만 BeAT에 붙여 넣는 재료가 <b>3개</b>입니다: ① 내 파일 ② 내 테스트(<code>src/tasks/__tests__</code> 안) ③ <code>src/tasks/taskTypes.ts</code></li>
-  <li>내 테스트 명령은 <code>npx vitest run task0N</code> (N은 내 번호. 예: 3번이면 <code>task03</code>)</li>
   <li><b>내 파일에서는</b> 맨 위 <code>import</code> 줄과 <code>export function</code> 이름은 <b>그대로 두고</b>, TODO가 있는 함수 <b>안의 코드만</b> 바꿉니다.</li>
 </ol>
+<p style="margin-top:4px"><b>내 번호별 파일 위치</b> — 왼쪽 목록 <code>src</code> → <code>tasks</code>에 ①이, 그 안의 <code>__tests__</code>에 ②가 있습니다. ③ <code>taskTypes.ts</code>는 모두 같고 <code>src/tasks</code> 안에 있습니다.</p>
+<table class="files keep">
+  <tr><th style="width:8%">번호</th><th>① 내 파일 (<code>src/tasks/</code> 안)</th><th>② 내 테스트 (<code>src/tasks/__tests__/</code> 안)</th><th>채점 명령</th></tr>
+  <tr><td style="text-align:center"><b>1</b></td><td><code>task01LookupAndMenu.ts</code></td><td><code>task01LookupAndMenu.test.ts</code></td><td><code>npx vitest run task01</code></td></tr>
+  <tr><td style="text-align:center"><b>2</b></td><td><code>task02CoinGrant.ts</code></td><td><code>task02CoinGrant.test.ts</code></td><td><code>npx vitest run task02</code></td></tr>
+  <tr><td style="text-align:center"><b>3</b></td><td><code>task03CoinSummary.ts</code></td><td><code>task03CoinSummary.test.ts</code></td><td><code>npx vitest run task03</code></td></tr>
+  <tr><td style="text-align:center"><b>4</b></td><td><code>task04CoinApproval.ts</code></td><td><code>task04CoinApproval.test.ts</code></td><td><code>npx vitest run task04</code></td></tr>
+  <tr><td style="text-align:center"><b>5</b></td><td><code>task05VoucherIssue.ts</code></td><td><code>task05VoucherIssue.test.ts</code></td><td><code>npx vitest run task05</code></td></tr>
+  <tr><td style="text-align:center"><b>6</b></td><td><code>task06VoucherUse.ts</code></td><td><code>task06VoucherUse.test.ts</code></td><td><code>npx vitest run task06</code></td></tr>
+  <tr><td style="text-align:center"><b>7</b></td><td><code>task07GameRanking.ts</code></td><td><code>task07GameRanking.test.ts</code></td><td><code>npx vitest run task07</code></td></tr>
+  <tr><td style="text-align:center"><b>8</b></td><td><code>task08StudentVoucherCard.tsx</code></td><td><code>task08StudentVoucherCard.test.tsx</code></td><td><code>npx vitest run task08</code></td></tr>
+</table>
+
 
 <h2 class="keep">3. 자주 하는 실수</h2>
 <table class="keep">

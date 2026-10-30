@@ -86,8 +86,20 @@ npx vitest run warmUp
 1. 연습 파일은 **GitHub로 보내지 않습니다.** 연습만 하고 끝입니다. (요약 카드 **"올리기"의 `git add`**(보낼 파일 고르기)에 이 파일을 넣지 않습니다)
 2. 왼쪽 목록에서 `src` → `tasks` → **내 담당 파일**을 엽니다.
 3. 똑같이 진행합니다. 다만 BeAT에 붙여 넣는 재료가 **3개**입니다: ① 내 파일 ② 내 테스트(`src/tasks/__tests__` 안) ③ `src/tasks/taskTypes.ts`
-4. 내 테스트 명령은 `npx vitest run task0N` (N은 내 번호. 예: 3번이면 `task03`)
-5. **내 파일에서는** 맨 위 `import` 줄과 `export function` 이름은 **그대로 두고**, TODO가 있는 함수 **안의 코드만** 바꿉니다.
+4. **내 파일에서는** 맨 위 `import` 줄과 `export function` 이름은 **그대로 두고**, TODO가 있는 함수 **안의 코드만** 바꿉니다.
+
+**내 번호별 파일 위치** — 왼쪽 목록에서 `src` → `tasks`를 열면 ①이 있고, 그 안의 `__tests__` 폴더를 열면 ②가 있습니다. ③ `taskTypes.ts`는 **모두 같고** `src/tasks` 안에 있습니다.
+
+| 번호 | ① 내 파일 (`src/tasks/` 안) | ② 내 테스트 (`src/tasks/__tests__/` 안) | 채점 명령 |
+|---|---|---|---|
+| **1** | `task01LookupAndMenu.ts` | `task01LookupAndMenu.test.ts` | `npx vitest run task01` |
+| **2** | `task02CoinGrant.ts` | `task02CoinGrant.test.ts` | `npx vitest run task02` |
+| **3** | `task03CoinSummary.ts` | `task03CoinSummary.test.ts` | `npx vitest run task03` |
+| **4** | `task04CoinApproval.ts` | `task04CoinApproval.test.ts` | `npx vitest run task04` |
+| **5** | `task05VoucherIssue.ts` | `task05VoucherIssue.test.ts` | `npx vitest run task05` |
+| **6** | `task06VoucherUse.ts` | `task06VoucherUse.test.ts` | `npx vitest run task06` |
+| **7** | `task07GameRanking.ts` | `task07GameRanking.test.ts` | `npx vitest run task07` |
+| **8** | `task08StudentVoucherCard.tsx` | `task08StudentVoucherCard.test.tsx` | `npx vitest run task08` |
 
 ## 3. 자주 하는 실수
 
