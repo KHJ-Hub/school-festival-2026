@@ -4,7 +4,7 @@
 
 ## 시작하기 (설치 없음, 브라우저만)
 
-1. **Chrome**으로 github.com 가입 (웨일은 안 됨, 멈추면 시크릿 창 → 그래도 안 되면 Edge) → **학교 구글 메일**로 가입, 사용자 이름은 **별명**
+1. **Chrome**으로 github.com 가입 (멈추면 시크릿 창 → 그래도 안 되면 Edge) → **학교 구글 메일**로 가입, 사용자 이름은 **별명**
 2. Settings → Emails → **Keep my email addresses private** 켜기
 3. 사용자 이름을 선생님께 알려 주고, 메일의 **초대 수락** (메일 제목에 `school-festival-2026`이 있는지 확인)
 4. 저장소 페이지에서 **내 브랜치 선택 → Code → Codespaces → Create codespace** (처음엔 **몇 분** 걸림, 기다리기)
