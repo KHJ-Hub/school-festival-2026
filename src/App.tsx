@@ -151,7 +151,7 @@ function StudentTaskRoadmap() {
   return (
     <section className="learning-roadmap">
       <div><span className="eyebrow">STUDENT TODO</span><h2>운영 기능은 우리가 직접 완성해요</h2><p><code>src/tasks/</code>의 내 파일 TODO와 <code>docs/STUDENT_TASKS.md</code>를 따라 한 과제씩 구현하세요. 확인은 <code>npm test</code>.</p></div>
-      <div className="task-chips"><span>① 학번 검사</span><span>② 적립 신청·승인</span><span>③ 잔액·누적 계산</span><span>④ 간식 메뉴</span><span>⑤ 교환권 발급</span><span>⑥ 사용 처리</span><span>⑦ 코인 랭킹</span><span>⑧ 교환권 카드</span></div>
+      <div className="task-chips"><span>① 학번·메뉴 조회</span><span>② 적립 신청</span><span>③ 잔액·누적 계산</span><span>④ 승인·거절</span><span>⑤ 교환권 발급</span><span>⑥ 사용 처리</span><span>⑦ 코인 랭킹</span><span>⑧ 교환권 카드</span></div>
     </section>
   )
 }

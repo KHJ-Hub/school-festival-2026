@@ -56,25 +56,27 @@ export function TaskPlayground() {
         <p>가상 데이터(가상 학번 9로 시작하는 5자리)로 8개 과제 함수를 실행한 결과입니다. 구현 전에는 기본값이 보이고, 코드를 저장하면 자동으로 바뀝니다. 정답 확인은 <code>npm test</code>로 하세요.</p>
       </div>
       <div className="playground-grid">
-        <Task no={1} title="학번 검사·학생 찾기" rows={[
+        <Task no={1} title="학번 검사·학생 찾기·메뉴 조회" rows={[
           { label: "isDemoStudentId('90001')", result: show(() => isDemoStudentId('90001')) },
           { label: "isDemoStudentId('9000')", result: show(() => isDemoStudentId('9000')) },
           { label: "findDemoStudent(' 90002 ')", result: show(() => findDemoStudent(DEMO_STUDENTS, ' 90002 ')) },
+          { label: "findEnabledMenu('popcorn-cup')", result: show(() => findEnabledMenu(DEMO_MENUS, 'popcorn-cup')?.name) },
+          { label: "findEnabledMenu('popcorn-set')", result: show(() => findEnabledMenu(DEMO_MENUS, 'popcorn-set')?.name) },
+          { label: "canAffordMenu(3, 정식 1봉지)", result: show(() => canAffordMenu(3, bag)) },
         ]} />
-        <Task no={2} title="코인 적립 신청·승인" rows={[
+        <Task no={2} title="코인 적립 신청 만들기" rows={[
           { label: "createCoinRequest(90001, 3) 후 건수", result: show(() => { const r = createCoinRequest(DEMO_REQUESTS, '90001', 3); return { ok: r.ok, count: r.requests.length } }) },
           { label: "createCoinRequest(90003, 1) pending 있음", result: show(() => { const r = createCoinRequest(DEMO_REQUESTS, '90003', 1); return { ok: r.ok, message: r.message } }) },
-          { label: "resolveCoinRequest('r-3', approve)", result: show(() => { const r = resolveCoinRequest(DEMO_REQUESTS, DEMO_GRANTS, 'r-3', 'approve'); return { ok: r.ok, grants: r.grants.length } }) },
-          { label: "resolveCoinRequest('r-1', approve) 이미 처리", result: show(() => { const r = resolveCoinRequest(DEMO_REQUESTS, DEMO_GRANTS, 'r-1', 'approve'); return { ok: r.ok, message: r.message } }) },
+          { label: "createCoinRequest(90001, 0) 잘못된 수량", result: show(() => { const r = createCoinRequest(DEMO_REQUESTS, '90001', 0); return { ok: r.ok, message: r.message } }) },
         ]} />
         <Task no={3} title="잔액·누적 적립" rows={[
           { label: "calculateCoinBalance(90001)", result: show(() => calculateCoinBalance('90001', DEMO_GRANTS, DEMO_VOUCHERS)) },
           { label: "calculateTotalEarned(90001)", result: show(() => calculateTotalEarned('90001', DEMO_GRANTS)) },
         ]} />
-        <Task no={4} title="간식 메뉴·구매 가능" rows={[
-          { label: "findEnabledMenu('popcorn-cup')", result: show(() => findEnabledMenu(DEMO_MENUS, 'popcorn-cup')?.name) },
-          { label: "findEnabledMenu('popcorn-set')", result: show(() => findEnabledMenu(DEMO_MENUS, 'popcorn-set')?.name) },
-          { label: "canAffordMenu(3, 정식 1봉지)", result: show(() => canAffordMenu(3, bag)) },
+        <Task no={4} title="적립 승인·거절 처리" rows={[
+          { label: "resolveCoinRequest('r-3', approve)", result: show(() => { const r = resolveCoinRequest(DEMO_REQUESTS, DEMO_GRANTS, 'r-3', 'approve'); return { ok: r.ok, grants: r.grants.length } }) },
+          { label: "resolveCoinRequest('r-3', reject)", result: show(() => { const r = resolveCoinRequest(DEMO_REQUESTS, DEMO_GRANTS, 'r-3', 'reject'); return { ok: r.ok, grants: r.grants.length } }) },
+          { label: "resolveCoinRequest('r-1', approve) 이미 처리", result: show(() => { const r = resolveCoinRequest(DEMO_REQUESTS, DEMO_GRANTS, 'r-1', 'approve'); return { ok: r.ok, message: r.message } }) },
         ]} />
         <Task no={5} title="교환권 발급" rows={[
           { label: "issueVoucher(90001, 정식 1봉지, 잔액 5)", result: show(() => { const r = issueVoucher(DEMO_VOUCHERS, '90001', bag, 5); return { ok: r.ok, message: r.message, count: r.vouchers.length } }) },

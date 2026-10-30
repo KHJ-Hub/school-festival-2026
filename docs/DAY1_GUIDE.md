@@ -51,10 +51,10 @@ Surface Go에 아무것도 설치하지 않습니다. **GitHub Codespaces**(브�
 
 | 번호 | 브랜치 | 담당 파일 |
 |---|---|---|
-| 1 | `feature/student-1-lookup` | `src/tasks/task01StudentLookup.ts` |
+| 1 | `feature/student-1-lookup-menu` | `src/tasks/task01LookupAndMenu.ts` |
 | 2 | `feature/student-2-coin-request` | `src/tasks/task02CoinGrant.ts` |
 | 3 | `feature/student-3-coin-summary` | `src/tasks/task03CoinSummary.ts` |
-| 4 | `feature/student-4-snack-menu` | `src/tasks/task04SnackMenu.ts` |
+| 4 | `feature/student-4-coin-approval` | `src/tasks/task04CoinApproval.ts` |
 | 5 | `feature/student-5-voucher-issue` | `src/tasks/task05VoucherIssue.ts` |
 | 6 | `feature/student-6-voucher-use` | `src/tasks/task06VoucherUse.ts` |
 | 7 | `feature/student-7-coin-ranking` | `src/tasks/task07GameRanking.ts` |
@@ -77,7 +77,7 @@ Surface Go에 아무것도 설치하지 않습니다. **GitHub Codespaces**(브�
 npm test
 ```
 
-**빨간 실패가 나오는 것이 정상**입니다. 아직 내가 코드를 안 썼기 때문입니다. 마지막에 `Tests  29 failed | 28 passed`처럼 나옵니다. 이 숫자는 파일이 아니라 **테스트 항목 수**이고, 내 과제를 해결할수록 빨간 숫자가 줄어듭니다. (파일 수 `Test Files`와 항목 수 `Tests`는 다른 줄입니다.)
+**빨간 실패가 나오는 것이 정상**입니다. 아직 내가 코드를 안 썼기 때문입니다. 마지막에 `Tests  30 failed | 28 passed`처럼 나옵니다. 이 숫자는 파일이 아니라 **테스트 항목 수**이고, 내 과제를 해결할수록 빨간 숫자가 줄어듭니다. (파일 수 `Test Files`와 항목 수 `Tests`는 다른 줄입니다.)
 
 > 화면 확인: 터미널에 `npm run dev`를 입력하면 오른쪽 아래에 알림이 뜹니다. **Open in Browser**를 누르고 **운영진용** 버튼을 누르면 내 함수의 결과가 보입니다. 끝낼 때는 터미널에서 `Ctrl` + `C`를 누릅니다.
 
