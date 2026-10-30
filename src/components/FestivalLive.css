@@ -66,3 +66,12 @@
 .live-check { width: 42px; height: 42px; border-radius: 50%; background: #2c9366; color: white; display: grid; place-items: center; font-size: 22px; font-weight: 700; flex: none; }
 .live-reset { padding: 8px 14px; border: 1px solid #a9d9bf; border-radius: 10px; background: white; color: #1f5f40; font-weight: 700; min-height: 44px; }
 @media (max-width: 600px) { .live-id-action .primary-button { flex: 1 1 100%; justify-content: center; } .live-reset { width: 100%; } .live-id.registered { display: grid; } }
+
+/* 기프티콘 형태: 교환권 카드 아래에 바코드 */
+.gifticon { border: 1px solid #e4dbd0; border-radius: 18px; overflow: hidden; background: white; box-shadow: 0 8px 24px #5c44340f; }
+.gifticon-code { padding: 12px 16px 16px; display: grid; gap: 4px; justify-items: center; border-top: 2px dashed #e4dbd0; text-align: center; }
+.gifticon-code .barcode { width: 100%; height: 64px; }
+.gifticon-code small { font: 14px ui-monospace, Consolas, monospace; letter-spacing: .12em; color: #2b211d; }
+.gifticon-code span { font-size: 13px; color: #8a786e; }
+.gifticon.used, .gifticon.cancelled { opacity: .55; filter: grayscale(.7); }
+.live-list code { font: 13px ui-monospace, Consolas, monospace; background: #fff; padding: 1px 6px; border-radius: 6px; }

@@ -15,6 +15,7 @@ import {
 } from '../studentTasks'
 import type { CoinGrant, CoinRequest, TaskVoucher } from '../tasks/taskTypes'
 import { DEMO_GRANTS, DEMO_MENUS, DEMO_REQUESTS, DEMO_STUDENTS, DEMO_VOUCHERS } from '../tasks/fixtures'
+import { Barcode } from './Barcode'
 import type { AppMode } from './ModeSwitcher'
 import './FestivalLive.css'
 
@@ -129,6 +130,7 @@ export function FestivalLive({ mode, studentId, nicknames }: { mode: AppMode; st
   const [grants, setGrants] = useState<CoinGrant[]>(DEMO_GRANTS)
   const [vouchers, setVouchers] = useState<TaskVoucher[]>(DEMO_VOUCHERS)
   const [message, setMessage] = useState('')
+  const [scanCode, setScanCode] = useState('')
   const [lastNotBuilt, setLastNotBuilt] = useState<Record<number, boolean>>({})
 
   const knownId = DEMO_STUDENTS.some((student) => student.studentId === studentId)
@@ -174,10 +176,17 @@ export function FestivalLive({ mode, studentId, nicknames }: { mode: AppMode; st
     report(4, result.message || (result.ok ? (decision === 'approve' ? '승인했어요.' : '거절했어요.') : ''), result.message === NOT_BUILT)
   }
 
-  const useVoucher = (voucherId: string) => {
+  /** 바코드 스캐너가 읽은 값(또는 직접 입력한 코드)으로 교환권을 찾아 자동으로 사용 처리합니다. */
+  const scanVoucher = (code: string) => {
+    const voucherId = code.trim().toLowerCase()
+    setScanCode('')
+    if (!vouchers.some((voucher) => voucher.id === voucherId)) {
+      report(6, `"${code.trim()}"는 없는 교환권이에요. 다시 스캔해 주세요.`, false)
+      return
+    }
     const result = safe(() => markVoucherUsed(vouchers, voucherId), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', vouchers })
     if (result.ok) setVouchers(result.vouchers)
-    report(6, result.message || (result.ok ? '사용 처리했어요.' : ''), result.message === NOT_BUILT)
+    report(6, result.message || (result.ok ? '스캔 완료! 사용 처리됐어요.' : ''), result.message === NOT_BUILT)
   }
 
   const rankingSection = (
@@ -236,7 +245,16 @@ export function FestivalLive({ mode, studentId, nicknames }: { mode: AppMode; st
           <Section no={8} title="내 모바일 교환권" desc="받은 교환권의 상태를 보여 줘요. 학생 화면에는 버튼이 없어요.">
             {myVouchers.length === 0 ? <p className="live-empty">아직 받은 교환권이 없어요.</p> : (
               <div className="live-cards">
-                {myVouchers.map((voucher) => <StudentVoucherCard key={voucher.id} voucher={voucher} menuName={DEMO_MENUS.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'} />)}
+                {myVouchers.map((voucher) => (
+                  <div key={voucher.id} className={`gifticon ${voucher.status}`}>
+                    <StudentVoucherCard voucher={voucher} menuName={DEMO_MENUS.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'} />
+                    <div className="gifticon-code">
+                      <Barcode value={voucher.id} />
+                      <small>{voucher.id}</small>
+                      <span>{voucher.status === 'issued' ? '부스에서 이 바코드를 보여 주세요' : voucher.status === 'used' ? '이미 사용한 교환권이에요' : '취소된 교환권이에요'}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </Section>
@@ -258,13 +276,18 @@ export function FestivalLive({ mode, studentId, nicknames }: { mode: AppMode; st
             )}
           </Section>
 
-          <Section no={6} title="교환권 사용 처리" desc="학생이 부스에서 교환권을 보여 주면 사용 처리해요." built={!lastNotBuilt[6]}>
-            {issued.length === 0 ? <p className="live-empty">사용할 교환권이 없어요.</p> : (
+          <Section no={6} title="교환권 바코드 스캔" desc="손님 폰의 바코드를 스캔하면 자동으로 사용 처리돼요. 스캐너가 없으면 코드를 직접 입력해도 돼요." built={!lastNotBuilt[6]}>
+            <form className="live-row" onSubmit={(event) => { event.preventDefault(); if (scanCode.trim()) scanVoucher(scanCode) }}>
+              <input value={scanCode} onChange={(event) => setScanCode(event.target.value)} placeholder="여기에 스캔 (예: v-1)" aria-label="교환권 바코드 값" autoComplete="off" />
+              <button className="primary-button" type="submit">스캔 <span>→</span></button>
+            </form>
+            <p className="live-empty">바코드 스캐너는 읽은 값을 이 칸에 입력하고 Enter를 눌러 줘요.</p>
+            {issued.length > 0 && (
               <ul className="live-list">
                 {issued.map((voucher) => (
                   <li key={voucher.id}>
-                    <span>{displayName(voucher.studentId, nicknames)} · {DEMO_MENUS.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'}</span>
-                    <button onClick={() => useVoucher(voucher.id)}>사용 처리</button>
+                    <span>{displayName(voucher.studentId, nicknames)} · {DEMO_MENUS.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'} · <code>{voucher.id}</code></span>
+                    <button onClick={() => scanVoucher(voucher.id)}>스캔해 보기</button>
                   </li>
                 ))}
               </ul>
