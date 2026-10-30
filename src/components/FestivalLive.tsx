@@ -55,6 +55,13 @@ function adminLabel(studentId: string, accounts: Account[]): string {
   return account ? `${account.nickname} (${account.studentId} ${account.name})` : `${studentId} (미등록)`
 }
 
+/** 스캔(사용 처리) 시각: "10월 31일 14:05". 예전 교환권처럼 시각이 없으면 "시각 기록 없음". */
+function scanTime(voucher: StoredVoucher): string {
+  const date = voucher.usedAt?.toDate()
+  if (!date) return '시각 기록 없음'
+  return new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(date)
+}
+
 /** 교환권에 저장된 메뉴 이름을 먼저 쓰고(메뉴를 지워도 남음), 없으면 지금 메뉴 목록에서 찾습니다. */
 function voucherMenuName(voucher: StoredVoucher, menus: SnackMenu[]): string {
   return voucher.menuName ?? menus.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'
@@ -184,6 +191,10 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   const earned = safe(() => calculateTotalEarned(studentId, mine.grants), 0)
   const pending = all.requests.filter((request) => request.status === 'pending')
   const issued = all.vouchers.filter((voucher) => voucher.status === 'issued')
+  // 최근에 사용 처리한 순서(시간 기록이 없는 예전 교환권은 맨 뒤)
+  const used = all.vouchers
+    .filter((voucher) => voucher.status === 'used')
+    .sort((a, b) => (b.usedAt?.toMillis() ?? 0) - (a.usedAt?.toMillis() ?? 0))
 
   const report = (no: number, text: string, notBuilt: boolean) => {
     setMessage(text)
@@ -329,16 +340,31 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
               <button className="primary-button" type="submit">스캔 <span>→</span></button>
             </form>
             <p className="live-empty">바코드 스캐너는 읽은 값을 이 칸에 입력하고 Enter를 눌러 줘요.</p>
-            {issued.length > 0 && (
-              <ul className="live-list">
-                {issued.map((voucher) => (
-                  <li key={voucher.id}>
-                    <span>{adminLabel(voucher.studentId, all.accounts)} · {voucherMenuName(voucher, menus)} · <code>{voucher.id}</code></span>
-                    <button onClick={() => void scanVoucher(voucher.id)}>스캔해 보기</button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {/* 사용 처리는 바코드 스캔이나 코드 입력으로만 합니다(목록에서 눌러서 쓰는 버튼 없음). */}
+            <details className="live-fold">
+              <summary>아직 안 쓴 교환권 {issued.length}장</summary>
+              {issued.length === 0 ? <p className="live-empty">모두 사용했어요.</p> : (
+                <ul className="live-list">
+                  {issued.map((voucher) => (
+                    <li key={voucher.id}><span>{adminLabel(voucher.studentId, all.accounts)} · {voucherMenuName(voucher, menus)} · <code>{voucher.id}</code></span></li>
+                  ))}
+                </ul>
+              )}
+            </details>
+            <details className="live-fold">
+              <summary>최근 스캔 기록 (사용 완료 {used.length}장)</summary>
+              {used.length === 0 ? <p className="live-empty">아직 사용한 교환권이 없어요.</p> : (
+                <ul className="live-list scan-log">
+                  {used.slice(0, 30).map((voucher) => (
+                    <li key={voucher.id}>
+                      <b>{scanTime(voucher)}</b>
+                      <span>{adminLabel(voucher.studentId, all.accounts)} · {voucherMenuName(voucher, menus)} · <code>{voucher.id}</code></span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {used.length > 30 && <p className="live-empty">최근 30장만 보여 줘요.</p>}
+            </details>
           </Section>
         </>
       )}

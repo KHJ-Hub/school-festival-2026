@@ -6,11 +6,13 @@ import {
   doc,
   getDoc,
   onSnapshot,
+  serverTimestamp,
   setDoc,
   updateDoc,
   writeBatch,
   type DocumentData,
   type QuerySnapshot,
+  type Timestamp,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { normalizeForCheck, type Account, type RosterEntry } from '../components/nicknameRules'
@@ -35,7 +37,7 @@ import type { CoinGrant, CoinRequest, SnackMenu, TaskVoucher } from '../tasks/ta
 export type RankingRow = { rank: number; nickname: string; total: number }
 
 /** 교환권에는 메뉴 이름도 같이 저장합니다(나중에 메뉴를 지워도 교환권에 이름이 남도록). */
-export type StoredVoucher = TaskVoucher & { menuName?: string }
+export type StoredVoucher = TaskVoucher & { menuName?: string; usedAt?: Timestamp | null }
 
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 
@@ -280,7 +282,8 @@ export async function saveVoucherUse(before: TaskVoucher[], after: TaskVoucher[]
   const batch = writeBatch(db)
   for (const voucher of after) {
     const old = before.find((item) => item.id === voucher.id)
-    if (old && old.status !== voucher.status) batch.update(doc(db, 'students', voucher.studentId, 'vouchers', voucher.id), { status: voucher.status })
+    // 사용 처리한 시각(서버 시계)을 같이 남겨 운영진 화면의 "최근 스캔 기록"에 씁니다.
+    if (old && old.status !== voucher.status) batch.update(doc(db, 'students', voucher.studentId, 'vouchers', voucher.id), { status: voucher.status, ...(voucher.status === 'used' ? { usedAt: serverTimestamp() } : {}) })
   }
   await batch.commit()
 }

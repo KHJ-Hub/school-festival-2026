@@ -155,3 +155,12 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .admin-file input:focus-visible + span { outline: 3px solid #f3bd3f; }
 .admin-tools-after { margin: 18px 0 0; }
 @media (max-width: 600px) { .admin-tools-after { margin-top: 14px; gap: 14px; } }
+
+/* 운영진: 접어 두는 목록(아직 안 쓴 교환권, 최근 스캔 기록) */
+.live-fold { margin-top: 12px; border: 1px solid #e4dbd0; border-radius: 12px; background: #fffdfb; }
+.live-fold summary { padding: 12px 14px; cursor: pointer; font-weight: 700; list-style-position: inside; }
+.live-fold[open] summary { border-bottom: 1px dashed #e4dbd0; }
+.live-fold .live-list, .live-fold .live-empty { margin: 10px 12px 12px; }
+.scan-log li { justify-content: flex-start; }
+.scan-log li b { flex: none; min-width: 120px; color: #2c6b57; font-size: 13px; }
+@media (max-width: 600px) { .scan-log li { flex-wrap: wrap; } .scan-log li b { min-width: 0; } .scan-log li > span:first-child { flex: 1 1 auto; } }
