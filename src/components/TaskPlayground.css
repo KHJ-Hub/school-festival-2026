@@ -6,5 +6,5 @@
 .playground-task h3 span { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: #302620; color: white; font-size: 12px; }
 .playground-task dl { margin: 0; display: grid; gap: 8px; }
 .playground-task dt { font-size: 12px; color: #8a786e; word-break: break-all; }
-.playground-task dd { margin: 2px 0 0; font: 13px ui-monospace, Consolas, monospace; word-break: break-all; }
+.playground-task dd { margin: 2px 0 0; color: #302620; font: 13px ui-monospace, Consolas, monospace; word-break: break-all; }
 .playground-cards { display: grid; gap: 10px; }
