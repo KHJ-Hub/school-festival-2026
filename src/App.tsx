@@ -7,7 +7,7 @@ import { AdminRankingSync, FestivalLive, RankingBoard, StudentIdBox } from './co
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
 import { checkNickname, type Account } from './components/nicknameRules'
 import { VisitorSteps } from './components/PopupIntro'
-import { enterStudent, isNicknameTaken, loadOwnAccount, renameStudent, saveBannedWords, saveRoster, useAdminData, useBannedWords } from './data/store'
+import { enterStudent, isNicknameTaken, loadOwnAccount, renameStudent, saveBannedWords, saveRoster, useAdminData, useBannedWordsState } from './data/store'
 import { ADMIN_EMAIL, auth } from './firebase'
 import { CLUBS } from './mockData'
 
@@ -41,7 +41,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null)
   const [me, setMe] = useState<Account | null>(null)
   const isAdmin = user?.email === ADMIN_EMAIL
-  const bannedWords = useBannedWords()
+  const { words: bannedWords, loaded: bannedLoaded } = useBannedWordsState()
   const admin = useAdminData(isAdmin)
 
   // 학생은 화면에 안 보이는 익명 로그인으로 기기마다 구분합니다. 운영진이 잠그면 다시 익명으로 돌아갑니다.
@@ -153,8 +153,9 @@ function App() {
               accounts={admin.accounts}
               extraWords={bannedWords}
               onAddRoster={saveRoster}
-              onAddWord={(word) => saveBannedWords(bannedWords.includes(word) ? bannedWords : [...bannedWords, word])}
-              onRemoveWord={(word) => saveBannedWords(bannedWords.filter((item) => item !== word))}
+              // 금지어를 서버에서 다 읽기 전에는 저장하지 않습니다(기존 금지어를 덮어쓰지 않도록).
+              onAddWord={(word) => (bannedLoaded ? saveBannedWords(bannedWords.includes(word) ? bannedWords : [...bannedWords, word]) : Promise.reject(new Error('loading')))}
+              onRemoveWord={(word) => (bannedLoaded ? saveBannedWords(bannedWords.filter((item) => item !== word)) : Promise.reject(new Error('loading')))}
             />
             <AdminPasswordChange />
           </div>

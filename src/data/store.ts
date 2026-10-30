@@ -138,9 +138,17 @@ export function newMenuId(): string {
 }
 
 export function useBannedWords(): string[] {
-  const [words, setWords] = useState<string[]>([])
-  useEffect(() => onSnapshot(doc(db, 'settings', 'bannedWords'), (snap) => setWords((snap.data()?.words as string[]) ?? []), () => setWords([])), [])
-  return words
+  return useBannedWordsState().words
+}
+
+/** 금지어와 함께 "서버에서 읽었는지"를 돌려줍니다(읽기 전에 추가하면 기존 금지어를 덮어쓰므로). */
+export function useBannedWordsState(): { words: string[]; loaded: boolean } {
+  const [state, setState] = useState<{ words: string[]; loaded: boolean }>({ words: [], loaded: false })
+  useEffect(() => onSnapshot(doc(db, 'settings', 'bannedWords'), (snap) => {
+    if (!snap.exists() && snap.metadata.fromCache) return
+    setState({ words: (snap.data()?.words as string[]) ?? [], loaded: true })
+  }, () => setState((current) => ({ ...current }))), [])
+  return state
 }
 
 // ───── 학생 등록 / 다시 들어오기 / 닉네임 ─────
