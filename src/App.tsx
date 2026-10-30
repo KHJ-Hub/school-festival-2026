@@ -16,7 +16,7 @@ function App() {
           <span className="brand-mark">F!</span>
           <span>
             <strong>배정고 친환경 팝업스토어</strong>
-            <small>리틀엔지니어랩 × 국제이해문화탐구반 × 보드게임동아리</small>
+            <small>보드게임동아리 × 리틀엔지니어랩 × 국제이해문화탐구반</small>
           </span>
         </button>
         <div className="header-actions">
