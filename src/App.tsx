@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { onAuthStateChanged, signInAnonymously, signOut, type User } from 'firebase/auth'
 import { AdminLock, AdminPasswordChange } from './components/AdminLock'
 import { AdminRoster } from './components/AdminRoster'
-import { FestivalLive, StudentIdBox } from './components/FestivalLive'
+import { AdminRankingSync, FestivalLive, RankingBoard, StudentIdBox } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
 import { checkNickname, type Account } from './components/nicknameRules'
 import { VisitorSteps } from './components/PopupIntro'
@@ -31,7 +31,12 @@ function writeMe(studentId: string | null) {
 }
 
 function App() {
-  const [mode, setMode] = useState<AppMode>('student')
+  // 주소 끝 #ranking / #admin 으로 화면을 바로 열 수 있습니다(교실 TV에는 #ranking).
+  const [mode, setModeState] = useState<AppMode>(() => (window.location.hash === '#ranking' ? 'ranking' : window.location.hash === '#admin' ? 'admin' : 'student'))
+  const setMode = (next: AppMode) => {
+    setModeState(next)
+    window.history.replaceState(null, '', next === 'student' ? window.location.pathname + window.location.search : `#${next}`)
+  }
   const [user, setUser] = useState<User | null>(null)
   const [me, setMe] = useState<Account | null>(null)
   const isAdmin = user?.email === ADMIN_EMAIL
@@ -108,7 +113,7 @@ function App() {
       <main>
         <section className="hero">
           <div>
-            <p className="eyebrow">{mode === 'student' ? '학생용 화면' : '운영진용 화면'}</p>
+            <p className="eyebrow">{mode === 'student' ? '학생용 화면' : mode === 'admin' ? '운영진용 화면' : '실시간 코인 랭킹'}</p>
             <h1>배정고<br /><em>친환경 팝업스토어</em></h1>
           </div>
         </section>
@@ -141,7 +146,11 @@ function App() {
           </div>
         )}
 
-        {(mode === 'student' || isAdmin) && <FestivalLive mode={mode} me={isAdmin ? null : me} isAdmin={isAdmin} />}
+        {mode === 'ranking' && <RankingBoard />}
+
+        {isAdmin && <AdminRankingSync />}
+
+        {(mode === 'student' || (mode === 'admin' && isAdmin)) && <FestivalLive mode={mode} me={isAdmin ? null : me} isAdmin={isAdmin} />}
 
         <section className="clubs">
           <span>함께 만드는 동아리</span>

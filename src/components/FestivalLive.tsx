@@ -169,7 +169,6 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   const studentId = me?.studentId ?? ''
   const mine = useStudentData(studentId || null)
   const all = useAdminData(isAdmin)
-  const ranking = useRanking()
   const [amount, setAmount] = useState(3)
   const [message, setMessage] = useState('')
   const [scanCode, setScanCode] = useState('')
@@ -179,18 +178,6 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   const earned = safe(() => calculateTotalEarned(studentId, mine.grants), 0)
   const pending = all.requests.filter((request) => request.status === 'pending')
   const issued = all.vouchers.filter((voucher) => voucher.status === 'issued')
-  const rankingBuilt = safe(() => rankByTotalEarned(DEMO_GRANTS, 5).length > 0, false)
-
-  // 운영진 화면이 열려 있으면 지급 내역이 바뀔 때마다 7번 학생 함수로 랭킹을 다시 계산해 닉네임만 공개합니다.
-  useEffect(() => {
-    if (!isAdmin) return
-    const rows = safe(() => rankByTotalEarned(all.grants, 10), []).map((row) => ({
-      rank: row.rank,
-      nickname: all.accounts.find((account) => account.studentId === row.studentId)?.nickname ?? '닉네임 없음',
-      total: row.total,
-    }))
-    if (JSON.stringify(rows) !== JSON.stringify(ranking)) void saveRanking(rows).catch(() => undefined)
-  }, [isAdmin, all.grants, all.accounts, ranking])
 
   const report = (no: number, text: string, notBuilt: boolean) => {
     setMessage(text)
@@ -254,18 +241,6 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
     }
     report(6, result.message || (result.ok ? '스캔 완료! 사용 처리됐어요.' : ''), result.message === NOT_BUILT)
   }
-
-  const rankingSection = (
-    <Section no={7} title="코인 랭킹" desc="지금까지 모은 코인이 많은 순서예요. 닉네임만 보여 줘요." built={rankingBuilt}>
-      {ranking.length === 0 ? (
-        <p className="live-empty">{rankingBuilt ? '아직 승인된 코인이 없어요.' : '7번 학생 코드가 순위를 만들면 여기에 나타나요.'}</p>
-      ) : (
-        <ol className="live-rank">
-          {ranking.map((row) => <li key={row.rank}><b>{row.rank}위</b><span>{row.nickname}</span><strong>{row.total} coin</strong></li>)}
-        </ol>
-      )}
-    </Section>
-  )
 
   return (
     <div className="live">
@@ -361,7 +336,73 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
         </>
       )}
 
-      {rankingSection}
     </div>
   )
+}
+
+/**
+ * 랭킹 전용 화면(교실 TV·모니터용). 운영진 화면이 계산해 저장한 랭킹(닉네임·코인만)을 실시간으로 보여 줍니다.
+ * 주소 끝에 #ranking 을 붙이면 바로 이 화면으로 열립니다.
+ */
+export function RankingBoard() {
+  const ranking = useRanking()
+  const built = safe(() => rankByTotalEarned(DEMO_GRANTS, 5).length > 0, false)
+  const [first, second, third, ...rest] = ranking
+  // 가운데가 1위가 되도록 [2위, 1위, 3위] 자리를 고정하고, 비어 있는 자리는 빈칸으로 둡니다.
+  const podium = [second, first, third]
+
+  return (
+    <section className="board">
+      <div className="board-head">
+        <div>
+          <h2>코인 랭킹 TOP 10</h2>
+          <p>지금까지 모은 코인 순위예요. 1위는 시크릿 박스에 도전!</p>
+        </div>
+        <div className="board-tags">
+          <span className="board-live"><i aria-hidden="true" /> 실시간</span>
+          <span className={`live-badge ${built ? 'done' : 'todo'}`}>{built ? '7번 학생이 만든 기능' : '7번 학생이 만드는 중'}</span>
+        </div>
+      </div>
+
+      {ranking.length === 0 ? (
+        <p className="board-empty">{built ? '아직 승인된 코인이 없어요. 첫 번째 주인공이 되어 보세요!' : '7번 학생 코드가 순위를 만들면 여기에 나타나요.'}</p>
+      ) : (
+        <>
+          <ol className="board-podium">
+            {podium.map((row, index) => row ? (
+              <li key={row.rank} className={`rank-${row.rank}`}>
+                <span className="board-medal" aria-hidden="true">{row.rank === 1 ? '👑' : row.rank === 2 ? '🥈' : '🥉'}</span>
+                <b>{row.rank}위</b>
+                <strong>{row.nickname}</strong>
+                <em>{row.total} coin</em>
+              </li>
+            ) : <li key={`empty-${index}`} className="empty" aria-hidden="true" />)}
+          </ol>
+          {rest.length > 0 && (
+            <ol className="board-list">
+              {rest.map((row) => <li key={row.rank}><b>{row.rank}위</b><span>{row.nickname}</span><strong>{row.total} coin</strong></li>)}
+            </ol>
+          )}
+        </>
+      )}
+    </section>
+  )
+}
+
+/**
+ * 운영진으로 로그인한 기기가 있으면(어느 화면이든) 지급 내역이 바뀔 때마다
+ * 7번 학생 함수로 랭킹을 다시 계산해 닉네임·코인만 공개 랭킹에 저장합니다. 화면에는 아무것도 그리지 않습니다.
+ */
+export function AdminRankingSync() {
+  const all = useAdminData(true)
+  const ranking = useRanking()
+  useEffect(() => {
+    const rows = safe(() => rankByTotalEarned(all.grants, 10), []).map((row) => ({
+      rank: row.rank,
+      nickname: all.accounts.find((account) => account.studentId === row.studentId)?.nickname ?? '닉네임 없음',
+      total: row.total,
+    }))
+    if (JSON.stringify(rows) !== JSON.stringify(ranking)) void saveRanking(rows).catch(() => undefined)
+  }, [all.grants, all.accounts, ranking])
+  return null
 }

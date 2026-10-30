@@ -84,3 +84,45 @@
 .admin-paste { width: 100%; padding: 10px 12px; border: 1px solid #d9cdc1; border-radius: 10px; font: 15px ui-monospace, Consolas, monospace; margin-bottom: 10px; box-sizing: border-box; }
 .admin-lock { margin: 22px 0; }
 .live-id.registered .live-row input { width: 160px; }
+
+/* 랭킹 전용 화면(교실 TV·모니터용) */
+.board { margin: 22px 0; padding: 28px; border-radius: 26px; background: #2b211d; color: #fff; box-shadow: 0 16px 40px #2b211d33; }
+.board-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.board-head h2 { margin: 0; font: clamp(28px, 4vw, 44px) 'Jua'; }
+.board-head p { margin: 4px 0 0; color: #d9c9bf; font-size: clamp(14px, 1.6vw, 18px); }
+.board-tags { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.board-live { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: #3d302a; color: #ffd4c8; font-size: 13px; font-weight: 700; }
+.board-live i { width: 8px; height: 8px; border-radius: 50%; background: #ff6b52; animation: board-pulse 1.4s infinite; }
+@keyframes board-pulse { 50% { opacity: .25; } }
+.board-empty { margin: 30px 0; text-align: center; font-size: clamp(18px, 2.4vw, 26px); color: #d9c9bf; }
+.board-podium { margin: 0 0 20px; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-items: end; }
+.board-podium li { padding: 22px 12px; border-radius: 20px; display: grid; gap: 4px; justify-items: center; text-align: center; background: #3d302a; min-width: 0; }
+.board-podium li.rank-1 { padding-top: 34px; padding-bottom: 34px; background: linear-gradient(160deg, #f6c445, #e59a2f); color: #3b2405; }
+.board-podium li.rank-2 { background: #4a3d36; }
+.board-podium li.rank-3 { background: #45362f; }
+.board-medal { font-size: clamp(30px, 4vw, 48px); }
+.board-podium b { font-size: clamp(14px, 1.6vw, 18px); opacity: .85; }
+.board-podium strong { font: clamp(22px, 3.2vw, 40px) 'Jua'; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-podium em { font-style: normal; font-size: clamp(16px, 2vw, 24px); font-weight: 700; }
+.board-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.board-list li { display: grid; grid-template-columns: 70px 1fr auto; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 14px; background: #3d302a; font-size: clamp(16px, 2vw, 24px); }
+.board-list b { color: #ffd4c8; }
+.board-list strong { font-weight: 700; }
+@media (max-width: 600px) {
+  .board { padding: 20px 16px; }
+  .board-podium { grid-template-columns: 1fr; }
+  .board-podium li.rank-1 { order: -1; }
+  .board-list li { grid-template-columns: 52px 1fr auto; padding: 10px 12px; }
+}
+.board-podium li.empty { background: transparent; }
+@media (max-width: 600px) { .board-podium li.empty { display: none; } }
+
+/* 머리 버튼 3개(학생용·운영진용·랭킹)가 폰에서도 한 줄로 보이게 */
+.mode-switcher button { white-space: nowrap; }
+@media (max-width: 500px) {
+  .topbar { gap: 8px; }
+  .brand { min-width: 0; }
+  .brand strong { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brand-mark { flex: none; }
+  .mode-switcher button { padding: 7px 7px; font-size: 11px; }
+}
