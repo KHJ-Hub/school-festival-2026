@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { FestivalLive, StudentIdBox } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
 import { VisitorSteps } from './components/PopupIntro'
-import { TaskPlayground } from './components/TaskPlayground'
-import './components/TaskPlayground.css'
 import { CLUBS } from './mockData'
 import { DEMO_STUDENTS } from './tasks/fixtures'
 
@@ -46,8 +44,6 @@ function App() {
         )}
 
         <FestivalLive mode={mode} inputId={inputId} nicknames={nicknames} />
-
-        {mode === 'admin' && <TaskPlayground />}
 
         <section className="clubs">
           <span>함께 만드는 동아리</span>
