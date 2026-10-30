@@ -32,11 +32,6 @@ function App() {
           </div>
         </section>
 
-        <div className="demo-alert" role="note">
-          <span>ⓘ</span>
-          <p><strong>연습용 학번(90001~90003)과 가상 데이터예요.</strong> 새로고침하면 처음 상태로 돌아가요. 아직 만들지 않은 기능은 "만드는 중"으로 보여요.</p>
-        </div>
-
         <PopupIntro />
 
         <FestivalLive mode={mode} />
