@@ -314,9 +314,12 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
             </ul>
           </Section>
 
-          <Section no={3} title="내 코인" desc="받은 코인과 지금 쓸 수 있는 코인이에요." built={BUILT[3]}>
+          <Section no={3} title="내 코인" desc={exchangedAll ? '교환을 마쳤어요. 모은 코인은 랭킹 점수로 남아요.' : '교환에 쓸 수 있는 코인과 지금까지 모은 코인이에요.'} built={BUILT[3]}>
             <div className="live-numbers">
-              <div><small>지금 쓸 수 있는 코인</small><strong>{balance} coin</strong></div>
+              {/* 교환은 한 번뿐이라, 교환한 뒤에는 남은 코인 대신 "교환 완료"를 보여 줍니다. */}
+              {exchangedAll
+                ? <div className="done"><small>간식 교환</small><strong>교환 완료 ✓</strong></div>
+                : <div><small>교환에 쓸 수 있는 코인</small><strong>{balance} coin</strong></div>}
               <div><small>지금까지 모은 코인</small><strong>{earned} coin</strong></div>
             </div>
           </Section>

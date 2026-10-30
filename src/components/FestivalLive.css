@@ -179,3 +179,5 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 
 /* 학생 등록 칸: 다른 칸처럼 제목 줄 오른쪽에 이름표 */
 .live-id > .live-head { display: block; width: 100%; margin-bottom: 0; }
+.live-numbers div.done { background: #e4f5ec; }
+.live-numbers div.done strong { color: #1f7a4f; }
