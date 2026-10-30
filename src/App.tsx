@@ -46,7 +46,6 @@ function App() {
 
       <footer>
         <span>2026 학교 축제 프로젝트</span>
-        <span>실습용 프론트엔드 · 서버 연결 전</span>
       </footer>
     </div>
   )
