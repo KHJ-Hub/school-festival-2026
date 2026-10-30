@@ -164,3 +164,13 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .scan-log li { justify-content: flex-start; }
 .scan-log li b { flex: none; min-width: 120px; color: #2c6b57; font-size: 13px; }
 @media (max-width: 600px) { .scan-log li { flex-wrap: wrap; } .scan-log li b { min-width: 0; } .scan-log li > span:first-child { flex: 1 1 auto; } }
+
+/* 칸 제목 줄: 제목 왼쪽, 이름표 오른쪽 (폰에서도 같은 줄) */
+.live-section .live-head { display: block; }
+.live-title-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.live-title-row h2 { min-width: 0; }
+.live-title-row .live-badge { flex: none; }
+.live-section .live-head p { margin-top: 6px; }
+@media (max-width: 600px) {
+  .live-title-row .live-badge { font-size: 11px; padding: 4px 8px; }
+}

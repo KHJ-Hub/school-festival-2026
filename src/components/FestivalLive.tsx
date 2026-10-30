@@ -28,6 +28,7 @@ import {
   type StoredVoucher,
   useStudentData,
 } from '../data/store'
+import { creditLabel } from '../credits'
 import { Barcode } from './Barcode'
 import type { AppMode } from './ModeSwitcher'
 import type { Account } from './nicknameRules'
@@ -71,11 +72,11 @@ function Section({ no, title, desc, built = true, children }: { no: number; titl
   return (
     <article className="panel live-section">
       <div className="live-head">
-        <div>
+        <div className="live-title-row">
           <h2>{title}</h2>
-          <p>{desc}</p>
+          <span className={`live-badge ${built ? 'done' : 'todo'}`}>{creditLabel(no, built)}</span>
         </div>
-        <span className={`live-badge ${built ? 'done' : 'todo'}`}>{built ? `${no}번 학생이 만든 기능` : `${no}번 학생이 만드는 중`}</span>
+        <p>{desc}</p>
       </div>
       {children}
     </article>
@@ -169,7 +170,7 @@ export function StudentIdBox({ me, busy, onEnter, onRename, onLeave }: {
       </div>
       <div className="live-id-action">
         <button className="primary-button" onClick={() => void submit()} disabled={busy || working}>{busy ? '연결 중…' : working ? '확인 중…' : '등록 / 다시 들어오기'} <span>→</span></button>
-        <span className={`live-badge ${built ? 'done' : 'todo'}`}>{built ? '학번 확인: 1번 학생이 만든 기능' : '학번 확인: 1번 학생이 만드는 중'}</span>
+        <span className={`live-badge ${built ? 'done' : 'todo'}`}>{`학번 확인: ${creditLabel(1, built)}`}</span>
       </div>
       <p className="live-empty">이미 등록했다면 학번과 이름만 쓰고 누르면 다시 들어와요.</p>
       {error && <p className="live-error" role="alert">{error}</p>}
@@ -393,7 +394,7 @@ export function RankingBoard() {
         </div>
         <div className="board-tags">
           <span className="board-live"><i aria-hidden="true" /> 실시간</span>
-          <span className={`live-badge ${built ? 'done' : 'todo'}`}>{built ? '7번 학생이 만든 기능' : '7번 학생이 만드는 중'}</span>
+          <span className={`live-badge ${built ? 'done' : 'todo'}`}>{creditLabel(7, built)}</span>
         </div>
       </div>
 
