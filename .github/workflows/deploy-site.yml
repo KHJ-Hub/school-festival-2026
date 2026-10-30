@@ -1,0 +1,68 @@
+name: 학생 작업 합쳐서 사이트 배포
+
+# 학생이 자기 브랜치에 push 하면, 지금까지 올라온 학생 작업을 모두 합쳐서 사이트를 새로 만듭니다.
+# 합친 결과는 gh-pages 브랜치에만 올라가며, 학생 브랜치는 건드리지 않습니다.
+on:
+  push:
+    branches:
+      - 'feature/student-**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 기본 브랜치 가져오기
+        uses: actions/checkout@v4
+        with:
+          ref: feature/student-tests-setup
+          fetch-depth: 0
+
+      - name: 학생 작업이 올라온 브랜치만 합치기
+        run: |
+          git config user.name "site-builder"
+          git config user.email "site-builder@users.noreply.github.com"
+          for branch in $(git branch -r --list 'origin/feature/student-[1-8]-*' | tr -d ' '); do
+            ahead=$(git rev-list --count HEAD..$branch)
+            if [ "$ahead" -gt 0 ]; then
+              if git merge --no-edit "$branch"; then
+                echo "합침: $branch ($ahead 커밋)"
+              else
+                git merge --abort
+                echo "::warning::합치지 못해 건너뜀: $branch"
+              fi
+            else
+              echo "아직 작업 없음: $branch"
+            fi
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # 학생 코드에 타입 오류가 있어도 사이트는 만들어지도록 vite build 만 실행합니다.
+      - name: 사이트 빌드
+        run: npx vite build
+        env:
+          VITE_BASE: /school-festival-2026/
+
+      - name: gh-pages 브랜치에 올리기
+        run: |
+          touch dist/.nojekyll
+          cd dist
+          git init -q -b gh-pages
+          git config user.name "site-builder"
+          git config user.email "site-builder@users.noreply.github.com"
+          git add -A
+          git commit -q -m "site: ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
