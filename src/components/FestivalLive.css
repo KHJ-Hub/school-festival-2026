@@ -231,3 +231,8 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
   .roster-add { grid-template-columns: .9fr 1.3fr; gap: 10px; }
   .roster-add .primary-button { padding-left: 10px; padding-right: 10px; font-size: 14px; }
 }
+
+/* 갤럭시 S25 울트라(약 412px)보다 좁은 폰에서는 두 줄로 쌓음 */
+@media (max-width: 399px) {
+  .roster-add { grid-template-columns: 1fr; gap: 6px; }
+}
