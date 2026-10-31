@@ -17,6 +17,7 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
   const [word, setWord] = useState('')
   const [note, setNote] = useState('')
   const [search, setSearch] = useState('')
+  const [pasteOpen, setPasteOpen] = useState(false)
 
   const addPasted = async () => {
     const { entries, skipped } = parseRosterText(pasted)
@@ -94,15 +95,26 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
 
       {note && <p className="live-message" role="status">{note}</p>}
 
-      <h3>엑셀 파일로 넣기</h3>
-      <label className="admin-file">
-        <input type="file" accept=".xlsx,.csv" onChange={(event) => { void addFile(event.target.files?.[0]); event.target.value = '' }} />
-        <span className="primary-button">파일 고르기</span>
-      </label>
-
-      <h3>여러 명 붙여넣기</h3>
-      <textarea className="admin-paste" value={pasted} onChange={(event) => setPasted(event.target.value)} rows={4} placeholder={'90004 홍길동\n90005,김배정'} />
-      <button className="primary-button" onClick={() => void addPasted()}>붙여 넣은 명단 넣기</button>
+      {/* 넓은 화면에서는 엑셀 파일과 붙여넣기를 나란히 두고, 폰에서는 붙여넣기를 접어 둡니다. */}
+      <div className="roster-add">
+        <div>
+          <h3>엑셀 파일로 넣기</h3>
+          <label className="admin-file">
+            <input type="file" accept=".xlsx,.csv" onChange={(event) => { void addFile(event.target.files?.[0]); event.target.value = '' }} />
+            <span className="primary-button">파일 고르기</span>
+          </label>
+        </div>
+        <div className={`roster-paste ${pasteOpen ? 'open' : ''}`}>
+          <div className="roster-paste-head">
+            <h3>여러 명 붙여넣기</h3>
+            <button type="button" className="live-toggle roster-paste-toggle" onClick={() => setPasteOpen((value) => !value)} aria-expanded={pasteOpen}>{pasteOpen ? '접기' : '펼치기'}</button>
+          </div>
+          <div className="roster-paste-body">
+            <textarea className="admin-paste" value={pasted} onChange={(event) => setPasted(event.target.value)} rows={3} placeholder={'90004 홍길동\n90005,김배정'} />
+            <button className="primary-button" onClick={() => void addPasted()}>붙여 넣은 명단 넣기</button>
+          </div>
+        </div>
+      </div>
 
       {/* 전교생을 넣으면 길어지므로 접어 두고, 펼치면 학번·이름으로 찾을 수 있게 합니다. */}
       <details className="live-fold">
