@@ -229,9 +229,9 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .roster-paste-head h3 { margin: 12px 0 8px; }
 .roster-paste .admin-paste { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
 
-/* 운영진 카드(간식 메뉴·학생 명단)의 버튼은 세로 길이를 낮게 */
-.app-shell .admin-roster .primary-button { min-height: 38px; padding: 8px 16px; font-size: 15px; box-shadow: 0 3px 0 #ac3c2b; }
-.app-shell .admin-roster .primary-button:active { box-shadow: 0 1px 0 #ac3c2b; }
+/* 주황(코랄) 버튼은 모두 세로 길이를 낮게 */
+.app-shell .primary-button { min-height: 38px; padding: 8px 16px; font-size: 15px; box-shadow: 0 3px 0 #ac3c2b; }
+.app-shell .primary-button:active { box-shadow: 0 1px 0 #ac3c2b; }
 
 /* 붙여넣기 입력 칸: 두 줄 안내문이 다 들어가게 높이를 잡아 스크롤 막대가 안 생기게 */
 .roster-paste .admin-paste { min-height: 76px; overflow-y: auto; resize: vertical; }
