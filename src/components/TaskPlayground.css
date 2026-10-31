@@ -15,4 +15,6 @@
 .playground-back { display: inline-block; margin-top: 4px; color: #c94d3a; font-weight: 700; }
 .lab-link { color: #e6a28f; text-decoration: underline; }
 @media (max-width: 500px) { .playground-grid { grid-template-columns: 1fr; } .playground h2 { font-size: 22px; } }
-.footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: flex-end; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: flex-start; }
+/* 폰에서는 바닥 글과 링크를 왼쪽 정렬로 위아래로 쌓음 */
+@media (max-width: 600px) { .app-shell footer { flex-direction: column; align-items: flex-start; gap: 10px; } }
