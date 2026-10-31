@@ -101,9 +101,8 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
 
       {note && <p className="live-message" role="status">{note}</p>}
 
-      {/* 넓은 화면에서는 엑셀 파일과 붙여넣기를 나란히 둡니다(폰에서도). */}
       <div className="roster-add">
-        <div>
+        <div className="roster-file">
           <h3>엑셀 파일로 넣기</h3>
           <label className="admin-file">
             <input type="file" accept=".xlsx,.csv" onChange={(event) => { void addFile(event.target.files?.[0]); event.target.value = '' }} />
@@ -111,13 +110,9 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
           </label>
         </div>
         <div className="roster-paste">
-          <div className="roster-paste-head">
-            <h3>여러 명 붙여넣기</h3>
-          </div>
-          <div className="roster-paste-body">
-            <textarea className="admin-paste" value={pasted} onChange={(event) => setPasted(event.target.value)} rows={3} placeholder={'90004 홍길동\n90005,김배정'} />
-            <button className="primary-button" onClick={() => void addPasted()}>붙여 넣은 명단 넣기</button>
-          </div>
+          <div className="roster-paste-head"><h3>여러 명 붙여넣기</h3></div>
+          <textarea className="admin-paste" value={pasted} onChange={(event) => setPasted(event.target.value)} rows={2} placeholder={'90004 홍길동\n90005,김배정'} />
+          <button className="primary-button" onClick={() => void addPasted()}>붙여 넣은 명단 넣기</button>
         </div>
       </div>
 
