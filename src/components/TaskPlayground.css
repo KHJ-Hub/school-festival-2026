@@ -1,10 +1,17 @@
-/* 교사 관리: TaskPlayground 전용 스타일 (공용 styles.css와 분리해 충돌을 줄입니다) */
-.playground { display: block; }
-.playground-grid { margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-.playground-task { padding: 14px; border: 1px solid #e5dbd0; border-radius: 14px; background: white; min-width: 0; }
-.playground-task h3 { margin: 0 0 10px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-.playground-task h3 span { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: #302620; color: white; font-size: 12px; }
-.playground-task dl { margin: 0; display: grid; gap: 8px; }
-.playground-task dt { font-size: 12px; color: #8a786e; word-break: break-all; }
-.playground-task dd { margin: 2px 0 0; color: #302620; font: 13px ui-monospace, Consolas, monospace; word-break: break-all; }
-.playground-cards { display: grid; gap: 10px; }
+/* 교사 관리: #lab 화면(학생 함수 원래 결과) 전용 스타일 */
+.playground { margin: 22px 0; display: grid; gap: 18px; }
+.playground h2 { margin: 0 0 8px; font: 26px 'Jua'; }
+.playground p { margin: 0 0 6px; color: #5d4c44; line-height: 1.6; word-break: keep-all; }
+.playground-note { font-size: 14px; color: #8a786e !important; }
+.playground-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.playground-task { padding: 18px; background: #fffdfb; border: 1px solid #e4dbd0; border-radius: 18px; box-shadow: 0 8px 24px #5c44340d; min-width: 0; }
+.playground-task h3 { margin: 0 0 12px; display: flex; align-items: center; gap: 8px; font: 19px 'Jua'; }
+.playground-task h3 span { padding: 3px 10px; border-radius: 999px; background: #df5d48; color: white; font: 700 13px 'Gowun Dodum'; }
+.playground-task dl { margin: 0; display: grid; gap: 10px; }
+.playground-task dl > div { padding: 10px 12px; border-radius: 12px; background: #f7f1ea; }
+.playground-task dt { font: 12px ui-monospace, Consolas, monospace; color: #8a786e; word-break: break-all; }
+.playground-task dd { margin: 4px 0 0; font: 14px ui-monospace, Consolas, monospace; color: #2b211d; word-break: break-all; }
+.playground-cards { display: grid; gap: 12px; }
+.playground-back { display: inline-block; margin-top: 4px; color: #c94d3a; font-weight: 700; }
+.lab-link { color: #e6a28f; text-decoration: underline; }
+@media (max-width: 500px) { .playground-grid { grid-template-columns: 1fr; } .playground h2 { font-size: 22px; } }

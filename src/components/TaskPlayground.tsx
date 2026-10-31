@@ -14,9 +14,12 @@ import {
   resolveCoinRequest,
 } from '../studentTasks'
 import { DEMO_GRANTS, DEMO_MENUS, DEMO_REQUESTS, DEMO_STUDENTS, DEMO_VOUCHERS } from '../tasks/fixtures'
+import './TaskPlayground.css'
 
 /**
  * 교사 관리 파일: 학생이 구현한 함수를 가상 데이터로 실행해 결과를 보여 줍니다.
+ * 사이트 주소 끝에 #lab 을 붙이면 열립니다. 축제 화면처럼 꾸미지 않고, 학생 함수가 돌려준 값과
+ * 8번 학생의 교환권 카드를 원래 모습 그대로 보여 줍니다.
  * 학생 코드에서 오류가 나도 이 화면 전체가 멈추지 않도록 항목마다 감쌉니다.
  */
 function show(run: () => unknown): string {
@@ -33,7 +36,7 @@ type Row = { label: string; result: string }
 function Task({ no, title, rows, children }: { no: number; title: string; rows?: Row[]; children?: ReactNode }) {
   return (
     <article className="playground-task">
-      <h3><span>{no}</span>{title}</h3>
+      <h3><span>{no}번</span>{title}</h3>
       {rows && (
         <dl>
           {rows.map((row) => (
@@ -49,11 +52,12 @@ function Task({ no, title, rows, children }: { no: number; title: string; rows?:
 export function TaskPlayground() {
   const bag = DEMO_MENUS[1]!
   return (
-    <section className="learning-roadmap playground">
+    <section className="playground">
       <div>
-        <span className="eyebrow">STUDENT TASK PLAYGROUND</span>
-        <h2>내가 만든 함수의 결과 보기</h2>
-        <p>가상 데이터(가상 학번 9로 시작하는 5자리)로 8개 과제 함수를 실행한 결과입니다. 구현 전에는 기본값이 보이고, 코드를 저장하면 자동으로 바뀝니다. 정답 확인은 <code>npm test</code>로 하세요.</p>
+        <span className="eyebrow">STUDENT CODE LAB</span>
+        <h2>내가 만든 코드, 원래 모습</h2>
+        <p>축제 사이트에서는 여러분이 만든 함수에 디자인을 입혀서 보여 줘요. 여기서는 연습용 가상 데이터(학번 9로 시작)로 함수를 실행해서 <b>함수가 돌려준 값 그대로</b> 보여 줘요. 8번 교환권 카드도 꾸미기 전 원래 모습이에요.</p>
+        <p className="playground-note">아직 만드는 중인 함수는 처음에 받은 기본값(TODO)이 보여요.</p>
       </div>
       <div className="playground-grid">
         <Task no={1} title="학번 검사·학생 찾기·메뉴 조회" rows={[
