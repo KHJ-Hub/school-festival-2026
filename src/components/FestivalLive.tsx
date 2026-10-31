@@ -365,7 +365,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
 
       {mode === 'admin' && isAdmin && (
         <>
-          <Section no={4} title="적립 신청 승인" desc="실물 코인을 회수한 뒤 승인해요. 학번·이름으로 중복 수령을 확인하세요." built={BUILT[4]}>
+          <Section no={4} title="적립 신청 승인" desc="학생이 낸 실물 코인을 받은 뒤 승인해요. 누가 신청했는지 이름·학번이 함께 보여요." built={BUILT[4]}>
             {pending.length === 0 ? <p className="live-empty">기다리는 신청이 없어요.</p> : (
               <ul className="live-list">
                 {pending.map((request) => (
