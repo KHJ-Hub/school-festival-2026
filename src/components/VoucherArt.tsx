@@ -58,6 +58,7 @@ export function VoucherArt({ menuName, status }: { menuName: string; status: 'is
   return (
     <div className={`voucher-art ${kind}`}>
       {kind === 'popcorn' ? <Popcorn /> : kind === 'cup' ? <Cup /> : <Gift />}
+      <p className="voucher-brand">배정 팝팝스토어</p>
       {status !== 'issued' && <span className="voucher-stamp">{status === 'used' ? <>사용<br />완료</> : <>취소<br />됨</>}</span>}
     </div>
   )
