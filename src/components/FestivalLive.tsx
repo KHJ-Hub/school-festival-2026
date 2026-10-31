@@ -92,7 +92,9 @@ function voucherMenuName(voucher: StoredVoucher, menus: SnackMenu[]): string {
   return voucher.menuName ?? menus.find((menu) => menu.id === voucher.menuId)?.name ?? DEMO_MENUS.find((menu) => menu.id === voucher.menuId)?.name ?? '메뉴'
 }
 
-function Section({ no, title, desc, built = true, children }: { no: number; title: string; desc: string; built?: boolean; children: ReactNode }) {
+/** open과 onToggle을 함께 주면 제목 줄에 접기/펼치기 버튼이 생기고, 접힌 동안에는 folded 문구만 보입니다. */
+function Section({ no, title, desc, built = true, open, onToggle, folded, children }: { no: number; title: string; desc: string; built?: boolean; open?: boolean; onToggle?: (open: boolean) => void; folded?: string; children: ReactNode }) {
+  const closed = onToggle !== undefined && open === false
   return (
     <article className="panel live-section">
       <div className="live-head">
@@ -100,9 +102,10 @@ function Section({ no, title, desc, built = true, children }: { no: number; titl
           <h2>{title}</h2>
           <span className={`live-badge ${built ? 'done' : 'todo'}`}>{creditLabel(no, built)}</span>
         </div>
-        <p>{desc}</p>
+        {closed ? (folded ? <p>{folded}</p> : null) : <p>{desc}</p>}
+        {onToggle && <button type="button" className="live-toggle" onClick={() => onToggle(closed)} aria-expanded={!closed}>{closed ? '펼치기' : '접기'}</button>}
       </div>
-      {children}
+      {!closed && children}
     </article>
   )
 }
@@ -213,6 +216,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   const all = useAdminData(isAdmin)
   const { menus } = useMenus()
   const [amount, setAmount] = useState(3)
+  const [requestOpen, setRequestOpen] = useState(true)
   const [message, setMessage] = useState('')
   const [scanCode, setScanCode] = useState('')
   const [lastNotBuilt, setLastNotBuilt] = useState<Record<number, boolean>>({})
@@ -243,6 +247,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
         return report(2, SAVE_FAILED, false)
       }
     }
+    if (created) setRequestOpen(false)
     report(2, result.message || (result.ok ? '신청했어요. 운영진에게 실물 코인을 내고 승인을 기다려요.' : ''), result.message === NOT_BUILT)
   }
 
@@ -302,7 +307,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
 
       {mode === 'student' && studentId && (
         <>
-          <Section no={2} title="코인 적립 신청" desc="받은 실물 코인 수를 신청하면 운영진이 코인을 회수하고 승인해요." built={BUILT[2]}>
+          <Section no={2} title="코인 적립 신청" desc="받은 실물 코인 수를 신청하면 운영진이 코인을 회수하고 승인해요." built={BUILT[2]} open={requestOpen} onToggle={setRequestOpen} folded={`신청 ${mine.requests.length}건 · 기다리는 중 ${mine.requests.filter((request) => request.status === 'pending').length}건`}>
             <div className="live-row">
               <input type="number" min={1} value={amount} onChange={(event) => setAmount(Number(event.target.value))} aria-label="신청할 코인 수" />
               <button className="primary-button" onClick={() => void submitRequest()}>신청하기 <span>→</span></button>
