@@ -218,6 +218,14 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   const { menus } = useMenus()
   const [amount, setAmount] = useState(3)
   const [requestOpen, setRequestOpen] = useState(true)
+  // 적립 신청은 한 번만: 신청 중이거나 이미 승인된 건이 있으면 새 신청을 막습니다(거절된 건만 있으면 다시 신청 가능).
+  const requestApproved = mine.requests.some((request) => request.status === 'approved')
+  const requestPending = mine.requests.some((request) => request.status === 'pending')
+  const requestLocked = requestApproved || requestPending
+  // 승인되면 신청 카드를 자동으로 접어 줍니다.
+  useEffect(() => {
+    if (requestApproved) setRequestOpen(false)
+  }, [requestApproved])
   const [message, setMessage] = useState('')
   const [scanCode, setScanCode] = useState('')
   const [lastNotBuilt, setLastNotBuilt] = useState<Record<number, boolean>>({})
@@ -239,6 +247,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   }
 
   const submitRequest = async () => {
+    if (requestLocked) return report(2, requestApproved ? '코인 적립 신청은 한 번만 할 수 있어요.' : '이미 신청했어요. 운영진이 승인할 때까지 기다려 주세요.', false)
     const result = safe(() => createCoinRequest(mine.requests, studentId, amount), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', requests: mine.requests })
     const created = result.ok ? result.requests.find((request) => !mine.requests.some((old) => old.id === request.id)) : undefined
     if (created) {
@@ -309,10 +318,14 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
       {mode === 'student' && studentId && (
         <>
           <Section no={2} title="코인 적립 신청" desc="받은 실물 코인 수를 신청하면 운영진이 코인을 회수하고 승인해요." built={BUILT[2]} open={requestOpen} onToggle={setRequestOpen} folded={`신청 ${mine.requests.length}건 · 기다리는 중 ${mine.requests.filter((request) => request.status === 'pending').length}건`}>
-            <div className="live-row">
-              <input type="number" min={1} value={amount} onChange={(event) => setAmount(Number(event.target.value))} aria-label="신청할 코인 수" />
-              <button className="primary-button" onClick={() => void submitRequest()}>신청하기 <span>→</span></button>
-            </div>
+            {requestLocked ? (
+              <p className="live-message">{requestApproved ? '코인을 받았어요! 적립 신청은 한 번만 할 수 있어요.' : '신청했어요. 운영진이 승인하면 코인이 들어와요.'}</p>
+            ) : (
+              <div className="live-row">
+                <input type="number" min={1} value={amount} onChange={(event) => setAmount(Number(event.target.value))} aria-label="신청할 코인 수" />
+                <button className="primary-button" onClick={() => void submitRequest()}>신청하기 <span>→</span></button>
+              </div>
+            )}
             <ul className="live-list one-line">
               {mine.requests.map((request) => (
                 <li key={request.id}><span>{request.claimedAmount} coin 신청</span><b className={`live-status ${request.status}`}>{{ pending: '기다리는 중', approved: `승인됨${request.approvedAmount !== undefined && request.approvedAmount !== request.claimedAmount ? ` (${request.approvedAmount} coin)` : ''}`, rejected: '거절됨' }[request.status]}</b></li>
