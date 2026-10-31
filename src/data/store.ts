@@ -63,7 +63,7 @@ export function useStudentData(studentId: string | null) {
     const stop = [
       onSnapshot(collection(db, ...base, 'requests'), (snap) => setData((d) => ({ ...d, requests: withStudent<CoinRequest>(snap) })), () => undefined),
       onSnapshot(collection(db, ...base, 'grants'), (snap) => setData((d) => ({ ...d, grants: withStudent<CoinGrant>(snap) })), () => undefined),
-      onSnapshot(collection(db, ...base, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<StoredVoucher>(snap), vouchersLoaded: true })), () => undefined),
+      onSnapshot(collection(db, ...base, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<StoredVoucher>(snap) })), () => undefined),
     ]
     return () => stop.forEach((unsubscribe) => unsubscribe())
   }, [studentId])
@@ -81,7 +81,7 @@ export function useAdminData(enabled: boolean) {
     const stop = [
       onSnapshot(collectionGroup(db, 'requests'), (snap) => setData((d) => ({ ...d, requests: withStudent<CoinRequest>(snap) })), () => undefined),
       onSnapshot(collectionGroup(db, 'grants'), (snap) => setData((d) => ({ ...d, grants: withStudent<CoinGrant>(snap), grantsLoaded: true })), () => undefined),
-      onSnapshot(collectionGroup(db, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<StoredVoucher>(snap) })), () => undefined),
+      onSnapshot(collectionGroup(db, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<StoredVoucher>(snap), vouchersLoaded: true })), () => undefined),
       onSnapshot(collection(db, 'accounts'), (snap) => setData((d) => ({ ...d, accounts: snap.docs.map((item) => ({ studentId: item.id, name: item.data().name, nickname: item.data().nickname })), accountsLoaded: true })), () => undefined),
       onSnapshot(collection(db, 'roster'), (snap) => setData((d) => ({ ...d, roster: snap.docs.map((item) => ({ studentId: item.id, name: item.data().name })) })), () => undefined),
     ]

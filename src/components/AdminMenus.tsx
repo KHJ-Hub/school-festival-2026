@@ -15,6 +15,13 @@ export function AdminMenus({ vouchers, vouchersLoaded }: { vouchers: StoredVouch
   const [note, setNote] = useState('')
   const issued = countIssuedByMenu(vouchers)
 
+  // 알림 문구는 4초 뒤 사라집니다(자리 차지하지 않게).
+  useEffect(() => {
+    if (!note) return
+    const timer = window.setTimeout(() => setNote(''), 4000)
+    return () => window.clearTimeout(timer)
+  }, [note])
+
   // Firebase에 메뉴가 정말 없을 때만(서버에서 확인한 뒤) 기본 메뉴로 한 번 채워 둡니다.
   // 읽는 중('loading')에 저장하면 운영진이 바꾼 메뉴를 기본값으로 덮어써 버리므로 하지 않습니다.
   useEffect(() => {
@@ -98,7 +105,7 @@ export function AdminMenus({ vouchers, vouchersLoaded }: { vouchers: StoredVouch
       <div className="live-head">
         <div>
           <h2>간식 메뉴</h2>
-          <p>품절로 바꾸면 학생 화면에서 바로 "품절"로 보이고 교환할 수 없어요. 수량을 정하면 그만큼 발급됐을 때 자동으로 품절돼요.</p>
+          <p>품절로 바꾸면 학생 화면에서 바로 "품절"로 보이고 교환할 수 없어요. 수량을 정하면 그만큼 발급됐을 때 자동으로 품절되고, 수량을 비워 두면 제한 없이 팔아요.</p>
         </div>
       </div>
 
@@ -127,7 +134,7 @@ export function AdminMenus({ vouchers, vouchersLoaded }: { vouchers: StoredVouch
       <div className="live-row">
         <input value={name} onChange={(event) => setName(event.target.value)} placeholder="메뉴 이름" aria-label="메뉴 이름" maxLength={20} />
         <input type="number" min={1} max={20} value={cost} onChange={(event) => setCost(Number(event.target.value))} aria-label="필요한 코인" />
-        <input type="number" min={1} value={stock} onChange={(event) => setStock(event.target.value)} placeholder="수량(비우면 제한 없음)" aria-label="교환 수량" />
+        <input type="number" min={1} value={stock} onChange={(event) => setStock(event.target.value)} placeholder="수량" aria-label="교환 수량" />
         <button className="primary-button" onClick={add}>메뉴 추가</button>
       </div>
     </article>
