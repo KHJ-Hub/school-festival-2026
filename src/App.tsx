@@ -112,7 +112,7 @@ function App() {
       <main>
         <section className="hero">
           <div>
-            <p className="eyebrow hero-clubs">보드게임 동아리 <span>×</span> 리틀엔지니어랩 <span>×</span> 국제 이해 문화 탐구반</p>
+            <p className="eyebrow hero-clubs">리틀엔지니어랩 <span>×</span> 보드게임 동아리 <span>×</span> 국제 이해 문화 탐구반</p>
             <h1>배정 <em>팝팝스토어</em></h1>
           </div>
         </section>
