@@ -33,6 +33,6 @@
 .popup-fold > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; }
 .popup-fold > summary::-webkit-details-marker { display: none; }
 .popup-fold > summary h2 { margin: 0; }
-.popup-fold > summary::after { content: '▾'; flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #f1e9df; color: #7a675e; font-size: 16px; transition: transform .15s; }
-.popup-fold:not([open]) > summary::after { transform: rotate(-90deg); }
+.popup-fold > summary::after { content: '접기'; flex: none; padding: 7px 14px; border-radius: 999px; background: #f1e9df; color: #5d4c44; font: 15px 'Gowun Dodum'; font-weight: 700; }
+.popup-fold:not([open]) > summary::after { content: '펼치기'; }
 .popup-fold[open] > summary { margin-bottom: 16px; }
