@@ -181,7 +181,10 @@ function App() {
 
       <footer>
         <span>2026 학교 축제 프로젝트</span>
-        <a className="lab-link" href="#lab" onClick={() => { setLab(true); window.scrollTo(0, 0) }}>내가 만든 코드 원래 모습 보기</a>
+        <span className="footer-links">
+          <a className="lab-link" href={`${import.meta.env.BASE_URL}original/`}>1차 활동 때 원래 화면</a>
+          <a className="lab-link" href="#lab" onClick={() => { setLab(true); window.scrollTo(0, 0) }}>함수 결과 그대로 보기</a>
+        </span>
       </footer>
     </div>
   )

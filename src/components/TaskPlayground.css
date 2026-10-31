@@ -15,3 +15,4 @@
 .playground-back { display: inline-block; margin-top: 4px; color: #c94d3a; font-weight: 700; }
 .lab-link { color: #e6a28f; text-decoration: underline; }
 @media (max-width: 500px) { .playground-grid { grid-template-columns: 1fr; } .playground h2 { font-size: 22px; } }
+.footer-links { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: flex-end; }
