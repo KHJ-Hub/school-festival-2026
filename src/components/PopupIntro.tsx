@@ -13,7 +13,7 @@ export function VisitorSteps() {
   return (
     <section className="popup-intro" aria-label="관람객 체험 단계">
       <div className="popup-card">
-        <h2>이렇게 즐겨요 <small>관람객 체험 5단계</small></h2>
+        <h2>이렇게 즐겨요</h2>
         <ol className="popup-steps">
           {STEPS.map((step) => (
             <li key={step.no} className={step.tone}>
