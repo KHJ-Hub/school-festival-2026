@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { csvToRows, normalizeForCheck, parseRosterText, rowsToRoster, type Account, type RosterEntry } from './nicknameRules'
 
 /**
@@ -18,6 +18,13 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
   const [note, setNote] = useState('')
   const [search, setSearch] = useState('')
   const [pasteOpen, setPasteOpen] = useState(false)
+
+  // 알림 문구는 4초 뒤 사라집니다(자리 차지하지 않게).
+  useEffect(() => {
+    if (!note) return
+    const timer = window.setTimeout(() => setNote(''), 4000)
+    return () => window.clearTimeout(timer)
+  }, [note])
 
   const addPasted = async () => {
     const { entries, skipped } = parseRosterText(pasted)
