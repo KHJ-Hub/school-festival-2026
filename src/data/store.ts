@@ -63,7 +63,7 @@ export function useStudentData(studentId: string | null) {
     const stop = [
       onSnapshot(collection(db, ...base, 'requests'), (snap) => setData((d) => ({ ...d, requests: withStudent<CoinRequest>(snap) })), () => undefined),
       onSnapshot(collection(db, ...base, 'grants'), (snap) => setData((d) => ({ ...d, grants: withStudent<CoinGrant>(snap) })), () => undefined),
-      onSnapshot(collection(db, ...base, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<StoredVoucher>(snap) })), () => undefined),
+      onSnapshot(collection(db, ...base, 'vouchers'), (snap) => setData((d) => ({ ...d, vouchers: withStudent<StoredVoucher>(snap), vouchersLoaded: true })), () => undefined),
     ]
     return () => stop.forEach((unsubscribe) => unsubscribe())
   }, [studentId])
@@ -73,7 +73,7 @@ export function useStudentData(studentId: string | null) {
 // ───── 운영진 전체 데이터 ─────
 
 export function useAdminData(enabled: boolean) {
-  const empty = { requests: [] as CoinRequest[], grants: [] as CoinGrant[], vouchers: [] as StoredVoucher[], accounts: [] as Account[], roster: [] as RosterEntry[], grantsLoaded: false, accountsLoaded: false }
+  const empty = { requests: [] as CoinRequest[], grants: [] as CoinGrant[], vouchers: [] as StoredVoucher[], accounts: [] as Account[], roster: [] as RosterEntry[], grantsLoaded: false, vouchersLoaded: false, accountsLoaded: false }
   const [data, setData] = useState(empty)
   useEffect(() => {
     setData(empty)
@@ -104,15 +104,18 @@ export function useRankingState(): { rows: RankingRow[]; loaded: boolean } {
   return state
 }
 
-type MenuDoc = { name: string; cost: number; enabled: boolean; order: number }
+type MenuDoc = { name: string; cost: number; enabled: boolean; order: number; stock?: number | null }
+
+/** 운영진 메뉴: stock은 이 메뉴로 발급할 수 있는 교환권 전체 수량(없으면 제한 없음). */
+export type StoreMenu = SnackMenu & { stock?: number }
 
 /**
  * 간식 메뉴(운영진이 추가·삭제·품절 처리). enabled가 false면 품절이라 교환권으로 바꿀 수 없습니다.
  * status: 'loading' = 아직 서버에서 못 읽음, 'missing' = 서버에 메뉴가 정말 없음, 'ready' = 읽음.
  * 읽기 전·없을 때는 화면에 기본 메뉴(fixtures)를 보여 줍니다. 기본 메뉴를 저장하는 일은 'missing'일 때만 합니다.
  */
-export function useMenus(): { menus: SnackMenu[]; ready: boolean; status: 'loading' | 'missing' | 'ready' } {
-  const [state, setState] = useState<{ menus: SnackMenu[]; status: 'loading' | 'missing' | 'ready' }>({ menus: DEMO_MENUS, status: 'loading' })
+export function useMenus(): { menus: StoreMenu[]; ready: boolean; status: 'loading' | 'missing' | 'ready' } {
+  const [state, setState] = useState<{ menus: StoreMenu[]; status: 'loading' | 'missing' | 'ready' }>({ menus: DEMO_MENUS, status: 'loading' })
   useEffect(() => onSnapshot(doc(db, 'settings', 'menus'), (snap) => {
     const items = snap.data()?.items as Record<string, MenuDoc> | undefined
     if (!items) {
@@ -122,15 +125,24 @@ export function useMenus(): { menus: SnackMenu[]; ready: boolean; status: 'loadi
     }
     const menus = Object.entries(items)
       .sort(([, a], [, b]) => a.order - b.order)
-      .map(([id, item]) => ({ id, name: item.name, cost: item.cost, enabled: item.enabled }))
+      .map(([id, item]) => ({ id, name: item.name, cost: item.cost, enabled: item.enabled, ...(typeof item.stock === 'number' ? { stock: item.stock } : {}) }))
     setState({ menus, status: 'ready' })
   }, () => setState((current) => ({ ...current, status: current.status === 'ready' ? 'ready' : 'loading' }))), [])
   return { menus: state.menus, ready: state.status === 'ready', status: state.status }
 }
 
-export async function saveMenus(menus: SnackMenu[]): Promise<void> {
-  const items = Object.fromEntries(menus.map((menu, order) => [menu.id, { name: menu.name, cost: menu.cost, enabled: menu.enabled, order }]))
+export async function saveMenus(menus: StoreMenu[]): Promise<void> {
+  const items = Object.fromEntries(menus.map((menu, order) => [menu.id, { name: menu.name, cost: menu.cost, enabled: menu.enabled, order, stock: menu.stock ?? null }]))
   await setDoc(doc(db, 'settings', 'menus'), { items })
+}
+
+/** 메뉴별로 지금까지 발급된 교환권 수(사용한 것 포함, 취소된 것 제외). */
+export function countIssuedByMenu(vouchers: StoredVoucher[]): Record<string, number> {
+  const counts: Record<string, number> = {}
+  for (const voucher of vouchers) {
+    if (voucher.status !== 'cancelled') counts[voucher.menuId] = (counts[voucher.menuId] ?? 0) + 1
+  }
+  return counts
 }
 
 export function newMenuId(): string {

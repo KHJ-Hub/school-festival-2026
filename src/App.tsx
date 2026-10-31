@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { onAuthStateChanged, signInAnonymously, signOut, type User } from 'firebase/auth'
 import { AdminLock, AdminPasswordChange } from './components/AdminLock'
-import { AdminMenus } from './components/AdminMenus'
+import { AdminMenus, AdminStockSync } from './components/AdminMenus'
 import { AdminRoster } from './components/AdminRoster'
 import { AdminRankingSync, FestivalLive, RankingBoard, StudentIdBox } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
@@ -139,13 +139,14 @@ function App() {
         {mode === 'ranking' && <RankingBoard />}
 
         {isAdmin && <AdminRankingSync />}
+        {isAdmin && <AdminStockSync vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />}
 
         {/* 운영진 화면 순서: 코인 승인·교환권 스캔(자주 쓰는 것) → 간식 메뉴 → 학생 명단·금지어 → 비밀번호 바꾸기 */}
         {(mode === 'student' || (mode === 'admin' && isAdmin)) && <FestivalLive mode={mode} me={isAdmin ? null : me} isAdmin={isAdmin} />}
 
         {mode === 'admin' && isAdmin && (
           <div className="admin-tools admin-tools-after">
-            <AdminMenus />
+            <AdminMenus vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />
             <AdminRoster
               roster={admin.roster}
               accounts={admin.accounts}

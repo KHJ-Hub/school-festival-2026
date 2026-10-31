@@ -216,3 +216,6 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 
 /* 코인 적립 신청 카드의 접기/펼치기 */
 .live-toggle { display: block; margin: 10px 0 0 auto; padding: 8px 16px; border: 0; border-radius: 999px; background: #f1e9df; color: #5d4c44; font: 700 14px 'Gowun Dodum'; cursor: pointer; white-space: nowrap; }
+
+/* 간식 메뉴의 발급 수 / 수량 */
+.menu-stock { display: block; margin-top: 2px; color: #8a786e; font-size: 13px; }
