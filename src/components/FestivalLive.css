@@ -220,15 +220,14 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 /* 간식 메뉴의 발급 수 / 수량 */
 .menu-stock { display: block; margin-top: 2px; color: #8a786e; font-size: 13px; }
 
-/* 학생 명단: 엑셀 파일과 붙여넣기를 나란히(넓은 화면) / 폰에서는 붙여넣기를 접어 둠 */
+/* 학생 명단: 엑셀 파일과 붙여넣기를 나란히 */
 .roster-add { display: grid; grid-template-columns: 1fr 1.6fr; gap: 16px; align-items: start; }
 .roster-paste-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .roster-paste-head h3 { margin: 0 0 8px; }
-.roster-paste-toggle { display: none; margin: 0; }
 .roster-add > div h3 { margin-top: 0; }
 .roster-paste .admin-paste { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
 @media (max-width: 600px) {
-  .roster-add { grid-template-columns: 1fr; gap: 4px; }
-  .roster-paste-toggle { display: block; }
-  .roster-paste:not(.open) .roster-paste-body { display: none; }
+  /* 폰에서도 나란히 두되, 좁으니 칸 간격과 버튼 글자를 줄임 */
+  .roster-add { grid-template-columns: .9fr 1.3fr; gap: 10px; }
+  .roster-add .primary-button { padding-left: 10px; padding-right: 10px; font-size: 14px; }
 }
