@@ -73,7 +73,8 @@
 .gifticon-code .barcode { width: 100%; height: 64px; }
 .gifticon-code small { font: 14px ui-monospace, Consolas, monospace; letter-spacing: .12em; color: #2b211d; }
 .gifticon-code span { font-size: 13px; color: #8a786e; }
-.gifticon.used, .gifticon.cancelled { opacity: .55; filter: grayscale(.7); }
+/* 사용·취소된 교환권은 흐리게(도장만 선명한 빨강으로 남김) */
+.gifticon.used > :not(.voucher-art), .gifticon.cancelled > :not(.voucher-art), .gifticon.used .voucher-art svg, .gifticon.cancelled .voucher-art svg { opacity: .55; filter: grayscale(.7); }
 .live-list code { font: 13px ui-monospace, Consolas, monospace; background: #fff; padding: 1px 6px; border-radius: 6px; }
 
 /* 운영진: 명단·금지어·잠금 */
@@ -241,4 +242,4 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .voucher-art svg { width: 120px; height: 120px; }
 .voucher-art.cup { background: linear-gradient(180deg, #e8f4fc, #fffdfb); }
 .voucher-art.gift { background: linear-gradient(180deg, #fff1cf, #fffdfb); }
-.voucher-stamp { position: absolute; top: 24px; left: calc(50% + 14px); width: 68px; height: 68px; display: grid; place-items: center; border: 4px solid #5d4c44; border-radius: 50%; color: #5d4c44; background: #ffffffcc; font: 700 17px/1.15 'Gowun Dodum'; text-align: center; transform: rotate(-14deg); }
+.voucher-stamp { position: absolute; top: 24px; left: calc(50% + 14px); width: 68px; height: 68px; display: grid; place-items: center; border: 4px solid #d8352a; border-radius: 50%; color: #d8352a; background: #ffffffb3; box-shadow: inset 0 0 0 2px #fffdfb, inset 0 0 0 3px #d8352a66; font: 700 17px/1.15 'Gowun Dodum'; text-align: center; transform: rotate(-14deg); }
