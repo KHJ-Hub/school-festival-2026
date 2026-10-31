@@ -235,3 +235,10 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 
 /* 붙여넣기 입력 칸: 두 줄 안내문이 다 들어가게 높이를 잡아 스크롤 막대가 안 생기게 */
 .roster-paste .admin-paste { min-height: 76px; overflow-y: auto; resize: vertical; }
+
+/* 교환권 위 그림 + "사용 완료" 도장 */
+.voucher-art { position: relative; display: grid; place-items: center; padding: 18px 0 10px; background: linear-gradient(180deg, #fff6df, #fffdfb); }
+.voucher-art svg { width: 120px; height: 120px; }
+.voucher-art.cup { background: linear-gradient(180deg, #e8f4fc, #fffdfb); }
+.voucher-art.gift { background: linear-gradient(180deg, #fff1cf, #fffdfb); }
+.voucher-stamp { position: absolute; top: 24px; left: calc(50% + 14px); width: 68px; height: 68px; display: grid; place-items: center; border: 4px solid #5d4c44; border-radius: 50%; color: #5d4c44; background: #ffffffcc; font: 700 17px/1.15 'Gowun Dodum'; text-align: center; transform: rotate(-14deg); }

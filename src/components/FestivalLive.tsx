@@ -30,6 +30,7 @@ import {
 } from '../data/store'
 import { creditLabel } from '../credits'
 import { Barcode } from './Barcode'
+import { VoucherArt } from './VoucherArt'
 import type { AppMode } from './ModeSwitcher'
 import type { Account } from './nicknameRules'
 import './FestivalLive.css'
@@ -347,6 +348,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
               <div className="live-cards">
                 {mine.vouchers.map((voucher) => (
                   <div key={voucher.id} className={`gifticon ${voucher.status}`}>
+                    <VoucherArt menuName={voucherMenuName(voucher, menus)} status={voucher.status} />
                     <StudentVoucherCard voucher={voucher} menuName={voucherMenuName(voucher, menus)} />
                     <div className="gifticon-code">
                       <Barcode value={voucher.id} />
