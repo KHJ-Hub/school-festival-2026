@@ -228,6 +228,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   }, [requestApproved])
   const [message, setMessage] = useState('')
   const [scanCode, setScanCode] = useState('')
+  const [scanned, setScanned] = useState<{ studentId: string; voucherId: string } | null>(null)
   const [lastNotBuilt, setLastNotBuilt] = useState<Record<number, boolean>>({})
 
   const balance = safe(() => calculateCoinBalance(studentId, mine.grants, mine.vouchers), 0)
@@ -291,11 +292,25 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
     report(4, result.message || (result.ok ? (decision === 'approve' ? '승인했어요.' : '거절했어요.') : ''), result.message === NOT_BUILT)
   }
 
+  /** 스캔할 때 운영진이 눈으로 확인할 학생 요약: 모은 코인, 쓴 코인(교환권 가격 합), 받은 교환권 수. */
+  const studentSummary = (studentId: string) => {
+    const earnedTotal = all.grants.filter((grant) => grant.studentId === studentId).reduce((sum, grant) => sum + grant.amount, 0)
+    const own = all.vouchers.filter((voucher) => voucher.studentId === studentId && voucher.status !== 'cancelled')
+    const spent = own.reduce((sum, voucher) => sum + voucher.cost, 0)
+    const problem = spent > earnedTotal ? '쓴 코인이 모은 코인보다 많아요' : own.length > VOUCHERS_PER_STUDENT ? `교환권이 ${VOUCHERS_PER_STUDENT}장보다 많아요` : ''
+    return { earned: earnedTotal, spent, count: own.length, problem }
+  }
+
   /** 바코드 스캐너가 읽은 값(또는 직접 입력한 코드)으로 교환권을 찾아 자동으로 사용 처리합니다. */
   const scanVoucher = async (code: string) => {
     const voucherId = code.trim().toUpperCase()
     setScanCode('')
-    if (!all.vouchers.some((voucher) => voucher.id === voucherId)) return report(6, `"${code.trim()}"는 없는 교환권이에요. 다시 스캔해 주세요.`, false)
+    const found = all.vouchers.find((voucher) => voucher.id === voucherId)
+    if (!found) {
+      setScanned(null)
+      return report(6, `"${code.trim()}"는 없는 교환권이에요. 다시 스캔해 주세요.`, false)
+    }
+    setScanned({ studentId: found.studentId, voucherId })
     const result = safe(() => markVoucherUsed(all.vouchers, voucherId), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', vouchers: all.vouchers })
     if (result.ok) {
       try {
@@ -397,6 +412,16 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
               <button className="primary-button" type="submit">스캔 <span>→</span></button>
             </form>
             <p className="live-empty">바코드 스캐너는 읽은 값을 이 칸에 입력하고 Enter를 눌러 줘요.</p>
+            {scanned && (() => {
+              const info = studentSummary(scanned.studentId)
+              return (
+                <div className={`scan-student ${info.problem ? 'warn' : ''}`}>
+                  <strong>{adminLabel(scanned.studentId, all.accounts)}</strong>
+                  <span>모은 코인 {info.earned} · 쓴 코인 {info.spent} · 받은 교환권 {info.count}장</span>
+                  {info.problem && <b>⚠ 확인 필요: {info.problem}</b>}
+                </div>
+              )
+            })()}
             {/* 사용 처리는 바코드 스캔이나 코드 입력으로만 합니다(목록에서 눌러서 쓰는 버튼 없음). */}
             <details className="live-fold">
               <summary>아직 안 쓴 교환권 {issued.length}장</summary>

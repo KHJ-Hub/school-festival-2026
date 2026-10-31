@@ -253,3 +253,9 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .gifticon .voucher-body .status, .gifticon .voucher-body p { display: none; }
 .gifticon .voucher-body h3 { margin: 0; font-size: 24px; text-align: center; }
 .gifticon .voucher-art { background: linear-gradient(180deg, #fff6df, #fffdfb 70%, #fffdfb); }
+
+/* 스캔한 교환권의 학생 요약(모은 코인·쓴 코인·교환권 수). 이상하면 붉게 표시 */
+.scan-student { margin: 10px 0; padding: 12px 14px; display: grid; gap: 3px; border-radius: 12px; background: #e4f5ec; color: #1f5f40; font-size: 14px; }
+.scan-student strong { font-size: 15px; }
+.scan-student.warn { background: #fde4e1; color: #a33b2e; }
+.scan-student b { font-size: 14px; }
