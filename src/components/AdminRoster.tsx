@@ -111,7 +111,7 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
         </div>
         <div className="roster-paste">
           <div className="roster-paste-head"><h3>여러 명 붙여넣기</h3></div>
-          <textarea className="admin-paste" value={pasted} onChange={(event) => setPasted(event.target.value)} rows={2} placeholder={'90004 홍길동\n90005,김배정'} />
+          <textarea className="admin-paste" value={pasted} onChange={(event) => setPasted(event.target.value)} rows={3} placeholder={'90004 홍길동\n90005,김배정'} />
           <button className="primary-button" onClick={() => void addPasted()}>붙여 넣은 명단 넣기</button>
         </div>
       </div>
