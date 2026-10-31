@@ -197,9 +197,9 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 @media (max-width: 400px) { .app-shell .hero h1 { font-size: 32px; } }
 
 /* 큰 제목 위: 함께 만드는 세 동아리 */
-.app-shell .hero-clubs { letter-spacing: .02em; line-height: 1.6; }
-.app-shell .hero-clubs span { margin: 0 4px; color: #e6a28f; }
-@media (max-width: 500px) { .app-shell .hero-clubs { font-size: 12px; } }
+.app-shell .hero-clubs { letter-spacing: .02em; line-height: 1.6; color: #2b211d; font-size: 17px; font-weight: 800; }
+.app-shell .hero-clubs span { margin: 0 6px; color: #df5d48; }
+@media (max-width: 500px) { .app-shell .hero-clubs { font-size: 14px; } }
 @media (max-width: 780px) { .app-shell .hero::before { display: none; } }
 
 /* 로고 옆 사이트 이름 크게 */
