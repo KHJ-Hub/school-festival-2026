@@ -6,6 +6,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   serverTimestamp,
   setDoc,
@@ -338,6 +339,31 @@ export async function saveRoster(entries: RosterEntry[]): Promise<void> {
 
 export async function removeRoster(studentId: string): Promise<void> {
   await deleteDoc(doc(db, 'roster', studentId))
+}
+
+/**
+ * 연습·테스트에 쓴 학번의 기록을 모두 지웁니다(운영진이 버튼을 눌러 확인한 뒤에만).
+ * 명단, 계정, 닉네임, 코인 신청·지급, 교환권을 지우고 지운 문서 수를 돌려줍니다.
+ * claims(다시 들어오기 확인서)는 보안 규칙상 지울 수 없어 남지만, 명단에서 빠지면 쓰이지 않습니다.
+ */
+export async function removeStudentRecords(studentId: string): Promise<number> {
+  const batch = writeBatch(db)
+  let count = 0
+  for (const sub of ['requests', 'grants', 'vouchers']) {
+    const snap = await getDocs(collection(db, 'students', studentId, sub))
+    snap.docs.forEach((item) => { batch.delete(item.ref); count += 1 })
+  }
+  const account = await getDoc(doc(db, 'accounts', studentId))
+  if (account.exists()) {
+    const key = account.data().nicknameKey as string | undefined
+    if (key) { batch.delete(doc(db, 'nicknames', key)); count += 1 }
+    batch.delete(account.ref)
+    count += 1
+  }
+  const roster = await getDoc(doc(db, 'roster', studentId))
+  if (roster.exists()) { batch.delete(roster.ref); count += 1 }
+  if (count > 0) await batch.commit()
+  return count
 }
 
 export async function saveBannedWords(words: string[]): Promise<void> {
