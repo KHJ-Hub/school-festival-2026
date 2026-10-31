@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { onAuthStateChanged, signInAnonymously, signOut, type User } from 'firebase/auth'
 import { AdminLock, AdminPasswordChange } from './components/AdminLock'
+import { AdminGrant } from './components/AdminGrant'
 import { AdminMenus, AdminStockSync } from './components/AdminMenus'
 import { AdminRoster } from './components/AdminRoster'
 import { AdminRankingSync, FestivalLive, RankingBoard, StudentIdBox } from './components/FestivalLive'
@@ -141,11 +142,12 @@ function App() {
         {isAdmin && <AdminRankingSync />}
         {isAdmin && <AdminStockSync vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />}
 
-        {/* 운영진 화면 순서: 코인 승인·교환권 스캔(자주 쓰는 것) → 간식 메뉴 → 학생 명단·금지어 → 비밀번호 바꾸기 */}
+        {/* 운영진 화면 순서: 코인 승인·교환권 스캔(자주 쓰는 것) → 코인 직접 지급 → 간식 메뉴 → 학생 명단·금지어 → 비밀번호 바꾸기 */}
         {(mode === 'student' || (mode === 'admin' && isAdmin)) && <FestivalLive mode={mode} me={isAdmin ? null : me} isAdmin={isAdmin} />}
 
         {mode === 'admin' && isAdmin && (
           <div className="admin-tools admin-tools-after">
+            <AdminGrant roster={admin.roster} accounts={admin.accounts} grants={admin.grants} />
             <AdminMenus vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />
             <AdminRoster
               roster={admin.roster}

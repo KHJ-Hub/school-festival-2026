@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  addDoc,
   collection,
   collectionGroup,
   deleteDoc,
@@ -300,6 +301,18 @@ export async function saveResolution(before: { requests: CoinRequest[]; grants: 
     batch.set(doc(collection(db, 'students', grant.studentId, 'grants')), { requestId: grant.requestId, amount: grant.amount })
   }
   await batch.commit()
+}
+
+/** 운영진이 학번으로 코인을 바로 지급합니다(알바 보상 등). 신청 없이 지급이라 requestId는 'direct'로 표시합니다. */
+export type DirectGrant = CoinGrant & { note?: string; at?: Timestamp | null }
+
+export async function grantCoinsDirect(studentId: string, amount: number, note: string): Promise<void> {
+  await addDoc(collection(db, 'students', studentId, 'grants'), { requestId: 'direct', amount, note, at: serverTimestamp() })
+}
+
+/** 잘못 지급했을 때 직접 지급 기록 하나를 지웁니다(신청으로 받은 코인은 지울 수 없게 화면에서 막아 둠). */
+export async function cancelDirectGrant(studentId: string, grantId: string): Promise<void> {
+  await deleteDoc(doc(db, 'students', studentId, 'grants', grantId))
 }
 
 /** 6번 학생 함수의 사용 처리 결과에서 상태가 바뀐 교환권만 저장합니다. */
