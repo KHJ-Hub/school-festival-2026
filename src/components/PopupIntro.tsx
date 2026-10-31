@@ -12,8 +12,8 @@ const STEPS = [
 export function VisitorSteps() {
   return (
     <section className="popup-intro" aria-label="관람객 체험 단계">
-      <div className="popup-card">
-        <h2>이렇게 즐겨요</h2>
+      <details className="popup-card popup-fold" open>
+        <summary><h2>이렇게 즐겨요</h2></summary>
         <ol className="popup-steps">
           {STEPS.map((step) => (
             <li key={step.no} className={step.tone}>
@@ -23,7 +23,7 @@ export function VisitorSteps() {
             </li>
           ))}
         </ol>
-      </div>
+      </details>
     </section>
   )
 }

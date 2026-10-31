@@ -28,3 +28,11 @@
 /* 설명이 단어 중간에서 끊기지 않게(한국어 어절 단위), 좁은 폰에서는 글자를 조금 작게 */
 .popup-steps li span { word-break: keep-all; }
 @media (max-width: 400px) { .popup-steps li span { font-size: 13px; } }
+
+/* 접고 펼 수 있는 안내 카드: 제목 줄 오른쪽에 화살표 */
+.popup-fold > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none; }
+.popup-fold > summary::-webkit-details-marker { display: none; }
+.popup-fold > summary h2 { margin: 0; }
+.popup-fold > summary::after { content: '▾'; flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: #f1e9df; color: #7a675e; font-size: 16px; transition: transform .15s; }
+.popup-fold:not([open]) > summary::after { transform: rotate(-90deg); }
+.popup-fold[open] > summary { margin-bottom: 16px; }
