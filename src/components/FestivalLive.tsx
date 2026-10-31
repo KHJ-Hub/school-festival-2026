@@ -218,6 +218,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   const { menus } = useMenus()
   const [amount, setAmount] = useState(3)
   const [requestOpen, setRequestOpen] = useState(true)
+  const [exchangeOpen, setExchangeOpen] = useState(true)
   // 적립 신청은 한 번만: 신청 중이거나 이미 승인된 건이 있으면 새 신청을 막습니다(거절된 건만 있으면 다시 신청 가능).
   const requestApproved = mine.requests.some((request) => request.status === 'approved')
   const requestPending = mine.requests.some((request) => request.status === 'pending')
@@ -234,6 +235,10 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   const balance = safe(() => calculateCoinBalance(studentId, mine.grants, mine.vouchers), 0)
   // 취소되지 않은 교환권이 이미 한 장 있으면 더 바꿀 수 없습니다.
   const exchangedAll = mine.vouchers.filter((voucher) => voucher.status !== 'cancelled').length >= VOUCHERS_PER_STUDENT
+  // 교환을 마치면 간식 교환 카드를 자동으로 접어 줍니다.
+  useEffect(() => {
+    if (exchangedAll) setExchangeOpen(false)
+  }, [exchangedAll])
   const earned = safe(() => calculateTotalEarned(studentId, mine.grants), 0)
   const pending = all.requests.filter((request) => request.status === 'pending')
   const issued = all.vouchers.filter((voucher) => voucher.status === 'issued')
@@ -358,7 +363,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
             </div>
           </Section>
 
-          <Section no={5} title="간식 교환" desc="모은 코인으로 원하는 간식 하나를 골라요. 교환은 한 번만 할 수 있어요." built={BUILT[5]}>
+          <Section no={5} title="간식 교환" desc="모은 코인으로 원하는 간식 하나를 골라요. 교환은 한 번만 할 수 있어요." built={BUILT[5]} open={exchangeOpen} onToggle={setExchangeOpen} folded={exchangedAll ? `교환 완료 ✓ · ${mine.vouchers.filter((voucher) => voucher.status !== 'cancelled').map((voucher) => voucherMenuName(voucher, menus)).join(', ')}` : '아직 교환하지 않았어요.'}>
             {exchangedAll && <p className="live-message">교환을 마쳤어요. 아래 교환권을 부스에서 보여 주세요.</p>}
             <ul className="live-list">
               {menus.map((menu) => (
