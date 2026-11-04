@@ -10,7 +10,7 @@ import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
 import { TaskPlayground } from './components/TaskPlayground'
 import { checkNickname, type Account } from './components/nicknameRules'
 import { VisitorSteps } from './components/PopupIntro'
-import { enterStudent, isNicknameTaken, loadOwnAccount, renameStudent, saveBannedWords, saveRoster, useAdminData, useBannedWordsState } from './data/store'
+import { enterStudent, isNicknameTaken, loadOwnAccount, renameStudent, saveAllowWords, saveBannedWords, saveRoster, useAdminData, useBannedWordsState } from './data/store'
 import { ADMIN_EMAIL, auth } from './firebase'
 
 /** 이 기기에서 마지막으로 들어온 학번(새로고침해도 다시 들어오기). 학번만 저장하고 이름은 저장하지 않습니다. */
@@ -50,7 +50,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null)
   const [me, setMe] = useState<Account | null>(null)
   const isAdmin = user?.email === ADMIN_EMAIL
-  const { words: bannedWords, loaded: bannedLoaded } = useBannedWordsState()
+  const { words: bannedWords, allow: allowWords, loaded: bannedLoaded } = useBannedWordsState()
   const admin = useAdminData(isAdmin)
 
   // 학생은 화면에 안 보이는 익명 로그인으로 기기마다 구분합니다. 운영진이 잠그면 다시 익명으로 돌아갑니다.
@@ -71,7 +71,7 @@ function App() {
   }, [user, isAdmin, me])
 
   const nicknameProblem = async (nickname: string, selfId?: string) => {
-    const problem = checkNickname(nickname, [], bannedWords, selfId)
+    const problem = checkNickname(nickname, [], bannedWords, selfId, allowWords)
     if (problem) return problem
     if (await isNicknameTaken(nickname, selfId)) return '이미 다른 학생이 쓰는 닉네임이에요. 다른 닉네임을 정해 주세요.'
     return null
@@ -173,6 +173,9 @@ function App() {
               // 금지어를 서버에서 다 읽기 전에는 저장하지 않습니다(기존 금지어를 덮어쓰지 않도록).
               onAddWord={(word) => (bannedLoaded ? saveBannedWords(bannedWords.includes(word) ? bannedWords : [...bannedWords, word]) : Promise.reject(new Error('loading')))}
               onRemoveWord={(word) => (bannedLoaded ? saveBannedWords(bannedWords.filter((item) => item !== word)) : Promise.reject(new Error('loading')))}
+              allowWords={allowWords}
+              onAddAllow={(word) => (bannedLoaded ? saveAllowWords(allowWords.includes(word) ? allowWords : [...allowWords, word]) : Promise.reject(new Error('loading')))}
+              onRemoveAllow={(word) => (bannedLoaded ? saveAllowWords(allowWords.filter((item) => item !== word)) : Promise.reject(new Error('loading')))}
             />
             <AdminCleanup roster={admin.roster} accounts={admin.accounts} />
             <AdminPasswordChange />

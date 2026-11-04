@@ -32,7 +32,7 @@ import type { CoinGrant, CoinRequest, SnackMenu, TaskVoucher } from '../tasks/ta
  *   students/{학번}/grants/{id}       지급 내역                         본인 읽기·운영진
  *   students/{학번}/vouchers/{코드}   교환권(코드 = 바코드 값)           본인·운영진
  *   public/ranking                    { rows: [{ rank, nickname, total }] } 모두 읽기
- *   settings/bannedWords              { words: [] }                    모두 읽기·운영진
+ *   settings/bannedWords              { words: [], allow: [] }         모두 읽기·운영진
  *   settings/menus                    { items: { 메뉴id: { name, cost, enabled, order } } } 모두 읽기·운영진
  */
 
@@ -155,12 +155,15 @@ export function useBannedWords(): string[] {
   return useBannedWordsState().words
 }
 
-/** 금지어와 함께 "서버에서 읽었는지"를 돌려줍니다(읽기 전에 추가하면 기존 금지어를 덮어쓰므로). */
-export function useBannedWordsState(): { words: string[]; loaded: boolean } {
-  const [state, setState] = useState<{ words: string[]; loaded: boolean }>({ words: [], loaded: false })
+/**
+ * 금지어·허용 단어와 함께 "서버에서 읽었는지"를 돌려줍니다(읽기 전에 추가하면 기존 목록을 덮어쓰므로).
+ * 허용 단어(allow): 금지어가 우연히 들어 있는 멀쩡한 낱말(예: 무지개색, 시발점). 검사 전에 닉네임에서 빼고 봅니다.
+ */
+export function useBannedWordsState(): { words: string[]; allow: string[]; loaded: boolean } {
+  const [state, setState] = useState<{ words: string[]; allow: string[]; loaded: boolean }>({ words: [], allow: [], loaded: false })
   useEffect(() => onSnapshot(doc(db, 'settings', 'bannedWords'), (snap) => {
     if (!snap.exists() && snap.metadata.fromCache) return
-    setState({ words: (snap.data()?.words as string[]) ?? [], loaded: true })
+    setState({ words: (snap.data()?.words as string[]) ?? [], allow: (snap.data()?.allow as string[]) ?? [], loaded: true })
   }, () => setState((current) => ({ ...current }))), [])
   return state
 }
@@ -366,6 +369,11 @@ export async function removeStudentRecords(studentId: string): Promise<number> {
   return count
 }
 
+// merge: 금지어를 저장해도 허용 단어가, 허용 단어를 저장해도 금지어가 지워지지 않게 합니다.
 export async function saveBannedWords(words: string[]): Promise<void> {
-  await setDoc(doc(db, 'settings', 'bannedWords'), { words })
+  await setDoc(doc(db, 'settings', 'bannedWords'), { words }, { merge: true })
+}
+
+export async function saveAllowWords(allow: string[]): Promise<void> {
+  await setDoc(doc(db, 'settings', 'bannedWords'), { allow }, { merge: true })
 }

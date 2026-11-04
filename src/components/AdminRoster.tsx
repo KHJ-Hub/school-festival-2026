@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { csvToRows, normalizeForCheck, parseRosterText, rowsToRoster, type Account, type RosterEntry } from './nicknameRules'
+import { csvToRows, findBannedWord, isBannedWordItself, normalizeForCheck, parseRosterText, rowsToRoster, type Account, type RosterEntry } from './nicknameRules'
 import { FoldButton, useFold } from './adminFold'
 
 /** 이 기기에서 넣은 명단 파일 목록(파일 이름·인원만, 학생 정보는 저장하지 않음) */
@@ -19,17 +19,21 @@ function readFiles(): RosterFile[] {
  * 교사 관리 파일: 운영진 화면의 학생 명단(학번·이름)과 금지어 관리.
  * 명단은 Firestore(운영진만 읽기)에 저장하고 GitHub에는 넣지 않습니다. 학생은 명단을 볼 수 없고 등록할 때 대조만 됩니다.
  */
-export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWord, onRemoveWord }: {
+export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWord, onRemoveWord, allowWords, onAddAllow, onRemoveAllow }: {
   roster: RosterEntry[]
   accounts: Account[]
   extraWords: string[]
   onAddRoster: (entries: RosterEntry[]) => Promise<void>
   onAddWord: (word: string) => Promise<void>
   onRemoveWord: (word: string) => Promise<void>
+  allowWords: string[]
+  onAddAllow: (word: string) => Promise<void>
+  onRemoveAllow: (word: string) => Promise<void>
 }) {
   const [pasted, setPasted] = useState('')
   const [open, setOpen] = useFold('roster')
   const [word, setWord] = useState('')
+  const [allow, setAllow] = useState('')
   const [note, setNote] = useState('')
   const [search, setSearch] = useState('')
   const [files, setFiles] = useState<RosterFile[]>(readFiles)
@@ -115,6 +119,31 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
     setNote(`"${value}"를 금지어에 추가했어요.`)
   }
 
+  /** 허용 단어: 금지어가 우연히 들어 있는 멀쩡한 낱말(예: 무지개색). 금지어 그 자체는 넣지 못하게 합니다. */
+  const addAllow = async () => {
+    const value = allow.trim()
+    if (!normalizeForCheck(value)) {
+      setNote('허용 단어에는 한글이나 영어가 들어가야 해요.')
+      return
+    }
+    if (isBannedWordItself(value, extraWords)) {
+      setNote('금지어 그 자체는 허용할 수 없어요. 앞뒤 글자까지 붙여서 넣어 주세요. (예: 시발 → 시발점)')
+      return
+    }
+    try {
+      await onAddAllow(value)
+    } catch {
+      setNote('저장하지 못했어요. 인터넷 연결을 확인해 주세요.')
+      return
+    }
+    setAllow('')
+    setNote(`"${value}"를 허용 단어에 추가했어요. 이제 이 낱말이 들어간 닉네임을 쓸 수 있어요.`)
+  }
+
+  // 허용 단어 칸에 쓰는 동안, 그 낱말이 지금 어떤 금지어 때문에 막히는지 바로 보여 줍니다.
+  const allowValue = allow.trim()
+  const blockedBy = allowValue ? findBannedWord(allowValue, extraWords, allowWords) : undefined
+
   const keyword = search.trim()
   const shown = keyword ? roster.filter((entry) => entry.studentId.includes(keyword) || entry.name.includes(keyword)) : roster
 
@@ -122,7 +151,7 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
     <article className={`panel live-section admin-roster ${open ? '' : 'folded'}`}>
       <div className="live-head">
         <div>
-          <h2>학생 명단 · 금지어</h2>
+          <h2>학생 명단 · 금지어 · 허용 단어</h2>
         </div>
         <FoldButton open={open} onToggle={setOpen} />
       </div>
@@ -181,6 +210,25 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
         <ul className="live-list">
           {extraWords.map((item) => (
             <li key={item}><span>{item}</span><button className="ghost" onClick={() => void onRemoveWord(item)}>빼기</button></li>
+          ))}
+        </ul>
+      )}
+
+      <h3>허용 단어</h3>
+      <p className="allow-help">띄어쓰기를 빼고 보면 금지어가 들어 있는 멀쩡한 낱말이에요. (예: 무지개색, 시발점, 졸라맨) 학생이 "닉네임이 안 돼요" 하면 그 낱말을 넣어 주세요.</p>
+      <div className="live-row">
+        <input value={allow} onChange={(event) => setAllow(event.target.value)} placeholder="예: 무지개색" aria-label="추가할 허용 단어" />
+        <button className="primary-button" onClick={() => void addAllow()}>허용 단어 추가</button>
+      </div>
+      {allowValue && normalizeForCheck(allowValue) && (
+        <p className={`allow-check ${blockedBy ? 'blocked' : 'ok'}`} role="status">
+          {blockedBy ? `지금은 "${blockedBy}" 때문에 막혀요. 추가하면 쓸 수 있어요.` : '지금도 쓸 수 있는 낱말이에요.'}
+        </p>
+      )}
+      {allowWords.length > 0 && (
+        <ul className="live-list">
+          {allowWords.map((item) => (
+            <li key={item}><span>{item}</span><button className="ghost" onClick={() => void onRemoveAllow(item)}>빼기</button></li>
           ))}
         </ul>
       )}

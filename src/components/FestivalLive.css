@@ -322,3 +322,9 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .roster-files li b { flex: 0 0 auto; color: #1f5f40; }
 .roster-files li.empty { color: #9a877c; display: block; }
 @media (max-width: 780px) { .roster-paste { margin-top: 14px; } }
+
+/* 허용 단어 안내·바로 확인 */
+.admin-roster .allow-help{margin:0 0 8px;color:var(--muted,#6b6b6b);font-size:14px;line-height:1.5}
+.admin-roster .allow-check{margin:8px 0 0;font-size:14px;font-weight:600}
+.admin-roster .allow-check.blocked{color:#c0392b}
+.admin-roster .allow-check.ok{color:#1e7f4f}

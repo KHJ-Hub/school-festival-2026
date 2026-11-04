@@ -32,19 +32,32 @@ export function normalizeForCheck(text: string): string {
   return text.toLowerCase().replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-z]/g, '')
 }
 
-export function findBannedWord(nickname: string, extraWords: string[] = []): string | undefined {
-  const target = normalizeForCheck(nickname)
+/** 금지어 그 자체인지(허용 단어로 넣으면 금지어가 통째로 풀리므로 막습니다). */
+export function isBannedWordItself(word: string, extraWords: string[] = []): boolean {
+  const target = normalizeForCheck(word)
+  return [...BASE_BANNED_WORDS, ...extraWords].some((item) => normalizeForCheck(item) === target)
+}
+
+/**
+ * 금지어 찾기. 허용 단어(예: 무지개색)는 먼저 닉네임에서 빼고 남은 부분만 검사합니다.
+ * 뺀 자리에는 구분 기호를 넣어서, 앞뒤 글자가 붙어 새 금지어가 되는 우회(예: 시+무지개색+발)도 막습니다.
+ */
+export function findBannedWord(nickname: string, extraWords: string[] = [], allowWords: string[] = []): string | undefined {
+  let target = normalizeForCheck(nickname)
+  const allowed = allowWords.map(normalizeForCheck).filter((word) => word.length > 0).sort((a, b) => b.length - a.length)
+  for (const word of allowed) target = target.split(word).join('|')
   return [...BASE_BANNED_WORDS, ...extraWords]
     .map(normalizeForCheck)
     .find((word) => word.length > 0 && target.includes(word))
 }
 
 /** 닉네임 검사. 문제가 있으면 학생에게 보여 줄 문구를, 괜찮으면 null을 돌려줍니다. selfId는 닉네임을 바꾸는 본인 학번. */
-export function checkNickname(nickname: string, accounts: Account[], extraWords: string[], selfId?: string): string | null {
+export function checkNickname(nickname: string, accounts: Account[], extraWords: string[], selfId?: string, allowWords: string[] = []): string | null {
   const value = nickname.trim()
   if (value.length < 2 || value.length > 12) return '닉네임은 2~12글자로 써 주세요.'
   if (normalizeForCheck(value).length === 0) return '닉네임에는 한글이나 영어가 들어가야 해요.'
-  if (findBannedWord(value, extraWords)) return '쓸 수 없는 닉네임이에요. 다른 닉네임을 정해 주세요.'
+  // 어떤 낱말 때문인지는 알려 주지 않습니다(금지어 목록을 알아내는 걸 막기 위해).
+  if (findBannedWord(value, extraWords, allowWords)) return '쓸 수 없는 낱말이 들어 있어요. 다른 닉네임으로 바꾸거나, 멀쩡한 낱말인데 막혔다면 운영진에게 말해 주세요.'
   const same = normalizeForCheck(value)
   if (accounts.some((account) => account.studentId !== selfId && normalizeForCheck(account.nickname) === same)) {
     return '이미 다른 학생이 쓰는 닉네임이에요. 다른 닉네임을 정해 주세요.'
