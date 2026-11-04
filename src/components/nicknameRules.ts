@@ -75,18 +75,40 @@ export function checkNickname(nickname: string, accounts: Account[], extraWords:
   return null
 }
 
-/** 운영진 붙여넣기: 한 줄에 "학번 이름" 또는 "학번,이름". 형식이 틀린 줄은 따로 돌려줍니다. */
-export function parseRosterText(text: string): { entries: RosterEntry[]; skipped: string[] } {
+const ID_TOKEN = /^\d{5}$/
+const NAME_TOKEN = /^[가-힣A-Za-z]{2,10}$/
+
+/**
+ * 글자 덩어리에서 "학번(5자리) 바로 다음 낱말 = 이름"인 짝을 모두 찾습니다.
+ * 명렬표처럼 "연번 학번 이름"이어도, 한 줄에 여러 명이어도, PDF에서 칸마다 줄이 바뀌어도 읽힙니다.
+ */
+export function findRosterPairs(text: string): RosterEntry[] {
+  const tokens = text.split(/[\s,]+/).filter(Boolean)
   const entries: RosterEntry[] = []
-  const skipped: string[] = []
-  for (const line of text.split(/\r?\n/)) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
-    const match = trimmed.match(/^(\d{5})[\s,\t]+(.+)$/)
-    if (match) entries.push({ studentId: match[1]!, name: match[2]!.trim() })
-    else skipped.push(trimmed)
+  for (let index = 0; index < tokens.length - 1; index += 1) {
+    if (ID_TOKEN.test(tokens[index]!) && NAME_TOKEN.test(tokens[index + 1]!)) {
+      entries.push({ studentId: tokens[index]!, name: tokens[index + 1]! })
+      index += 1
+    }
   }
-  return { entries, skipped }
+  return entries
+}
+
+/**
+ * 운영진 붙여넣기: "학번 이름", "학번,이름", 명렬표의 "연번 학번 이름" 모두 됩니다.
+ * 제목 줄(예: "2학년 3반", "연번 학번 이름")처럼 학번이 없는 줄은 조용히 넘기고,
+ * 학번은 있는데 이름을 못 찾은 줄만 따로 돌려줍니다.
+ */
+export function parseRosterText(text: string): { entries: RosterEntry[]; skipped: string[] } {
+  const entries = findRosterPairs(text)
+  const found = new Set(entries.map((entry) => entry.studentId))
+  const skipped = text.split(/\r?\n/).map((line) => line.trim()).filter((line) => {
+    const ids = line.match(/\b\d{5}\b/g)
+    return ids !== null && ids.some((id) => !found.has(id))
+  })
+  // 같은 학번이 여러 번 나오면 마지막 것을 씁니다.
+  const unique = [...new Map(entries.map((entry) => [entry.studentId, entry])).values()]
+  return { entries: unique, skipped }
 }
 
 /**

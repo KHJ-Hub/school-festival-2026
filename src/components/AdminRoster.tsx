@@ -60,8 +60,9 @@ export function AdminRoster({ roster, accounts, onAddRoster, idRange, onSaveRang
     }
   }
 
-  const rememberFile = (file: RosterFile) => {
-    const next = [file, ...files.filter((item) => item.name !== file.name)].slice(0, 10)
+  const rememberFiles = (added: RosterFile[]) => {
+    const names = new Set(added.map((item) => item.name))
+    const next = [...added, ...files.filter((item) => !names.has(item.name))].slice(0, 40)
     setFiles(next)
     try {
       localStorage.setItem(FILES_KEY, JSON.stringify(next))
@@ -91,38 +92,55 @@ export function AdminRoster({ roster, accounts, onAddRoster, idRange, onSaveRang
     setNote(`${entries.length}명을 명단에 넣었어요.${skipped.length ? ` 형식이 맞지 않는 ${skipped.length}줄은 칸에 남겨 두었어요.` : ''}`)
   }
 
-  /** 엑셀(.xlsx)·CSV 파일에서 학번·이름을 읽어 명단에 넣습니다. 파일은 이 기기에서만 읽고, 학번·이름만 저장합니다. */
-  const addFile = async (file: File | undefined) => {
-    if (!file) return
-    let rows: unknown[][]
-    try {
-      if (/\.csv$/i.test(file.name)) {
-        rows = csvToRows(await file.text())
-      } else if (/\.xlsx$/i.test(file.name)) {
-        const { readSheet } = await import('read-excel-file/browser')
-        rows = (await readSheet(file)) as unknown[][]
-      } else {
-        setNote('엑셀(.xlsx) 또는 CSV 파일만 넣을 수 있어요. 예전 엑셀(.xls)은 "다른 이름으로 저장 → Excel 통합 문서(.xlsx)"로 바꿔 주세요.')
-        return
+  /** 파일 하나에서 학번·이름을 읽습니다. 엑셀(.xlsx)·CSV는 표로, 명렬표 PDF는 "학번 다음 낱말 = 이름"으로 읽습니다. */
+  const readFile = async (file: File): Promise<RosterEntry[]> => {
+    if (/\.pdf$/i.test(file.name)) {
+      const { pdfToText } = await import('./pdfRoster')
+      return parseRosterText(await pdfToText(file)).entries
+    }
+    if (/\.csv$/i.test(file.name)) return rowsToRoster(csvToRows(await file.text())).entries
+    if (/\.xlsx$/i.test(file.name)) {
+      const { readSheet } = await import('read-excel-file/browser')
+      return rowsToRoster((await readSheet(file)) as unknown[][]).entries
+    }
+    throw new Error('format')
+  }
+
+  /** 여러 파일(반별 명렬표 PDF 등)을 한 번에 골라 명단에 넣습니다. 파일은 이 기기에서만 읽고, 학번·이름만 저장합니다. */
+  const addFiles = async (picked: FileList | null) => {
+    const list = picked ? [...picked] : []
+    if (list.length === 0) return
+    setNote(`파일 ${list.length}개를 읽는 중…`)
+    const results: { file: File; entries: RosterEntry[] }[] = []
+    const failed: string[] = []
+    for (const file of list) {
+      try {
+        const entries = await readFile(file)
+        if (entries.length > 0) results.push({ file, entries })
+        else failed.push(file.name)
+      } catch {
+        failed.push(file.name)
       }
-    } catch {
-      setNote('파일을 읽지 못했어요. 엑셀에서 다시 저장한 뒤 넣어 주세요.')
+    }
+    const all = [...new Map(results.flatMap((item) => item.entries).map((entry) => [entry.studentId, entry])).values()]
+    if (all.length === 0) {
+      setNote('파일에서 학번(숫자 5자리)과 이름을 찾지 못했어요. 엑셀(.xlsx)·CSV·PDF만 읽을 수 있고, 스캔한 그림 PDF는 못 읽어요.')
       return
     }
-    const { entries, skipped } = rowsToRoster(rows)
-    if (entries.length === 0) {
-      setNote('파일에서 학번(숫자 5자리)과 이름을 찾지 못했어요. 첫 줄에 "학번", "이름" 제목을 넣어 주세요.')
+    const summary = results.map((item) => `${item.file.name}: ${item.entries.length}명`).join('\n')
+    const failNote = failed.length ? `\n\n못 읽은 파일 ${failed.length}개: ${failed.join(', ')}` : ''
+    if (!window.confirm(`모두 ${all.length}명을 찾았어요. 명단에 넣을까요? 같은 학번은 새 이름으로 바뀌어요.\n\n${summary}${failNote}`)) {
+      setNote('')
       return
     }
-    if (!window.confirm(`${file.name}에서 ${entries.length}명을 찾았어요.${skipped ? ` (형식이 맞지 않는 ${skipped}줄은 건너뜀)` : ''} 명단에 넣을까요? 같은 학번은 새 이름으로 바뀌어요.`)) return
     try {
-      await onAddRoster(entries)
+      await onAddRoster(all)
     } catch {
       setNote('저장하지 못했어요. 인터넷 연결을 확인해 주세요.')
       return
     }
-    rememberFile({ name: file.name, count: entries.length, at: Date.now() })
-    setNote(`${entries.length}명을 명단에 넣었어요.${skipped ? ` 형식이 맞지 않는 ${skipped}줄은 건너뛰었어요.` : ''}`)
+    rememberFiles(results.map((item) => ({ name: item.file.name, count: item.entries.length, at: Date.now() })))
+    setNote(`${all.length}명을 명단에 넣었어요.${failed.length ? ` 못 읽은 파일 ${failed.length}개가 있어요: ${failed.join(', ')}` : ''}`)
   }
 
   // 찾기 대상 = 명단 + 명단에 없이 등록한 학생. 학번·이름·랭킹 닉네임으로 찾고 띄어쓰기는 무시합니다(상품 줄 때 닉네임으로 찾기).
@@ -193,16 +211,16 @@ export function AdminRoster({ roster, accounts, onAddRoster, idRange, onSaveRang
       <p className="allow-help">안 넣어도 등록할 수 있어요. 명단을 넣은 학번은 이름까지 맞아야 등록돼요(남의 학번 도용 방지).</p>
       <div className="roster-add">
         <div className="roster-file">
-          <h3>엑셀 파일로 넣기</h3>
+          <h3>파일로 넣기 (엑셀·PDF)</h3>
           {/* 1·2·3학년을 따로 넣을 수 있게, 이 기기에서 넣은 파일을 보여 줍니다. */}
           <ul className="roster-files">
-            {files.length === 0 ? <li className="empty">아직 넣은 파일이 없어요. 학년별로 따로 넣어도 돼요.</li> : files.map((file) => (
+            {files.length === 0 ? <li className="empty">아직 넣은 파일이 없어요. 반별 명렬표 PDF를 한꺼번에 골라도 돼요.</li> : files.map((file) => (
               <li key={`${file.name}-${file.at}`}><span>{file.name}</span><b>{file.count}명</b></li>
             ))}
           </ul>
           <label className="admin-file">
-            <input type="file" accept=".xlsx,.csv" onChange={(event) => { void addFile(event.target.files?.[0]); event.target.value = '' }} />
-            <span className="primary-button">파일 고르기</span>
+            <input type="file" accept=".xlsx,.csv,.pdf" multiple onChange={(event) => { void addFiles(event.target.files); event.target.value = '' }} />
+            <span className="primary-button">파일 고르기 (여러 개 가능)</span>
           </label>
         </div>
         <div className="roster-paste">

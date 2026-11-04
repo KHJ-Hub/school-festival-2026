@@ -336,10 +336,13 @@ export async function saveRanking(rows: RankingRow[]): Promise<void> {
   await setDoc(doc(db, 'public', 'ranking'), { rows })
 }
 
+/** 명단 저장. Firestore는 한 번에 500개까지만 쓸 수 있어서 400명씩 나눠 저장합니다(전교생 PDF를 한꺼번에 넣어도 됨). */
 export async function saveRoster(entries: RosterEntry[]): Promise<void> {
-  const batch = writeBatch(db)
-  entries.forEach((entry) => batch.set(doc(db, 'roster', entry.studentId), { name: entry.name }))
-  await batch.commit()
+  for (let start = 0; start < entries.length; start += 400) {
+    const batch = writeBatch(db)
+    entries.slice(start, start + 400).forEach((entry) => batch.set(doc(db, 'roster', entry.studentId), { name: entry.name }))
+    await batch.commit()
+  }
 }
 
 export async function removeRoster(studentId: string): Promise<void> {
