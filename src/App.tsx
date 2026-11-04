@@ -8,9 +8,10 @@ import { AdminRoster } from './components/AdminRoster'
 import { AdminRankingSync, FestivalLive, RankingBoard, StudentIdBox } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
 import { TaskPlayground } from './components/TaskPlayground'
-import { checkNickname, type Account } from './components/nicknameRules'
+import { type Account } from './components/nicknameRules'
+import { pickFreeNickname } from './components/autoNickname'
 import { VisitorSteps } from './components/PopupIntro'
-import { enterStudent, isNicknameTaken, loadOwnAccount, renameStudent, saveAllowWords, saveBannedWords, saveRoster, useAdminData, useBannedWordsState } from './data/store'
+import { enterStudent, isNicknameTaken, loadOwnAccount, renameStudent, saveRoster, useAdminData } from './data/store'
 import { ADMIN_EMAIL, auth } from './firebase'
 
 /** 이 기기에서 마지막으로 들어온 학번(새로고침해도 다시 들어오기). 학번만 저장하고 이름은 저장하지 않습니다. */
@@ -50,7 +51,6 @@ function App() {
   const [user, setUser] = useState<User | null>(null)
   const [me, setMe] = useState<Account | null>(null)
   const isAdmin = user?.email === ADMIN_EMAIL
-  const { words: bannedWords, allow: allowWords, loaded: bannedLoaded } = useBannedWordsState()
   const admin = useAdminData(isAdmin)
 
   // 학생은 화면에 안 보이는 익명 로그인으로 기기마다 구분합니다. 운영진이 잠그면 다시 익명으로 돌아갑니다.
@@ -70,33 +70,31 @@ function App() {
     })
   }, [user, isAdmin, me])
 
-  const nicknameProblem = async (nickname: string, selfId?: string) => {
-    const problem = checkNickname(nickname, [], bannedWords, selfId, allowWords)
-    if (problem) return problem
-    if (await isNicknameTaken(nickname, selfId)) return '이미 다른 학생이 쓰는 닉네임이에요. 다른 닉네임을 정해 주세요.'
-    return null
-  }
+  // 랭킹 닉네임은 학생이 쓰지 않고 자동으로 지어 줍니다(욕설·비하 닉네임 방지). 누가 누구인지는 운영진 화면에서만 보입니다.
+  const BUSY = '사람이 몰려서 이름을 못 정했어요. 잠시 뒤 다시 눌러 주세요.'
 
-  const enter = async (input: { studentId: string; name: string; nickname: string }) => {
+  const enter = async (input: { studentId: string; name: string }) => {
     const studentId = input.studentId.trim()
     const name = input.name.trim()
     if (!/^\d{5}$/.test(studentId)) return '학번은 숫자 5자리로 써 주세요.'
     if (!name) return '이름을 써 주세요.'
-    const result = await enterStudent({ studentId, name, nickname: input.nickname.trim() }, (nickname) => nicknameProblem(nickname))
+    // 다시 들어오는 학생은 원래 닉네임을 그대로 쓰고, 이 이름은 처음 등록할 때만 씁니다.
+    const nickname = await pickFreeNickname((candidate) => isNicknameTaken(candidate))
+    if (!nickname) return BUSY
+    const result = await enterStudent({ studentId, name, nickname }, async (candidate) => ((await isNicknameTaken(candidate)) ? BUSY : null))
     if (!result.ok) return result.message
     setMe(result.account)
     writeMe(result.account.studentId)
     return null
   }
 
-  const rename = async (nickname: string) => {
+  const reroll = async () => {
     if (!me) return '먼저 등록해 주세요.'
-    const value = nickname.trim()
-    const problem = await nicknameProblem(value, me.studentId)
-    if (problem) return problem
-    const failed = await renameStudent(me, value)
+    const nickname = await pickFreeNickname((candidate) => isNicknameTaken(candidate, me.studentId), me.nickname)
+    if (!nickname) return BUSY
+    const failed = await renameStudent(me, nickname)
     if (failed) return failed
-    setMe({ ...me, nickname: value })
+    setMe({ ...me, nickname })
     return null
   }
 
@@ -146,7 +144,7 @@ function App() {
             {isAdmin ? (
               <div className="live-message" role="status">이 기기는 운영진으로 로그인되어 있어요. 운영진용 화면에서 잠그면 학생 화면을 쓸 수 있어요.</div>
             ) : (
-              <StudentIdBox me={me} busy={!user} onEnter={enter} onRename={rename} onLeave={leave} />
+              <StudentIdBox me={me} busy={!user} onEnter={enter} onReroll={reroll} onLeave={leave} />
             )}
           </>
         )}
@@ -158,25 +156,14 @@ function App() {
         {isAdmin && <AdminRankingSync />}
         {isAdmin && <AdminStockSync vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />}
 
-        {/* 운영진 화면 순서: 코인 승인·교환권 스캔(자주 쓰는 것) → 코인 직접 지급 → 간식 메뉴 → 학생 명단·금지어 → 연습 학번 지우기 → 비밀번호 바꾸기 */}
+        {/* 운영진 화면 순서: 코인 승인·교환권 스캔(자주 쓰는 것) → 코인 직접 지급 → 간식 메뉴 → 학생 명단 → 연습 학번 지우기 → 비밀번호 바꾸기 */}
         {!lab && (mode === 'student' || (mode === 'admin' && isAdmin)) && <FestivalLive mode={mode} me={isAdmin ? null : me} isAdmin={isAdmin} />}
 
         {!lab && mode === 'admin' && isAdmin && (
           <div className="admin-tools admin-tools-after">
             <AdminGrant roster={admin.roster} accounts={admin.accounts} grants={admin.grants} />
             <AdminMenus vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />
-            <AdminRoster
-              roster={admin.roster}
-              accounts={admin.accounts}
-              extraWords={bannedWords}
-              onAddRoster={saveRoster}
-              // 금지어를 서버에서 다 읽기 전에는 저장하지 않습니다(기존 금지어를 덮어쓰지 않도록).
-              onAddWord={(word) => (bannedLoaded ? saveBannedWords(bannedWords.includes(word) ? bannedWords : [...bannedWords, word]) : Promise.reject(new Error('loading')))}
-              onRemoveWord={(word) => (bannedLoaded ? saveBannedWords(bannedWords.filter((item) => item !== word)) : Promise.reject(new Error('loading')))}
-              allowWords={allowWords}
-              onAddAllow={(word) => (bannedLoaded ? saveAllowWords(allowWords.includes(word) ? allowWords : [...allowWords, word]) : Promise.reject(new Error('loading')))}
-              onRemoveAllow={(word) => (bannedLoaded ? saveAllowWords(allowWords.filter((item) => item !== word)) : Promise.reject(new Error('loading')))}
-            />
+            <AdminRoster roster={admin.roster} accounts={admin.accounts} onAddRoster={saveRoster} />
             <AdminCleanup roster={admin.roster} accounts={admin.accounts} />
             <AdminPasswordChange />
           </div>

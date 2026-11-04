@@ -112,19 +112,19 @@ function Section({ no, title, desc, built = true, open, onToggle, folded, childr
   )
 }
 
-/** 학번·이름·닉네임 등록칸. 처음이면 등록, 이미 등록한 학번이면 다시 들어오기로 처리합니다(App이 판단). */
-export function StudentIdBox({ me, busy, onEnter, onRename, onLeave }: {
+/**
+ * 학번·이름 등록칸. 처음이면 등록, 이미 등록한 학번이면 다시 들어오기로 처리합니다(App이 판단).
+ * 랭킹 닉네임은 자동으로 지어지고(예: 배고픈고래), 학생은 "다른 이름 뽑기"로만 바꿀 수 있습니다.
+ */
+export function StudentIdBox({ me, busy, onEnter, onReroll, onLeave }: {
   me: Account | null
   busy: boolean
-  onEnter: (input: { studentId: string; name: string; nickname: string }) => Promise<string | null>
-  onRename: (nickname: string) => Promise<string | null>
+  onEnter: (input: { studentId: string; name: string }) => Promise<string | null>
+  onReroll: () => Promise<string | null>
   onLeave: () => void
 }) {
   const [studentId, setStudentId] = useState('')
   const [name, setName] = useState('')
-  const [nickname, setNickname] = useState('')
-  const [newNick, setNewNick] = useState('')
-  const [renaming, setRenaming] = useState(false)
   const [working, setWorking] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
@@ -133,25 +133,21 @@ export function StudentIdBox({ me, busy, onEnter, onRename, onLeave }: {
 
   const submit = async () => {
     setWorking(true)
-    const problem = await onEnter({ studentId, name, nickname })
+    const problem = await onEnter({ studentId, name })
     setWorking(false)
     setError(problem ?? '')
     if (!problem) {
       setStudentId('')
       setName('')
-      setNickname('')
     }
   }
 
-  const rename = async () => {
+  const reroll = async () => {
     setWorking(true)
-    const problem = await onRename(newNick)
+    const problem = await onReroll()
     setWorking(false)
     setError(problem ?? '')
-    if (!problem) {
-      setRenaming(false)
-      setDone('닉네임을 바꿨어요.')
-    }
+    if (!problem) setDone('랭킹 이름을 새로 뽑았어요.')
   }
 
   if (me) {
@@ -160,22 +156,15 @@ export function StudentIdBox({ me, busy, onEnter, onRename, onLeave }: {
         <div className="live-registered">
           <span className="live-check" aria-hidden="true">✓</span>
           <div>
-            <strong>{me.nickname}님, 반가워요!</strong>
-            <small>{done || '아래에서 코인 신청을 시작해 보세요.'}</small>
+            <small>랭킹에는 이 이름으로 나와요</small>
+            <strong>{me.nickname}</strong>
+            <small>{done || '누가 누구인지는 운영진만 알아요. 아래에서 코인 신청을 시작해 보세요.'}</small>
           </div>
         </div>
-        {renaming ? (
-          <div className="live-row">
-            <input value={newNick} onChange={(event) => setNewNick(event.target.value)} maxLength={12} placeholder="새 닉네임" aria-label="새 닉네임" />
-            <button className="live-reset" onClick={() => void rename()} disabled={working}>{working ? '바꾸는 중…' : '바꾸기'}</button>
-            <button className="live-reset" onClick={() => { setRenaming(false); setError('') }}>취소</button>
-          </div>
-        ) : (
-          <div className="live-buttons">
-            <button className="live-reset" onClick={() => { setNewNick(me.nickname); setRenaming(true); setDone('') }}>닉네임 바꾸기</button>
-            <button className="live-reset" onClick={() => { setError(''); setDone(''); onLeave() }}>나가기</button>
-          </div>
-        )}
+        <div className="live-buttons">
+          <button className="live-reset" onClick={() => void reroll()} disabled={working}>{working ? '뽑는 중…' : '다른 이름 뽑기'}</button>
+          <button className="live-reset" onClick={() => { setError(''); setDone(''); onLeave() }}>나가기</button>
+        </div>
         {error && <p className="live-error" role="alert">{error}</p>}
       </section>
     )
@@ -198,15 +187,11 @@ export function StudentIdBox({ me, busy, onEnter, onRename, onLeave }: {
           이름 (명단 확인용 · 화면에는 안 나와요)
           <input value={name} onChange={(event) => setName(event.target.value)} maxLength={20} />
         </label>
-        <label>
-          닉네임 (랭킹에 이 이름으로 나와요 · 처음 등록할 때만)
-          <input value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={12} placeholder="예: 별빛여우" />
-        </label>
       </div>
       <div className="live-id-action">
         <button className="primary-button" onClick={() => void submit()} disabled={busy || working}>{busy ? '연결 중…' : working ? '확인 중…' : '등록 / 다시 들어오기'} <span>→</span></button>
       </div>
-      <p className="live-empty">이미 등록했다면 학번과 이름만 쓰고 누르면 다시 들어와요.</p>
+      <p className="live-empty">랭킹 이름은 자동으로 지어져요(예: 배고픈고래). 이미 등록했다면 같은 학번·이름으로 다시 들어와요.</p>
       {error && <p className="live-error" role="alert">{error}</p>}
     </section>
   )
@@ -336,7 +321,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
       {message && <div className={`live-message ${Object.values(lastNotBuilt).some(Boolean) ? 'todo' : ''}`} role="status">{message}</div>}
 
       {mode === 'student' && !studentId && (
-        <div className="live-message" role="status">위에서 학번·이름·닉네임으로 등록하면 코인 신청을 시작할 수 있어요.</div>
+        <div className="live-message" role="status">위에서 학번·이름으로 등록하면 코인 신청을 시작할 수 있어요.</div>
       )}
 
       {mode === 'student' && studentId && (
