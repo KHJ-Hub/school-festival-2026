@@ -3,6 +3,7 @@ rules_version = '2';
 // 배정고 친환경 팝업스토어 보안 규칙
 // 적용 방법: Firebase 콘솔 > Firestore Database > 규칙 탭에 이 파일 내용을 그대로 붙여 넣고 [게시]를 누릅니다.
 // - 학번·이름(명단, 계정)은 운영진과 본인만 읽을 수 있습니다. 랭킹은 닉네임과 코인만 공개합니다.
+// - 명단은 선택: 운영진이 정한 학번 범위 안이면 등록됩니다. 명단에 넣은 학번은 이름까지 맞아야 합니다.
 // - 운영진 = Authentication에 만든 admin 계정(src/firebase.ts의 ADMIN_EMAIL과 같아야 함).
 // - 학생은 화면에 안 보이는 익명 로그인으로 기기마다 구분합니다.
 // - 교환권은 운영진 메뉴 목록(settings/menus)에 있고 품절이 아닌 메뉴만, 그 가격으로만 만들 수 있습니다.
@@ -20,6 +21,16 @@ service cloud.firestore {
     }
     function rosterName(sid) {
       return get(docPath('roster', sid)).data.name;
+    }
+    // 등록할 수 있는 학번: 숫자 5자리 + 운영진이 정한 범위(settings/idRules의 pattern, 연습용 9xxxx 포함)
+    function idAllowed(sid) {
+      return sid.matches('^[0-9]{5}$')
+        && (!exists(docPath('settings', 'idRules')) || sid.matches(get(docPath('settings', 'idRules')).data.pattern));
+    }
+    // 이름: 1~20글자. 명단에 넣은 학번이면 명단 이름과 같아야 함(명단은 선택)
+    function nameOk(sid, name) {
+      return name is string && name.size() >= 1 && name.size() <= 20
+        && (!exists(docPath('roster', sid)) || name == rosterName(sid));
     }
     // 이 기기(익명 로그인)가 그 학번의 주인인지
     function ownerOf(sid) {
@@ -52,12 +63,12 @@ service cloud.firestore {
       allow get: if signedIn() && (resource == null || resource.data.uid == request.auth.uid || isAdmin());
       allow list: if isAdmin();
 
-      // 처음 등록: 학번·이름이 명단과 같아야 하고, 닉네임 문서를 같이 만들어야 함
+      // 처음 등록: 범위 안의 학번(명단에 있으면 이름도 같아야 함), 닉네임 문서를 같이 만들어야 함
       allow create: if signedIn()
-        && sid.matches('^[0-9]{5}$')
+        && idAllowed(sid)
         && request.resource.data.keys().hasOnly(['uid', 'name', 'nickname', 'nicknameKey'])
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.name == rosterName(sid)
+        && nameOk(sid, request.resource.data.name)
         && validNickname(request.resource.data.nickname)
         && nicknameClaimed(request.resource.data.nicknameKey, sid);
 
@@ -79,12 +90,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ── 다시 들어오기 확인서: 학번·이름이 명단과 맞을 때만 만들 수 있음(아무도 읽지 못함) ──
+    // ── 다시 들어오기 확인서: 처음 등록할 때 쓴 이름과 맞을 때만 만들 수 있음(아무도 읽지 못함) ──
     match /claims/{id} {
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly(['studentId', 'name', 'uid'])
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.name == rosterName(request.resource.data.studentId);
+        && request.resource.data.name == get(docPath('accounts', request.resource.data.studentId)).data.name;
     }
 
     // ── 닉네임(중복 방지용). 문서 이름 = 띄어쓰기·기호를 뺀 닉네임 ──
@@ -155,6 +166,12 @@ service cloud.firestore {
     match /settings/bannedWords {
       allow read: if true;
       allow write: if isAdmin();
+    }
+    // ── 등록할 수 있는 학번 범위(운영진이 정함) ──
+    match /settings/idRules {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.pattern is string;
     }
     // ── 간식 메뉴(운영진이 추가·삭제·품절 처리) ──
     match /settings/menus {

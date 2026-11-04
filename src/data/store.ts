@@ -18,6 +18,7 @@ import {
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import { normalizeForCheck, type Account, type RosterEntry } from '../components/nicknameRules'
+import { clampRange, DEFAULT_ID_RANGE, idPattern, type IdRange } from '../components/studentIdRules'
 import { DEMO_MENUS } from '../tasks/fixtures'
 import type { CoinGrant, CoinRequest, SnackMenu, TaskVoucher } from '../tasks/taskTypes'
 
@@ -25,7 +26,8 @@ import type { CoinGrant, CoinRequest, SnackMenu, TaskVoucher } from '../tasks/ta
  * 교사 관리 파일: Firestore에 읽고 쓰는 함수 모음. 화면(App, FestivalLive)은 여기만 부릅니다.
  *
  * 저장 구조 (보안 규칙은 firestore.rules)
- *   roster/{학번}                     { name }                         운영진만
+ *   roster/{학번}                     { name }                         운영진만 (선택: 넣은 학번은 이름까지 확인)
+ *   settings/idRules                  { grades, classes, numbers, pattern } 등록할 수 있는 학번 범위
  *   accounts/{학번}                   { uid, name, nickname, nicknameKey } 본인·운영진
  *   nicknames/{닉네임키}              { studentId, uid }               중복 확인용
  *   students/{학번}/requests/{id}     코인 신청                         본인·운영진
@@ -172,7 +174,7 @@ export function useBannedWordsState(): { words: string[]; allow: string[]; loade
 
 export type EnterOutcome = { ok: true; account: Account; kind: 'new' | 'reenter' } | { ok: false; message: string }
 
-const ROSTER_MISMATCH = '명단에 없는 학번이거나 이름이 달라요. 운영진에게 물어보세요.'
+const ROSTER_MISMATCH = '학번이나 이름을 다시 확인해 주세요. 이미 등록한 학번이면 처음에 쓴 이름과 같아야 해요. 그래도 안 되면 운영진에게 말해 주세요.'
 
 /** 닉네임이 이미 쓰이는지: 없는 닉네임 문서만 읽을 수 있게 규칙을 만들어, 읽기가 막히면 "이미 있음"으로 봅니다. */
 export async function isNicknameTaken(nickname: string, ownStudentId?: string): Promise<boolean> {
@@ -342,6 +344,35 @@ export async function saveRoster(entries: RosterEntry[]): Promise<void> {
 
 export async function removeRoster(studentId: string): Promise<void> {
   await deleteDoc(doc(db, 'roster', studentId))
+}
+
+/**
+ * 등록 풀기: 다른 사람이 남의 학번으로 먼저 등록했을 때, 계정과 랭킹 닉네임만 지워서 진짜 주인이 새로 등록할 수 있게 합니다.
+ * 코인 신청·지급·교환권 기록은 학번에 그대로 남습니다(지우지 않음).
+ */
+export async function releaseStudentId(studentId: string): Promise<void> {
+  const account = await getDoc(doc(db, 'accounts', studentId))
+  if (!account.exists()) return
+  const batch = writeBatch(db)
+  const key = account.data().nicknameKey as string | undefined
+  if (key) batch.delete(doc(db, 'nicknames', key))
+  batch.delete(account.ref)
+  await batch.commit()
+}
+
+/** 등록할 수 있는 학번 범위(모두 읽기·운영진 쓰기). 보안 규칙은 pattern으로 확인합니다. */
+export function useIdRange(): IdRange {
+  const [range, setRange] = useState<IdRange>(DEFAULT_ID_RANGE)
+  useEffect(() => onSnapshot(doc(db, 'settings', 'idRules'), (snap) => {
+    const data = snap.data()
+    if (data) setRange(clampRange({ grades: data.grades, classes: data.classes, numbers: data.numbers }))
+  }, () => undefined), [])
+  return range
+}
+
+export async function saveIdRange(range: IdRange): Promise<void> {
+  const value = clampRange(range)
+  await setDoc(doc(db, 'settings', 'idRules'), { ...value, pattern: idPattern(value) })
 }
 
 /**
