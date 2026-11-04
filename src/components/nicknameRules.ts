@@ -13,7 +13,7 @@ export type Account = { studentId: string; name: string; nickname: string }
 export const BASE_BANNED_WORDS = [
   // 욕설
   '씨발', '시발', '씨팔', '시팔', '쓰발', '씨바', 'ㅅㅂ', 'ㅆㅂ', 'ㅅㅃ', '좆', 'ㅈ같', '존나', '졸라', 'ㅈㄴ',
-  '병신', '븅신', '빙신', 'ㅂㅅ', '개새끼', '개새기', '개색', '개세끼', 'ㄱㅅㄲ', '새끼야', '지랄', 'ㅈㄹ',
+  '병신', '븅신', '빙신', 'ㅂㅅ', '개새끼', '개새기', '개색', '개색기', '개색끼', '개세끼', 'ㄱㅅㄲ', '새끼야', '지랄', 'ㅈㄹ',
   '미친놈', '미친년', '미친새', 'ㅁㅊ', '닥쳐', '꺼져', '엿먹', '염병', '썅', '쌍년', '쌍놈', '개년', '개놈',
   '느금', '니애미', '니엄마', '니어미', '애미', '애비', '느그', '호로새', '후레', '등신', '찐따', '또라이', '똘추',
   // 비하·혐오 표현
@@ -38,17 +38,27 @@ export function isBannedWordItself(word: string, extraWords: string[] = []): boo
   return [...BASE_BANNED_WORDS, ...extraWords].some((item) => normalizeForCheck(item) === target)
 }
 
+/** text 안에서 word가 나오는 모든 시작 위치 */
+function positionsOf(text: string, word: string): number[] {
+  const found: number[] = []
+  for (let at = text.indexOf(word); at >= 0; at = text.indexOf(word, at + 1)) found.push(at)
+  return found
+}
+
 /**
- * 금지어 찾기. 허용 단어(예: 무지개색)는 먼저 닉네임에서 빼고 남은 부분만 검사합니다.
- * 뺀 자리에는 구분 기호를 넣어서, 앞뒤 글자가 붙어 새 금지어가 되는 우회(예: 시+무지개색+발)도 막습니다.
+ * 금지어 찾기. 금지어가 나온 자리가 허용 단어(예: 무지개색) 안에 "통째로" 들어 있을 때만 봐줍니다.
+ * 허용 단어 밖으로 한 글자라도 삐져나오면 막습니다 → "무지개색기"는 "개색기"가 무지개색 밖으로 나가서 막힘.
  */
 export function findBannedWord(nickname: string, extraWords: string[] = [], allowWords: string[] = []): string | undefined {
-  let target = normalizeForCheck(nickname)
-  const allowed = allowWords.map(normalizeForCheck).filter((word) => word.length > 0).sort((a, b) => b.length - a.length)
-  for (const word of allowed) target = target.split(word).join('|')
+  const target = normalizeForCheck(nickname)
+  const spans = allowWords
+    .map(normalizeForCheck)
+    .filter((word) => word.length > 0)
+    .flatMap((word) => positionsOf(target, word).map((start) => [start, start + word.length] as const))
+  const covered = (start: number, end: number) => spans.some(([from, to]) => from <= start && end <= to)
   return [...BASE_BANNED_WORDS, ...extraWords]
     .map(normalizeForCheck)
-    .find((word) => word.length > 0 && target.includes(word))
+    .find((word) => word.length > 0 && positionsOf(target, word).some((start) => !covered(start, start + word.length)))
 }
 
 /** 닉네임 검사. 문제가 있으면 학생에게 보여 줄 문구를, 괜찮으면 null을 돌려줍니다. selfId는 닉네임을 바꾸는 본인 학번. */
