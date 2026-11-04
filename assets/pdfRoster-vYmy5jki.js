@@ -1,0 +1,3 @@
+import{t as e}from"./index-DPbkLaGu.js";async function t(t){let n=await e(()=>import(`./pdf-ChPZ-4aa.js`),[]),{default:r}=await e(async()=>{let{default:e}=await import(`./pdf.worker.min-Bq2VDz6K.js`);return{default:e}},[]);n.GlobalWorkerOptions.workerSrc=r;let i=await n.getDocument({data:new Uint8Array(await t.arrayBuffer())}).promise,a=[];for(let e=1;e<=i.numPages;e+=1){let t=await(await i.getPage(e)).getTextContent();a.push(t.items.map(e=>`str`in e?e.str+(e.hasEOL?`
+`:` `):``).join(``))}return await i.destroy(),a.join(`
+`)}export{t as pdfToText};
