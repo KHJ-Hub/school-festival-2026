@@ -34,6 +34,7 @@ import { VoucherArt } from './VoucherArt'
 import type { AppMode } from './ModeSwitcher'
 import type { Account } from './nicknameRules'
 import './FestivalLive.css'
+import { useFold } from './adminFold'
 
 /**
  * 교사 관리 파일: 학생들이 만든 함수(src/tasks/)를 실제 화면 흐름에 연결합니다.
@@ -219,6 +220,9 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   const [amount, setAmount] = useState(3)
   const [requestOpen, setRequestOpen] = useState(true)
   const [exchangeOpen, setExchangeOpen] = useState(true)
+  // 운영진 카드: 자주 쓰는 승인·스캔은 폰에서도 펼쳐 두고, 접으면 이 기기에 기억합니다.
+  const [approveOpen, setApproveOpen] = useFold('approve', true)
+  const [scanOpen, setScanOpen] = useFold('scan', true)
   // 적립 신청은 한 번만: 신청 중이거나 이미 승인된 건이 있으면 새 신청을 막습니다(거절된 건만 있으면 다시 신청 가능).
   const requestApproved = mine.requests.some((request) => request.status === 'approved')
   const requestPending = mine.requests.some((request) => request.status === 'pending')
@@ -398,7 +402,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
 
       {mode === 'admin' && isAdmin && (
         <>
-          <Section no={4} title="적립 신청 승인" desc="학생이 낸 실물 코인을 받은 뒤 승인해요. 누가 신청했는지 이름·학번이 함께 보여요." built={BUILT[4]}>
+          <Section no={4} title="적립 신청 승인" desc="학생이 낸 실물 코인을 받은 뒤 승인해요. 누가 신청했는지 이름·학번이 함께 보여요." built={BUILT[4]} open={approveOpen} onToggle={setApproveOpen} folded={`기다리는 신청 ${pending.length}건`}>
             {pending.length === 0 ? <p className="live-empty">기다리는 신청이 없어요.</p> : (
               <ul className="live-list">
                 {pending.map((request) => (
@@ -411,7 +415,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
             )}
           </Section>
 
-          <Section no={6} title="교환권 바코드 스캔" desc="손님 폰의 바코드를 스캔하면 자동으로 사용 처리돼요. 스캐너가 없으면 코드를 직접 입력해도 돼요." built={BUILT[6]}>
+          <Section no={6} title="교환권 바코드 스캔" desc="손님 폰의 바코드를 스캔하면 자동으로 사용 처리돼요. 스캐너가 없으면 코드를 직접 입력해도 돼요." built={BUILT[6]} open={scanOpen} onToggle={setScanOpen} folded={`아직 안 쓴 교환권 ${issued.length}장`}>
             <form className="live-row" onSubmit={(event) => { event.preventDefault(); if (scanCode.trim()) void scanVoucher(scanCode) }}>
               <input value={scanCode} onChange={(event) => setScanCode(event.target.value)} placeholder="여기에 스캔 (예: K7F2Q9AB)" aria-label="교환권 바코드 값" autoComplete="off" />
               <button className="primary-button" type="submit">스캔 <span>→</span></button>

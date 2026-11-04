@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword, updatePassword } from 'firebase/auth'
 import { ADMIN_EMAIL, auth } from '../firebase'
+import { FoldButton, useFold } from './adminFold'
 
 /**
  * 교사 관리 파일: 운영진 화면 비밀번호 잠금.
@@ -44,6 +45,7 @@ export function AdminLock() {
 /** 운영진 화면 안에서 비밀번호 바꾸기. 지금 비밀번호를 맞혀야 바꿀 수 있고, 모든 기기에 적용됩니다. */
 export function AdminPasswordChange() {
   const [current, setCurrent] = useState('')
+  const [open, setOpen] = useFold('password')
   const [next, setNext] = useState('')
   const [confirm, setConfirm] = useState('')
   const [note, setNote] = useState('')
@@ -73,13 +75,15 @@ export function AdminPasswordChange() {
   }
 
   return (
-    <article className="panel live-section">
+    <article className={`panel live-section ${open ? '' : 'folded'}`}>
       <div className="live-head">
         <div>
           <h2>비밀번호 바꾸기</h2>
           <p>바꾸면 모든 운영진 기기에 바로 적용돼요.</p>
         </div>
+        <FoldButton open={open} onToggle={setOpen} />
       </div>
+      {open && (<>
       <form className="live-id-fields" onSubmit={(event) => { event.preventDefault(); void submit() }}>
         <label>지금 비밀번호<input type="password" value={current} onChange={(event) => setCurrent(event.target.value)} autoComplete="current-password" /></label>
         <label>새 비밀번호 (6글자 이상)<input type="password" value={next} onChange={(event) => setNext(event.target.value)} autoComplete="new-password" /></label>
@@ -88,6 +92,7 @@ export function AdminPasswordChange() {
       </form>
       {error && <p className="live-error" role="alert">{error}</p>}
       {note && <p className="live-message" role="status">{note}</p>}
+      </>)}
     </article>
   )
 }

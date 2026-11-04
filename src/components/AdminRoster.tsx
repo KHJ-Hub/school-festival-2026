@@ -1,5 +1,19 @@
 import { useEffect, useState } from 'react'
 import { csvToRows, normalizeForCheck, parseRosterText, rowsToRoster, type Account, type RosterEntry } from './nicknameRules'
+import { FoldButton, useFold } from './adminFold'
+
+/** 이 기기에서 넣은 명단 파일 목록(파일 이름·인원만, 학생 정보는 저장하지 않음) */
+type RosterFile = { name: string; count: number; at: number }
+const FILES_KEY = 'roster-files'
+
+function readFiles(): RosterFile[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(FILES_KEY) ?? '[]')
+    return Array.isArray(saved) ? saved : []
+  } catch {
+    return []
+  }
+}
 
 /**
  * 교사 관리 파일: 운영진 화면의 학생 명단(학번·이름)과 금지어 관리.
@@ -14,9 +28,21 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
   onRemoveWord: (word: string) => Promise<void>
 }) {
   const [pasted, setPasted] = useState('')
+  const [open, setOpen] = useFold('roster')
   const [word, setWord] = useState('')
   const [note, setNote] = useState('')
   const [search, setSearch] = useState('')
+  const [files, setFiles] = useState<RosterFile[]>(readFiles)
+
+  const rememberFile = (file: RosterFile) => {
+    const next = [file, ...files.filter((item) => item.name !== file.name)].slice(0, 10)
+    setFiles(next)
+    try {
+      localStorage.setItem(FILES_KEY, JSON.stringify(next))
+    } catch {
+      // 기억 못 해도 명단은 이미 저장됐습니다.
+    }
+  }
 
   // 알림 문구는 4초 뒤 사라집니다(자리 차지하지 않게).
   useEffect(() => {
@@ -69,6 +95,7 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
       setNote('저장하지 못했어요. 인터넷 연결을 확인해 주세요.')
       return
     }
+    rememberFile({ name: file.name, count: entries.length, at: Date.now() })
     setNote(`${entries.length}명을 명단에 넣었어요.${skipped ? ` 형식이 맞지 않는 ${skipped}줄은 건너뛰었어요.` : ''}`)
   }
 
@@ -92,18 +119,26 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
   const shown = keyword ? roster.filter((entry) => entry.studentId.includes(keyword) || entry.name.includes(keyword)) : roster
 
   return (
-    <article className="panel live-section admin-roster">
+    <article className={`panel live-section admin-roster ${open ? '' : 'folded'}`}>
       <div className="live-head">
         <div>
           <h2>학생 명단 · 금지어</h2>
         </div>
+        <FoldButton open={open} onToggle={setOpen} />
       </div>
+      {open && (<>
 
       {note && <p className="live-message" role="status">{note}</p>}
 
       <div className="roster-add">
         <div className="roster-file">
           <h3>엑셀 파일로 넣기</h3>
+          {/* 1·2·3학년을 따로 넣을 수 있게, 이 기기에서 넣은 파일을 보여 줍니다. */}
+          <ul className="roster-files">
+            {files.length === 0 ? <li className="empty">아직 넣은 파일이 없어요. 학년별로 따로 넣어도 돼요.</li> : files.map((file) => (
+              <li key={`${file.name}-${file.at}`}><span>{file.name}</span><b>{file.count}명</b></li>
+            ))}
+          </ul>
           <label className="admin-file">
             <input type="file" accept=".xlsx,.csv" onChange={(event) => { void addFile(event.target.files?.[0]); event.target.value = '' }} />
             <span className="primary-button">파일 고르기</span>
@@ -149,6 +184,7 @@ export function AdminRoster({ roster, accounts, extraWords, onAddRoster, onAddWo
           ))}
         </ul>
       )}
+      </>)}
     </article>
   )
 }

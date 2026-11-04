@@ -306,3 +306,19 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
   .live-row .field.wide { flex: 1 1 100%; }
   .live-row .field.narrow { flex: 1 1 80px; }
 }
+/* 접힌 운영진 카드는 제목과 펼치기 버튼만 */
+.live-section.folded .live-head { margin-bottom: 0; }
+.live-section.folded .live-head p { display: none; }
+/* 운영진 카드(코인 지급·메뉴·명단 등)는 접기 버튼을 제목 줄 오른쪽에 */
+.live-section .live-head:has(> div + .live-toggle) { display: flex; flex-direction: row; align-items: flex-start; gap: 12px; }
+.live-head > div + .live-toggle { margin: 0 0 0 auto; flex: 0 0 auto; }
+/* 학생 명단: 왼쪽 넣은 파일 목록 / 오른쪽 붙여넣기 칸, 아래 버튼 두 개가 나란히 */
+.roster-file, .roster-paste { display: grid; grid-template-rows: auto 1fr auto; gap: 8px; }
+.roster-file h3, .roster-paste-head h3 { margin: 0; }
+.roster-paste .admin-paste { margin-bottom: 0; }
+.roster-files { margin: 0; padding: 8px 12px; list-style: none; min-height: 76px; max-height: 140px; overflow-y: auto; box-sizing: border-box; border: 1px dashed #d9cdc1; border-radius: 10px; background: #fcfaf7; font-size: 14px; }
+.roster-files li { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; }
+.roster-files li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roster-files li b { flex: 0 0 auto; color: #1f5f40; }
+.roster-files li.empty { color: #9a877c; display: block; }
+@media (max-width: 780px) { .roster-paste { margin-top: 14px; } }

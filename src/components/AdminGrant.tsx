@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { cancelDirectGrant, grantCoinsDirect, type DirectGrant } from '../data/store'
 import type { Account, RosterEntry } from './nicknameRules'
+import { FoldButton, useFold } from './adminFold'
 
 /**
  * 교사 관리 파일: 운영진이 학번으로 코인을 바로 지급합니다(알바 보상 등).
@@ -9,6 +10,7 @@ import type { Account, RosterEntry } from './nicknameRules'
  */
 export function AdminGrant({ roster, accounts, grants }: { roster: RosterEntry[]; accounts: Account[]; grants: DirectGrant[] }) {
   const [studentId, setStudentId] = useState('')
+  const [open, setOpen] = useFold('grant')
   const [amount, setAmount] = useState(1)
   const [note, setNote] = useState('')
   const [message, setMessage] = useState('')
@@ -56,13 +58,15 @@ export function AdminGrant({ roster, accounts, grants }: { roster: RosterEntry[]
     .slice(0, 5)
 
   return (
-    <article className="panel live-section admin-roster">
+    <article className={`panel live-section admin-roster ${open ? '' : 'folded'}`}>
       <div className="live-head">
         <div>
           <h2>코인 직접 지급</h2>
           <p>학번으로 코인을 바로 줘요. 알바 보상처럼 신청 없이 줄 때 써요. 메모는 비워 둬도 돼요.</p>
         </div>
+        <FoldButton open={open} onToggle={setOpen} />
       </div>
+      {open && (<>
 
       {message && <p className="live-message" role="status">{message}</p>}
 
@@ -86,6 +90,7 @@ export function AdminGrant({ roster, accounts, grants }: { roster: RosterEntry[]
           </ul>
         </>
       )}
+      </>)}
     </article>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { removeStudentRecords } from '../data/store'
 import type { Account, RosterEntry } from './nicknameRules'
+import { FoldButton, useFold } from './adminFold'
 
 /** "90001~90003", "90001-90003", "90001 90005" 같은 입력을 학번 목록으로 바꿉니다. 형식이 틀리면 null. */
 function parseIds(text: string): string[] | null {
@@ -27,6 +28,7 @@ function parseIds(text: string): string[] | null {
  */
 export function AdminCleanup({ roster, accounts }: { roster: RosterEntry[]; accounts: Account[] }) {
   const [input, setInput] = useState('')
+  const [open, setOpen] = useFold('cleanup')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -59,18 +61,21 @@ export function AdminCleanup({ roster, accounts }: { roster: RosterEntry[]; acco
   }
 
   return (
-    <article className="panel live-section admin-roster">
+    <article className={`panel live-section admin-roster ${open ? '' : 'folded'}`}>
       <div className="live-head">
         <div>
           <h2>연습 학번 기록 지우기</h2>
           <p>연습·리허설에 쓴 학번(9로 시작)의 명단, 계정, 닉네임, 코인 신청·지급, 교환권을 지워요.</p>
         </div>
+        <FoldButton open={open} onToggle={setOpen} />
       </div>
+      {open && (<>
       {note && <p className="live-message" role="status">{note}</p>}
       <div className="live-row">
         <input value={input} onChange={(event) => setInput(event.target.value)} placeholder="90001~90003" aria-label="지울 연습 학번" />
         <button className="primary-button" disabled={busy} onClick={() => void run()}>{busy ? '지우는 중…' : '지우기'}</button>
       </div>
+      </>)}
     </article>
   )
 }

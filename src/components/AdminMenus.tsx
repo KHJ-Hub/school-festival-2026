@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { countIssuedByMenu, newMenuId, saveMenus, useMenus, type StoreMenu, type StoredVoucher } from '../data/store'
+import { FoldButton, useFold } from './adminFold'
 
 /**
  * 교사 관리 파일: 운영진 화면의 간식 메뉴 관리(품절 처리, 수량, 추가, 삭제).
@@ -10,6 +11,7 @@ import { countIssuedByMenu, newMenuId, saveMenus, useMenus, type StoreMenu, type
 export function AdminMenus({ vouchers, vouchersLoaded }: { vouchers: StoredVoucher[]; vouchersLoaded: boolean }) {
   const { menus, status } = useMenus()
   const [name, setName] = useState('')
+  const [open, setOpen] = useFold('menus')
   const [cost, setCost] = useState(1)
   const [stock, setStock] = useState('')
   const [note, setNote] = useState('')
@@ -101,13 +103,15 @@ export function AdminMenus({ vouchers, vouchersLoaded }: { vouchers: StoredVouch
   }
 
   return (
-    <article className="panel live-section admin-roster">
+    <article className={`panel live-section admin-roster ${open ? '' : 'folded'}`}>
       <div className="live-head">
         <div>
           <h2>간식 메뉴</h2>
           <p>품절로 바꾸면 학생 화면에서 바로 "품절"로 보이고 교환할 수 없어요. 수량을 정하면 그만큼 발급됐을 때 자동으로 품절되고, 수량을 비워 두면 제한 없이 팔아요.</p>
         </div>
+        <FoldButton open={open} onToggle={setOpen} />
       </div>
+      {open && (<>
 
       {note && <p className="live-message" role="status">{note}</p>}
 
@@ -137,6 +141,7 @@ export function AdminMenus({ vouchers, vouchersLoaded }: { vouchers: StoredVouch
         <label className="field narrow">수량<input type="number" min={1} value={stock} onChange={(event) => setStock(event.target.value)} placeholder="제한 없음" /></label>
         <button className="primary-button" onClick={add}>메뉴 추가</button>
       </div>
+      </>)}
     </article>
   )
 }
