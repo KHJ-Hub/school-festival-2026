@@ -95,8 +95,27 @@ export function AdminRoster({ roster, accounts, onAddRoster }: {
     setNote(`${entries.length}명을 명단에 넣었어요.${skipped ? ` 형식이 맞지 않는 ${skipped}줄은 건너뛰었어요.` : ''}`)
   }
 
-  const keyword = search.trim()
-  const shown = keyword ? roster.filter((entry) => entry.studentId.includes(keyword) || entry.name.includes(keyword)) : roster
+  // 학번·이름·랭킹 닉네임으로 찾기(상품 줄 때 랭킹 닉네임으로 학생을 찾습니다). 띄어쓰기는 무시합니다.
+  const keyword = search.replace(/\s/g, '')
+  const nicknameOf = (studentId: string) => accounts.find((item) => item.studentId === studentId)?.nickname ?? ''
+  const shown = keyword
+    ? roster.filter((entry) => entry.studentId.includes(keyword) || entry.name.replace(/\s/g, '').includes(keyword) || nicknameOf(entry.studentId).replace(/\s/g, '').includes(keyword))
+    : roster
+  const rows = (
+    shown.length === 0 ? <p className="live-empty">{keyword ? '찾는 학생이 없어요.' : '아직 명단이 없어요.'}</p> : (
+      <ul className="live-list">
+        {shown.map((entry) => {
+          const nickname = nicknameOf(entry.studentId)
+          return (
+            <li key={entry.studentId}>
+              <span>{entry.studentId} · {entry.name}</span>
+              <b className={`live-status ${nickname ? 'approved' : 'pending'}`}>{nickname ? `등록됨 · ${nickname}` : '아직 등록 안 함'}</b>
+            </li>
+          )
+        })}
+      </ul>
+    )
+  )
 
   return (
     <article className={`panel live-section admin-roster ${open ? '' : 'folded'}`}>
@@ -131,26 +150,17 @@ export function AdminRoster({ roster, accounts, onAddRoster }: {
         </div>
       </div>
 
-      {/* 전교생을 넣으면 길어지므로 접어 두고, 펼치면 학번·이름으로 찾을 수 있게 합니다. */}
-      <details className="live-fold">
-        <summary>명단 ({roster.length}명 · 등록 {accounts.length}명)</summary>
-        <div className="live-row admin-search">
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="학번이나 이름으로 찾기" aria-label="명단에서 찾기" />
-        </div>
-        {shown.length === 0 ? <p className="live-empty">{keyword ? '찾는 학생이 없어요.' : '아직 명단이 없어요.'}</p> : (
-          <ul className="live-list">
-            {shown.map((entry) => {
-              const account = accounts.find((item) => item.studentId === entry.studentId)
-              return (
-                <li key={entry.studentId}>
-                  <span>{entry.studentId} · {entry.name}</span>
-                  <b className={`live-status ${account ? 'approved' : 'pending'}`}>{account ? `등록됨 · ${account.nickname}` : '아직 등록 안 함'}</b>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </details>
+      {/* 찾기 칸은 늘 보이게 두고(상품 줄 때 바로 찾게), 전체 명단은 길어서 접어 둡니다. */}
+      <h3>학생 찾기</h3>
+      <div className="live-row admin-search">
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="학번·이름·랭킹 닉네임으로 찾기 (예: 배고픈고래)" aria-label="명단에서 찾기" />
+      </div>
+      {keyword ? rows : (
+        <details className="live-fold">
+          <summary>명단 ({roster.length}명 · 등록 {accounts.length}명)</summary>
+          {rows}
+        </details>
+      )}
 
       </>)}
     </article>
