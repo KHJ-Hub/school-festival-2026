@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { csvToRows, parseRosterText, rowsToRoster, type Account, type RosterEntry } from './nicknameRules'
 import { FoldButton, useFold } from './adminFold'
-import { clampRange, rangeExample, type IdRange } from './studentIdRules'
 
 /** 이 기기에서 넣은 명단 파일 목록(파일 이름·인원만, 학생 정보는 저장하지 않음) */
 type RosterFile = { name: string; count: number; at: number }
@@ -22,12 +21,10 @@ function readFiles(): RosterFile[] {
  * - 명단(학번·이름)은 선택: 넣은 학번은 이름까지 확인합니다. Firestore(운영진만 읽기)에 저장하고 GitHub에는 넣지 않습니다.
  * - 학번·이름·랭킹 닉네임으로 학생을 찾고, 남의 학번으로 잘못 등록된 경우 "등록 풀기"를 합니다.
  */
-export function AdminRoster({ roster, accounts, onAddRoster, idRange, onSaveRange, onRelease }: {
+export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
   roster: RosterEntry[]
   accounts: Account[]
   onAddRoster: (entries: RosterEntry[]) => Promise<void>
-  idRange: IdRange
-  onSaveRange: (range: IdRange) => Promise<void>
   onRelease: (studentId: string) => Promise<void>
 }) {
   const [pasted, setPasted] = useState('')
@@ -35,21 +32,6 @@ export function AdminRoster({ roster, accounts, onAddRoster, idRange, onSaveRang
   const [note, setNote] = useState('')
   const [search, setSearch] = useState('')
   const [files, setFiles] = useState<RosterFile[]>(readFiles)
-  const [range, setRange] = useState(idRange)
-  // 서버 값이 바뀌면(처음 읽을 때 포함) 입력칸도 맞춥니다.
-  useEffect(() => setRange(idRange), [idRange])
-
-  const saveRange = async () => {
-    const value = clampRange(range)
-    try {
-      await onSaveRange(value)
-    } catch {
-      setNote('저장하지 못했어요. 인터넷 연결을 확인해 주세요.')
-      return
-    }
-    setNote(`이제 ${rangeExample(value)} 학번(과 연습용 9로 시작하는 학번)으로 등록할 수 있어요.`)
-  }
-
   const release = async (entry: RosterEntry, nickname: string) => {
     if (!window.confirm(`${entry.studentId} ${entry.name} (${nickname})의 등록을 풀까요?\n\n계정과 랭킹 닉네임만 지워지고, 코인·교환권 기록은 학번에 남아요. 진짜 주인이 이 학번으로 새로 등록할 수 있게 돼요.`)) return
     try {
@@ -185,16 +167,6 @@ export function AdminRoster({ roster, accounts, onAddRoster, idRange, onSaveRang
 
       {note && <p className="live-message" role="status">{note}</p>}
 
-      {/* 명단 없이도 등록할 수 있게, 있을 수 있는 학번(학년·반·번호)만 받습니다. */}
-      <h3>등록할 수 있는 학번</h3>
-      <p className="allow-help">학번 = 학년 1자리 + 반 2자리 + 번호 2자리 (예: 1학년 3반 5번 → 10305). 지금: {rangeExample(idRange)} · 연습용 9로 시작하는 학번</p>
-      <div className="live-row">
-        <label className="field narrow">학년 수<input type="number" min={1} max={8} value={range.grades} onChange={(event) => setRange({ ...range, grades: Number(event.target.value) })} /></label>
-        <label className="field narrow">반 (최대)<input type="number" min={1} max={99} value={range.classes} onChange={(event) => setRange({ ...range, classes: Number(event.target.value) })} /></label>
-        <label className="field narrow">번호 (최대)<input type="number" min={1} max={99} value={range.numbers} onChange={(event) => setRange({ ...range, numbers: Number(event.target.value) })} /></label>
-        <button className="primary-button" onClick={() => void saveRange()}>저장</button>
-      </div>
-
       {/* 찾기 칸은 늘 보이게 두고(상품 줄 때 바로 찾게), 전체 목록은 길어서 접어 둡니다. */}
       <h3>학생 찾기</h3>
       <div className="live-row admin-search">
@@ -207,8 +179,8 @@ export function AdminRoster({ roster, accounts, onAddRoster, idRange, onSaveRang
         </details>
       )}
 
-      <h3>명단 넣기 (선택)</h3>
-      <p className="allow-help">안 넣어도 등록할 수 있어요. 명단을 넣은 학번은 이름까지 맞아야 등록돼요(남의 학번 도용 방지).</p>
+      <h3>명단 넣기</h3>
+      <p className="allow-help">명단에 있는 학번·이름이 맞아야 등록돼요. 전학생처럼 빠진 학생은 붙여넣기로 추가해 주세요.</p>
       <div className="roster-add">
         <div className="roster-file">
           <h3>파일로 넣기 (엑셀·PDF)</h3>

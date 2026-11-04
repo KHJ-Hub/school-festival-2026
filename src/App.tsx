@@ -11,8 +11,7 @@ import { TaskPlayground } from './components/TaskPlayground'
 import { type Account } from './components/nicknameRules'
 import { pickFreeNickname } from './components/autoNickname'
 import { VisitorSteps } from './components/PopupIntro'
-import { enterStudent, isNicknameTaken, loadOwnAccount, releaseStudentId, renameStudent, saveIdRange, saveRoster, useAdminData, useIdRange } from './data/store'
-import { isAllowedStudentId } from './components/studentIdRules'
+import { enterStudent, isNicknameTaken, loadOwnAccount, releaseStudentId, renameStudent, saveRoster, useAdminData } from './data/store'
 import { ADMIN_EMAIL, auth } from './firebase'
 
 /** 이 기기에서 마지막으로 들어온 학번(새로고침해도 다시 들어오기). 학번만 저장하고 이름은 저장하지 않습니다. */
@@ -53,7 +52,6 @@ function App() {
   const [me, setMe] = useState<Account | null>(null)
   const isAdmin = user?.email === ADMIN_EMAIL
   const admin = useAdminData(isAdmin)
-  const idRange = useIdRange()
 
   // 학생은 화면에 안 보이는 익명 로그인으로 기기마다 구분합니다. 운영진이 잠그면 다시 익명으로 돌아갑니다.
   useEffect(() => onAuthStateChanged(auth, (next) => {
@@ -79,7 +77,6 @@ function App() {
     const studentId = input.studentId.trim()
     const name = input.name.trim()
     if (!/^\d{5}$/.test(studentId)) return '학번은 숫자 5자리로 써 주세요. (예: 1학년 3반 5번 → 10305)'
-    if (!isAllowedStudentId(studentId, idRange)) return '없는 학번이에요. 학년·반·번호를 다시 확인해 주세요. (예: 1학년 3반 5번 → 10305)'
     if (!name) return '이름을 써 주세요.'
     // 다시 들어오는 학생은 원래 닉네임을 그대로 쓰고, 이 이름은 처음 등록할 때만 씁니다.
     const nickname = await pickFreeNickname((candidate) => isNicknameTaken(candidate))
@@ -166,7 +163,7 @@ function App() {
           <div className="admin-tools admin-tools-after">
             <AdminGrant roster={admin.roster} accounts={admin.accounts} grants={admin.grants} />
             <AdminMenus vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />
-            <AdminRoster roster={admin.roster} accounts={admin.accounts} onAddRoster={saveRoster} idRange={idRange} onSaveRange={saveIdRange} onRelease={releaseStudentId} />
+            <AdminRoster roster={admin.roster} accounts={admin.accounts} onAddRoster={saveRoster} onRelease={releaseStudentId} />
             <AdminCleanup roster={admin.roster} accounts={admin.accounts} />
             <AdminPasswordChange />
           </div>
