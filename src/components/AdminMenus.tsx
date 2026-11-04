@@ -132,9 +132,9 @@ export function AdminMenus({ vouchers, vouchersLoaded }: { vouchers: StoredVouch
 
       <h3>메뉴 추가</h3>
       <div className="live-row">
-        <input value={name} onChange={(event) => setName(event.target.value)} placeholder="메뉴 이름" aria-label="메뉴 이름" maxLength={20} />
-        <input type="number" min={1} max={20} value={cost} onChange={(event) => setCost(Number(event.target.value))} aria-label="필요한 코인" />
-        <input type="number" min={1} value={stock} onChange={(event) => setStock(event.target.value)} placeholder="수량" aria-label="교환 수량" />
+        <label className="field wide">메뉴 이름<input value={name} onChange={(event) => setName(event.target.value)} placeholder="예: 팝콘 한 봉지" maxLength={20} /></label>
+        <label className="field narrow">코인<input type="number" min={1} max={20} value={cost} onChange={(event) => setCost(Number(event.target.value))} /></label>
+        <label className="field narrow">수량<input type="number" min={1} value={stock} onChange={(event) => setStock(event.target.value)} placeholder="제한 없음" /></label>
         <button className="primary-button" onClick={add}>메뉴 추가</button>
       </div>
     </article>

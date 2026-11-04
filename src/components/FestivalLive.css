@@ -272,3 +272,37 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
   .live-id-action .primary-button { flex: 0 0 auto; width: auto; min-width: 260px; justify-content: center; }
   .board-empty { margin: 44px 0; font-size: clamp(20px, 2.4vw, 30px); }
 }
+
+/* 운영진 화면 다듬기 */
+/* 칸 위에 이름을 붙인 입력칸(학번·코인·메모 등) */
+.live-row { align-items: flex-end; }
+.live-row .field { display: grid; gap: 4px; margin: 0; flex: 1 1 120px; min-width: 0; color: #8a786e; font-size: 13px; font-weight: 700; }
+.live-row .field.wide { flex: 2 1 160px; }
+.live-row .field.narrow { flex: 0 0 112px; }
+.app-shell .live-row .field input { width: 100%; box-sizing: border-box; }
+/* 비밀번호 바꾸기 칸도 다른 칸과 같은 모양으로 */
+.live-id-fields label { margin: 0; color: #8a786e; font-size: 13px; font-weight: 700; display: grid; gap: 4px; }
+.live-id-fields input { box-sizing: border-box; padding: 10px 12px; border: 1px solid #d9cdc1; border-radius: 10px; background: white; font-size: 16px; }
+/* 메뉴·금지어 목록 버튼: 작고 차분하게 */
+.admin-roster .live-list button { min-height: 34px; padding: 6px 12px; font-size: 14px; background: white; color: #2b211d; border: 1px solid #d9cdc1; }
+.admin-roster .live-list button.ghost { background: #f1e8df; border-color: #f1e8df; color: #a33b2e; }
+/* 운영진 화면 제목은 작게, 오른쪽에 잠그기 버튼 */
+.app-shell .hero.compact { min-height: 0; padding: 18px 0 14px; }
+.app-shell .hero.compact::before { display: none; }
+.app-shell .hero.compact h1 { font-size: 30px; }
+.app-shell .hero.compact .hero-clubs { font-size: 14px; margin-bottom: 4px; }
+.hero-side { justify-self: end; }
+@media (max-width: 780px) { .hero-side { justify-self: stretch; } }
+@media (min-width: 781px) {
+  /* 입력칸은 넓게, 버튼은 같은 줄 오른쪽에 글자 길이만큼 */
+  .app-shell .live-row input:not([type='number']) { flex: 1 1 200px; width: auto; min-width: 0; }
+  .app-shell .live-row .primary-button { width: auto; flex: 0 0 auto; min-width: 120px; min-height: 44px; }
+  .live-id-fields + .live-id-action { margin-top: 4px; }
+  /* 학생 명단: 엑셀 파일 / 붙여넣기를 좌우로 */
+  .roster-add { grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  .roster-paste-head h3 { margin-top: 0; }
+}
+@media (max-width: 600px) {
+  .live-row .field.wide { flex: 1 1 100%; }
+  .live-row .field.narrow { flex: 1 1 80px; }
+}

@@ -120,11 +120,17 @@ function App() {
       </header>
 
       <main>
-        <section className="hero">
+        {/* 운영진 화면은 일하는 화면이라 제목을 작게 줄이고, 오른쪽에 잠그기 버튼을 둡니다. */}
+        <section className={`hero ${!lab && mode === 'admin' ? 'compact' : ''}`}>
           <div>
             <p className="eyebrow hero-clubs">리틀 엔지니어 랩 <span>×</span> 보드게임 동아리 <span>×</span> 국제 이해 문화 탐구반</p>
             <h1>배정 <em>팝팝스토어</em></h1>
           </div>
+          {!lab && mode === 'admin' && isAdmin && (
+            <div className="hero-side">
+              <button className="live-reset" onClick={() => void signOut(auth)}>운영진 화면 잠그기</button>
+            </div>
+          )}
         </section>
 
         {lab && (
@@ -146,12 +152,6 @@ function App() {
         )}
 
         {!lab && mode === 'admin' && !isAdmin && <AdminLock />}
-
-        {!lab && mode === 'admin' && isAdmin && (
-          <div className="admin-tools">
-            <button className="live-reset" onClick={() => void signOut(auth)}>운영진 화면 잠그기</button>
-          </div>
-        )}
 
         {!lab && mode === 'ranking' && <RankingBoard />}
 

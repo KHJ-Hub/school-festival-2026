@@ -67,9 +67,9 @@ export function AdminGrant({ roster, accounts, grants }: { roster: RosterEntry[]
       {message && <p className="live-message" role="status">{message}</p>}
 
       <div className="live-row">
-        <input value={studentId} onChange={(event) => setStudentId(event.target.value)} placeholder="학번" inputMode="numeric" maxLength={5} aria-label="지급할 학번" />
-        <input type="number" min={1} max={100} value={amount} onChange={(event) => setAmount(Number(event.target.value))} aria-label="지급할 코인 수" />
-        <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="메모 (선택)" maxLength={30} aria-label="메모" />
+        <label className="field">학번<input value={studentId} onChange={(event) => setStudentId(event.target.value)} placeholder="90011" inputMode="numeric" maxLength={5} /></label>
+        <label className="field narrow">코인<input type="number" min={1} max={100} value={amount} onChange={(event) => setAmount(Number(event.target.value))} /></label>
+        <label className="field wide">메모 (선택)<input value={note} onChange={(event) => setNote(event.target.value)} placeholder="예: 알바 보상" maxLength={30} /></label>
         <button className="primary-button" onClick={() => void give()}>지급하기</button>
       </div>
 
