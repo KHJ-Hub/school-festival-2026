@@ -337,3 +337,16 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 /* PDF에서 읽은 모양(이름은 ○로 가림) */
 .pdf-look p { margin: 10px 0 4px; font-size: 14px; }
 .pdf-look pre { margin: 0; padding: 10px 12px; max-height: 260px; overflow: auto; border-radius: 10px; background: #fcfaf7; border: 1px dashed #d9cdc1; font-size: 13px; line-height: 1.6; white-space: pre; }
+
+/* 전체 보기: 반별로 접기 */
+.class-groups { display: grid; gap: 6px; margin-top: 8px; }
+.class-group { border: 1px solid #ece2d8; border-radius: 10px; background: #fffdfb; }
+.class-group > summary { cursor: pointer; padding: 9px 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.class-group > summary small { font-weight: 400; color: #8a7468; font-size: 13px; }
+.class-group[open] > summary { border-bottom: 1px dashed #ece2d8; }
+.class-group .live-list { margin: 6px 8px 8px; }
+.class-group > summary { list-style: none; justify-content: flex-start; }
+.class-group > summary::-webkit-details-marker { display: none; }
+.class-group > summary::before { content: '▸'; color: #a33b2e; }
+.class-group[open] > summary::before { content: '▾'; }
+.class-group > summary small { margin-left: auto; }

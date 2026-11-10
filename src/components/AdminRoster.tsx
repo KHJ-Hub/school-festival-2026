@@ -148,24 +148,31 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
   const shown = keyword
     ? people.filter((entry) => entry.studentId.includes(keyword) || entry.name.replace(/\s/g, '').includes(keyword) || nicknameOf(entry.studentId).replace(/\s/g, '').includes(keyword))
     : people
-  const rows = (
-    shown.length === 0 ? <p className="live-empty">{keyword ? '찾는 학생이 없어요.' : '아직 등록한 학생이 없어요.'}</p> : (
-      <ul className="live-list">
-        {shown.map((entry) => {
-          const nickname = nicknameOf(entry.studentId)
-          return (
-            <li key={entry.studentId}>
-              <span>{entry.studentId} · {entry.name}{inRoster(entry.studentId) ? '' : ' (직접 등록)'}</span>
-              <span className="live-buttons">
-                <b className={`live-status ${nickname ? 'approved' : 'pending'}`}>{nickname ? `등록됨 · ${nickname}` : '아직 등록 안 함'}</b>
-                {nickname && <button className="ghost" onClick={() => void release(entry, nickname)}>등록 풀기</button>}
-              </span>
-            </li>
-          )
-        })}
-      </ul>
-    )
+  const list = (items: RosterEntry[]) => (
+    <ul className="live-list">
+      {items.map((entry) => {
+        const nickname = nicknameOf(entry.studentId)
+        return (
+          <li key={entry.studentId}>
+            <span>{entry.studentId} · {entry.name}{inRoster(entry.studentId) ? '' : ' (직접 등록)'}</span>
+            <span className="live-buttons">
+              <b className={`live-status ${nickname ? 'approved' : 'pending'}`}>{nickname ? `등록됨 · ${nickname}` : '아직 등록 안 함'}</b>
+              {nickname && <button className="ghost" onClick={() => void release(entry, nickname)}>등록 풀기</button>}
+            </span>
+          </li>
+        )
+      })}
+    </ul>
   )
+  const rows = shown.length === 0 ? <p className="live-empty">{keyword ? '찾는 학생이 없어요.' : '아직 등록한 학생이 없어요.'}</p> : list(shown)
+
+  // 전체 보기는 반별로 접어서 보여 줍니다. 학번 = 학년 1자리 + 반 2자리 + 번호 2자리(9로 시작하면 연습 학번).
+  const classOf = (studentId: string) => (studentId.startsWith('9') ? '연습 학번' : `${studentId[0]}학년 ${Number(studentId.slice(1, 3))}반`)
+  const classes = [...people.reduce((map, entry) => {
+    const key = classOf(entry.studentId)
+    map.set(key, [...(map.get(key) ?? []), entry])
+    return map
+  }, new Map<string, RosterEntry[]>())]
 
   return (
     <article className={`panel live-section admin-roster ${open ? '' : 'folded'}`}>
@@ -187,7 +194,16 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
       {keyword ? rows : (
         <details className="live-fold">
           <summary>전체 보기 (등록 {accounts.length}명 · 명단 {roster.length}명)</summary>
-          {rows}
+          {classes.length === 0 ? rows : (
+            <div className="class-groups">
+              {classes.map(([label, members]) => (
+                <details key={label} className="class-group">
+                  <summary>{label} <small>등록 {members.filter((entry) => nicknameOf(entry.studentId)).length} / {members.length}명</small></summary>
+                  {list(members)}
+                </details>
+              ))}
+            </div>
+          )}
         </details>
       )}
 
