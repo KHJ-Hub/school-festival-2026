@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { onAuthStateChanged, signInAnonymously, signOut, type User } from 'firebase/auth'
 import { AdminLock, AdminPasswordChange } from './components/AdminLock'
-import { AdminCleanup } from './components/AdminCleanup'
 import { AdminGrant } from './components/AdminGrant'
 import { AdminMenus, AdminStockSync } from './components/AdminMenus'
 import { AdminRoster } from './components/AdminRoster'
@@ -11,7 +10,7 @@ import { TaskPlayground } from './components/TaskPlayground'
 import { type Account } from './components/nicknameRules'
 import { pickFreeNickname } from './components/autoNickname'
 import { VisitorSteps } from './components/PopupIntro'
-import { enterStudent, isNicknameTaken, loadOwnAccount, releaseStudentId, renameStudent, saveRoster, useAdminData } from './data/store'
+import { enterStudent, isNicknameTaken, loadOwnAccount, removeStudentRecords, renameStudent, resetAllStudents, resetStudent, saveRoster, useAdminData } from './data/store'
 import { ADMIN_EMAIL, auth } from './firebase'
 
 /** 이 기기에서 마지막으로 들어온 학번(새로고침해도 다시 들어오기). 학번만 저장하고 이름은 저장하지 않습니다. */
@@ -156,15 +155,14 @@ function App() {
         {isAdmin && <AdminRankingSync />}
         {isAdmin && <AdminStockSync vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />}
 
-        {/* 운영진 화면 순서: 코인 승인·교환권 스캔(자주 쓰는 것) → 코인 직접 지급 → 간식 메뉴 → 학생 등록 관리 → 연습 학번 지우기 → 비밀번호 바꾸기 */}
+        {/* 운영진 화면 순서: 코인 승인·교환권 스캔(자주 쓰는 것) → 코인 직접 지급 → 간식 메뉴 → 학생 등록 관리 → 비밀번호 바꾸기 */}
         {!lab && (mode === 'student' || (mode === 'admin' && isAdmin)) && <FestivalLive mode={mode} me={isAdmin ? null : me} isAdmin={isAdmin} />}
 
         {!lab && mode === 'admin' && isAdmin && (
           <div className="admin-tools admin-tools-after">
             <AdminGrant roster={admin.roster} accounts={admin.accounts} grants={admin.grants} />
             <AdminMenus vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />
-            <AdminRoster roster={admin.roster} accounts={admin.accounts} onAddRoster={saveRoster} onRelease={releaseStudentId} />
-            <AdminCleanup roster={admin.roster} accounts={admin.accounts} />
+            <AdminRoster roster={admin.roster} accounts={admin.accounts} onAddRoster={saveRoster} onReset={resetStudent} onRemove={removeStudentRecords} onResetAll={resetAllStudents} />
             <AdminPasswordChange />
           </div>
         )}

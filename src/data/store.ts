@@ -13,6 +13,7 @@ import {
   updateDoc,
   writeBatch,
   type DocumentData,
+  type DocumentReference,
   type QuerySnapshot,
   type Timestamp,
 } from 'firebase/firestore'
@@ -347,42 +348,60 @@ export async function removeRoster(studentId: string): Promise<void> {
   await deleteDoc(doc(db, 'roster', studentId))
 }
 
-/**
- * 등록 풀기: 다른 사람이 남의 학번으로 먼저 등록했을 때, 계정과 랭킹 닉네임만 지워서 진짜 주인이 새로 등록할 수 있게 합니다.
- * 코인 신청·지급·교환권 기록은 학번에 그대로 남습니다(지우지 않음).
- */
-export async function releaseStudentId(studentId: string): Promise<void> {
-  const account = await getDoc(doc(db, 'accounts', studentId))
-  if (!account.exists()) return
-  const batch = writeBatch(db)
-  const key = account.data().nicknameKey as string | undefined
-  if (key) batch.delete(doc(db, 'nicknames', key))
-  batch.delete(account.ref)
-  await batch.commit()
+/** 문서들을 400개씩 나눠 지웁니다(Firestore는 한 번에 500개까지만 쓸 수 있음). 지운 개수를 돌려줍니다. */
+async function deleteAll(refs: DocumentReference[]): Promise<number> {
+  for (let start = 0; start < refs.length; start += 400) {
+    const batch = writeBatch(db)
+    refs.slice(start, start + 400).forEach((ref) => batch.delete(ref))
+    await batch.commit()
+  }
+  return refs.length
 }
 
-/**
- * 연습·테스트에 쓴 학번의 기록을 모두 지웁니다(운영진이 버튼을 눌러 확인한 뒤에만).
- * 명단, 계정, 닉네임, 코인 신청·지급, 교환권을 지우고 지운 문서 수를 돌려줍니다.
- * claims(다시 들어오기 확인서)는 보안 규칙상 지울 수 없어 남지만, 명단에서 빠지면 쓰이지 않습니다.
- */
-export async function removeStudentRecords(studentId: string): Promise<number> {
-  const batch = writeBatch(db)
-  let count = 0
+/** 한 학생의 계정·랭킹 닉네임·코인 신청·지급·교환권 문서 위치를 모읍니다. */
+async function studentRefs(studentId: string): Promise<DocumentReference[]> {
+  const refs: DocumentReference[] = []
   for (const sub of ['requests', 'grants', 'vouchers']) {
     const snap = await getDocs(collection(db, 'students', studentId, sub))
-    snap.docs.forEach((item) => { batch.delete(item.ref); count += 1 })
+    refs.push(...snap.docs.map((item) => item.ref))
   }
   const account = await getDoc(doc(db, 'accounts', studentId))
   if (account.exists()) {
     const key = account.data().nicknameKey as string | undefined
-    if (key) { batch.delete(doc(db, 'nicknames', key)); count += 1 }
-    batch.delete(account.ref)
-    count += 1
+    if (key) refs.push(doc(db, 'nicknames', key))
+    refs.push(account.ref)
   }
+  return refs
+}
+
+/**
+ * 초기화(한 학생): 명단(학번·이름)은 두고 계정·랭킹 닉네임·코인 신청·지급·교환권을 지웁니다.
+ * 학생은 같은 학번으로 처음부터 다시 등록할 수 있습니다. 운영진이 버튼을 눌러 확인한 뒤에만 부릅니다.
+ * claims(다시 들어오기 확인서)는 보안 규칙상 지울 수 없어 남지만, 계정이 없으면 쓰이지 않습니다.
+ */
+export async function resetStudent(studentId: string): Promise<number> {
+  return deleteAll(await studentRefs(studentId))
+}
+
+/** 학번 지우기(한 학생): 초기화에 더해 명단(학번·이름)까지 지웁니다. 잘못 들어간 학번을 없앨 때 씁니다. */
+export async function removeStudentRecords(studentId: string): Promise<number> {
+  const refs = await studentRefs(studentId)
   const roster = await getDoc(doc(db, 'roster', studentId))
-  if (roster.exists()) { batch.delete(roster.ref); count += 1 }
-  if (count > 0) await batch.commit()
+  if (roster.exists()) refs.push(roster.ref)
+  return deleteAll(refs)
+}
+
+/**
+ * 전체 초기화: 명단은 두고 모든 학생의 계정·랭킹 닉네임·코인 신청·지급·교환권을 지웁니다(리허설 뒤 축제 전에).
+ * 랭킹 화면도 비웁니다. 간식 메뉴와 명단은 그대로입니다.
+ */
+export async function resetAllStudents(): Promise<number> {
+  const refs: DocumentReference[] = []
+  for (const name of ['requests', 'grants', 'vouchers']) refs.push(...(await getDocs(collectionGroup(db, name))).docs.map((item) => item.ref))
+  refs.push(...(await getDocs(collection(db, 'nicknames'))).docs.map((item) => item.ref))
+  refs.push(...(await getDocs(collection(db, 'accounts'))).docs.map((item) => item.ref))
+  const count = await deleteAll(refs)
+  await setDoc(doc(db, 'public', 'ranking'), { rows: [] })
   return count
 }
 

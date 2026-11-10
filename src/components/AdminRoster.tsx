@@ -17,15 +17,17 @@ function readFiles(): RosterFile[] {
 
 /**
  * 교사 관리 파일: 운영진 화면의 학생 등록 관리.
- * - 등록할 수 있는 학번 범위(학년·반·번호)를 정합니다. 범위 안의 학번이면 명단 없이도 등록됩니다.
- * - 명단(학번·이름)은 선택: 넣은 학번은 이름까지 확인합니다. Firestore(운영진만 읽기)에 저장하고 GitHub에는 넣지 않습니다.
- * - 학번·이름·랭킹 닉네임으로 학생을 찾고, 남의 학번으로 잘못 등록된 경우 "등록 풀기"를 합니다.
+ * - 명단(학번·이름)을 넣습니다(엑셀·CSV·명렬표 PDF·붙여넣기). Firestore(운영진만 읽기)에 저장하고 GitHub에는 넣지 않습니다.
+ * - 학번·이름·랭킹 닉네임으로 학생을 찾고, 반별로 봅니다.
+ * - 초기화: 명단은 두고 계정·코인·교환권을 지움 / 지우기: 명단까지 모두 지움 / 전체 초기화: 모든 학생 초기화.
  */
-export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
+export function AdminRoster({ roster, accounts, onAddRoster, onReset, onRemove, onResetAll }: {
   roster: RosterEntry[]
   accounts: Account[]
   onAddRoster: (entries: RosterEntry[]) => Promise<void>
-  onRelease: (studentId: string) => Promise<void>
+  onReset: (studentId: string) => Promise<number>
+  onRemove: (studentId: string) => Promise<number>
+  onResetAll: () => Promise<number>
 }) {
   const [pasted, setPasted] = useState('')
   const [open, setOpen] = useFold('roster')
@@ -34,13 +36,48 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
   const [files, setFiles] = useState<RosterFile[]>(readFiles)
   // 방금 읽은 PDF의 글자 모양(이름은 ○로 가림). 인원이 모자랄 때 어떻게 읽혔는지 확인하는 용도.
   const [pdfLooks, setPdfLooks] = useState<{ name: string; count: number; masked: string }[]>([])
-  const release = async (entry: RosterEntry, nickname: string) => {
-    if (!window.confirm(`${entry.studentId} ${entry.name} (${nickname})의 등록을 풀까요?\n\n계정과 랭킹 닉네임만 지워지고, 코인·교환권 기록은 학번에 남아요. 진짜 주인이 이 학번으로 새로 등록할 수 있게 돼요.`)) return
+  const [busy, setBusy] = useState(false)
+
+  // 지우기·초기화는 되돌릴 수 없어서, 확인 창에 무엇이 지워지는지 적고 운영진이 눌러야만 합니다.
+  const resetOne = async (entry: RosterEntry) => {
+    if (!window.confirm(`${entry.studentId} ${entry.name} 학생을 초기화할까요? 되돌릴 수 없어요.\n\n계정·랭킹 닉네임·코인 신청·지급·교환권이 지워져요.\n명단(학번·이름)은 남아서 처음부터 다시 등록할 수 있어요.`)) return
+    setBusy(true)
     try {
-      await onRelease(entry.studentId)
-      setNote(`${entry.studentId}의 등록을 풀었어요.`)
+      const count = await onReset(entry.studentId)
+      setNote(`${entry.studentId}을 초기화했어요. (기록 ${count}개 지움)`)
     } catch {
-      setNote('등록을 풀지 못했어요. 인터넷 연결을 확인해 주세요.')
+      setNote('초기화하지 못했어요. 인터넷 연결을 확인해 주세요.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const removeOne = async (entry: RosterEntry) => {
+    if (!window.confirm(`${entry.studentId} ${entry.name} 학생을 명단에서 지울까요? 되돌릴 수 없어요.\n\n명단(학번·이름)·계정·랭킹 닉네임·코인 신청·지급·교환권이 모두 지워져요.\n잘못 들어간 학번일 때 쓰세요.`)) return
+    setBusy(true)
+    try {
+      await onRemove(entry.studentId)
+      setNote(`${entry.studentId}을 지웠어요.`)
+    } catch {
+      setNote('지우지 못했어요. 인터넷 연결을 확인해 주세요.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const resetEveryone = async () => {
+    const typed = window.prompt(`모든 학생(등록 ${accounts.length}명)을 초기화해요. 되돌릴 수 없어요.\n\n지워지는 것: 모든 계정·랭킹 닉네임·코인 신청·지급·교환권, 랭킹 화면\n남는 것: 명단(학번·이름), 간식 메뉴\n\n정말 하려면 아래 칸에 "초기화"라고 써 주세요.`)
+    if (typed === null) return
+    if (typed.trim() !== '초기화') return setNote('"초기화"라고 정확히 써야 진행돼요. 아무것도 지우지 않았어요.')
+    setBusy(true)
+    setNote('전체 초기화 중…')
+    try {
+      const count = await onResetAll()
+      setNote(`전체 초기화했어요. (기록 ${count}개 지움) 명단은 그대로예요.`)
+    } catch {
+      setNote('전체 초기화 중에 멈췄어요. 인터넷 연결을 확인하고 다시 눌러 주세요.')
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -157,7 +194,8 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
             <span>{entry.studentId} · {entry.name}{inRoster(entry.studentId) ? '' : ' (직접 등록)'}</span>
             <span className="live-buttons">
               <b className={`live-status ${nickname ? 'approved' : 'pending'}`}>{nickname ? `등록됨 · ${nickname}` : '아직 등록 안 함'}</b>
-              {nickname && <button className="ghost" onClick={() => void release(entry, nickname)}>등록 풀기</button>}
+              {nickname && <button disabled={busy} onClick={() => void resetOne(entry)}>초기화</button>}
+              <button className="ghost" disabled={busy} onClick={() => void removeOne(entry)}>지우기</button>
             </span>
           </li>
         )
@@ -242,6 +280,13 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
           ))}
         </details>
       )}
+
+      {/* 리허설 뒤 축제 전에: 명단은 두고 모든 학생의 등록·코인·교환권을 지웁니다. */}
+      <h3>전체 초기화</h3>
+      <div className="reset-all">
+        <p className="allow-help">리허설이 끝나면 눌러 주세요. 명단(학번·이름)과 간식 메뉴는 남기고, 모든 학생의 계정·랭킹 닉네임·코인·교환권을 지워요. 한 학생만 할 때는 위 목록의 [초기화]를 쓰세요.</p>
+        <button className="ghost" disabled={busy} onClick={() => void resetEveryone()}>전체 초기화</button>
+      </div>
 
       </>)}
     </article>

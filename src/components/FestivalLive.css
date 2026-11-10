@@ -350,3 +350,9 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .class-group > summary::before { content: '▸'; color: #a33b2e; }
 .class-group[open] > summary::before { content: '▾'; }
 .class-group > summary small { margin-left: auto; }
+
+/* 전체 초기화 */
+.reset-all { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px 14px; border: 1px dashed #e8b4ad; border-radius: 12px; background: #fff7f5; }
+.reset-all p { flex: 1 1 260px; margin: 0; }
+.reset-all button { flex: 0 0 auto; min-height: 40px; padding: 8px 16px; border-radius: 10px; border: 1px solid #a33b2e; background: white; color: #a33b2e; font-weight: 700; cursor: pointer; }
+.reset-all button:disabled { opacity: .5; cursor: default; }
