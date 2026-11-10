@@ -26,7 +26,8 @@ export function AdminTeacherTry({ roster, accounts, onAddRoster, onRemove }: {
   onRemove: (studentId: string) => Promise<number>
 }) {
   const [open, setOpen] = useFold('try')
-  const [count, setCount] = useState(40)
+  // 몇 명: 기본 1, 숫자 두 자리(1~99)까지. 지웠다가 다시 쓸 수 있게 글자로 둡니다.
+  const [count, setCount] = useState('1')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
   const tries = roster.filter((entry) => isTryId(entry.studentId)).sort((a, b) => a.studentId.localeCompare(b.studentId))
@@ -38,7 +39,7 @@ export function AdminTeacherTry({ roster, accounts, onAddRoster, onRemove }: {
   }, [note])
 
   const make = async () => {
-    const howMany = Math.min(50, Math.max(1, Math.floor(count) || 1))
+    const howMany = Math.min(99, Math.max(1, Number(count) || 1))
     const ids = nextTryIds(roster.map((entry) => entry.studentId), howMany)
     setBusy(true)
     try {
@@ -91,7 +92,7 @@ export function AdminTeacherTry({ roster, accounts, onAddRoster, onRemove }: {
       {open && (<>
       {note && <p className="live-message" role="status">{note}</p>}
       <div className="live-row">
-        <label className="field narrow">몇 명<input type="number" min={1} max={50} value={count} onChange={(event) => setCount(Number(event.target.value))} /></label>
+        <label className="field narrow">몇 명<input inputMode="numeric" maxLength={2} value={count} onChange={(event) => setCount(event.target.value.replace(/\D/g, '').slice(0, 2))} aria-label="만들 체험용 학번 수(1~99)" /></label>
         <button className="primary-button" disabled={busy} onClick={() => void make()}>{busy ? '만드는 중…' : '체험용 QR 만들기'}</button>
         {tries.length > 0 && <button className="live-reset" onClick={() => window.print()}>QR 인쇄</button>}
       </div>
