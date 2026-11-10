@@ -1,0 +1,6 @@
+import{t as e}from"./index-D6S4OxdG.js";function t(e){let t=e.filter(e=>e.text.trim()).sort((e,t)=>t.y-e.y||e.x-t.x),n=[];for(let e of t){let t=n[n.length-1];t&&Math.abs(t[0].y-e.y)<=Math.max(2,e.size*.4)?t.push(e):n.push([e])}return n.map(e=>e.sort((e,t)=>e.x-t.x))}function n(e,t){return e.map(e=>{let n=``,r=-1/0;for(let i of e)n&&i.x-r>Math.max(1,i.size*.35)&&(n+=` `),n+=i.text,r=i.x+t(i);return n}).join(`
+`)}function r(e){let r=t(e);return[n(r,e=>e.width),n(r,e=>e.text.length*e.size*.55),e.map(e=>e.text+(e.eol?`
+`:` `)).join(``)]}async function i(t){let n=await e(()=>import(`./pdf-ChPZ-4aa.js`),[]),{default:i}=await e(async()=>{let{default:e}=await import(`./pdf.worker.min-Bq2VDz6K.js`);return{default:e}},[]);n.GlobalWorkerOptions.workerSrc=i;let a=await n.getDocument({data:new Uint8Array(await t.arrayBuffer())}).promise,o=[];for(let e=1;e<=a.numPages;e+=1){let t=await(await a.getPage(e)).getTextContent(),n=[];for(let e of t.items){if(!(`str`in e))continue;let[t,r,,,i,a]=e.transform;n.push({text:e.str,x:i,y:a,width:e.width,size:Math.hypot(t,r)||e.height||10,eol:e.hasEOL})}o.push(r(n))}return await a.destroy(),[0,1,2].map(e=>o.map(t=>t[e]).join(`
+`))}function a(e,t=15){return e.split(`
+`).filter(e=>e.trim()).slice(0,t).map(e=>e.replace(/[가-힣ㄱ-ㅎㅏ-ㅣA-Za-z]/g,`○`)).join(`
+`)}export{a as maskNames,i as pdfToTexts};
