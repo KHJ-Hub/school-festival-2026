@@ -4,6 +4,8 @@ import { AdminLock, AdminPasswordChange } from './components/AdminLock'
 import { AdminGrant } from './components/AdminGrant'
 import { AdminMenus, AdminStockSync } from './components/AdminMenus'
 import { AdminRoster } from './components/AdminRoster'
+import { AdminTeacherTry } from './components/AdminTeacherTry'
+import { readTryHash } from './components/teacherTry'
 import { AdminRankingSync, FestivalLive, RankingBoard, StudentIdBox } from './components/FestivalLive'
 import { ModeSwitcher, type AppMode } from './components/ModeSwitcher'
 import { TaskPlayground } from './components/TaskPlayground'
@@ -47,6 +49,8 @@ function App() {
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
+  // 주소 끝 #try=99001: 선생님 체험 QR. 학생 화면에 학번·이름을 미리 채웁니다.
+  const [tryPrefill] = useState(() => readTryHash(window.location.hash))
   const [user, setUser] = useState<User | null>(null)
   const [me, setMe] = useState<Account | null>(null)
   const isAdmin = user?.email === ADMIN_EMAIL
@@ -84,6 +88,7 @@ function App() {
     if (!result.ok) return result.message
     setMe(result.account)
     writeMe(result.account.studentId)
+    if (window.location.hash.startsWith('#try=')) window.history.replaceState(null, '', window.location.pathname + window.location.search)
     return null
   }
 
@@ -143,7 +148,7 @@ function App() {
             {isAdmin ? (
               <div className="live-message" role="status">이 기기는 운영진으로 로그인되어 있어요. 운영진용 화면에서 잠그면 학생 화면을 쓸 수 있어요.</div>
             ) : (
-              <StudentIdBox me={me} busy={!user} onEnter={enter} onReroll={reroll} onLeave={leave} />
+              <StudentIdBox me={me} busy={!user} onEnter={enter} onReroll={reroll} onLeave={leave} prefill={tryPrefill} />
             )}
           </>
         )}
@@ -155,7 +160,7 @@ function App() {
         {isAdmin && <AdminRankingSync />}
         {isAdmin && <AdminStockSync vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />}
 
-        {/* 운영진 화면 순서: 코인 승인·교환권 스캔(자주 쓰는 것) → 코인 직접 지급 → 간식 메뉴 → 학생 등록 관리 → 비밀번호 바꾸기 */}
+        {/* 운영진 화면 순서: 코인 승인·교환권 스캔(자주 쓰는 것) → 코인 직접 지급 → 간식 메뉴 → 학생 등록 관리 → 선생님 체험 → 비밀번호 바꾸기 */}
         {!lab && (mode === 'student' || (mode === 'admin' && isAdmin)) && <FestivalLive mode={mode} me={isAdmin ? null : me} isAdmin={isAdmin} />}
 
         {!lab && mode === 'admin' && isAdmin && (
@@ -163,6 +168,7 @@ function App() {
             <AdminGrant roster={admin.roster} accounts={admin.accounts} grants={admin.grants} />
             <AdminMenus vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />
             <AdminRoster roster={admin.roster} accounts={admin.accounts} onAddRoster={saveRoster} onReset={resetStudent} onRemove={removeStudentRecords} onResetAll={resetAllStudents} />
+            <AdminTeacherTry roster={admin.roster} accounts={admin.accounts} onAddRoster={saveRoster} />
             <AdminPasswordChange />
           </div>
         )}

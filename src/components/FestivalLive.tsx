@@ -116,15 +116,17 @@ function Section({ no, title, desc, built = true, open, onToggle, folded, childr
  * 학번·이름 등록칸. 처음이면 등록, 이미 등록한 학번이면 다시 들어오기로 처리합니다(App이 판단).
  * 랭킹 닉네임은 자동으로 지어지고(예: 배고픈고래), 학생은 "다른 이름 뽑기"로만 바꿀 수 있습니다.
  */
-export function StudentIdBox({ me, busy, onEnter, onReroll, onLeave }: {
+export function StudentIdBox({ me, busy, onEnter, onReroll, onLeave, prefill }: {
   me: Account | null
   busy: boolean
   onEnter: (input: { studentId: string; name: string }) => Promise<string | null>
   onReroll: () => Promise<string | null>
   onLeave: () => void
+  /** 선생님 체험 QR로 들어오면 학번·이름을 미리 채웁니다. */
+  prefill?: { studentId: string; name: string } | null
 }) {
-  const [studentId, setStudentId] = useState('')
-  const [name, setName] = useState('')
+  const [studentId, setStudentId] = useState(prefill?.studentId ?? '')
+  const [name, setName] = useState(prefill?.name ?? '')
   const [working, setWorking] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
@@ -178,6 +180,7 @@ export function StudentIdBox({ me, busy, onEnter, onReroll, onLeave }: {
           <span className={`live-badge ${built ? 'done' : 'todo'}`}>{creditLabel(1, built)}</span>
         </div>
       </div>
+      {prefill && studentId === prefill.studentId && <p className="live-message try-hello" role="status">선생님 체험용 학번이에요. 아래 [등록 / 다시 들어오기]만 눌러 주세요.</p>}
       <div className="live-id-fields">
         <label>
           학번 (숫자 5자리)

@@ -356,3 +356,37 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .reset-all p { flex: 1 1 260px; margin: 0; }
 .reset-all button { flex: 0 0 auto; min-height: 40px; padding: 8px 16px; border-radius: 10px; border: 1px solid #a33b2e; background: white; color: #a33b2e; font-weight: 700; cursor: pointer; }
 .reset-all button:disabled { opacity: .5; cursor: default; }
+
+/* 선생님 체험 QR 카드 */
+.try-print-title { display: none; }
+.try-cards { list-style: none; margin: 10px 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; max-height: 520px; overflow-y: auto; }
+.try-cards li { display: flex; gap: 10px; align-items: center; padding: 8px; border: 1px solid #ece2d8; border-radius: 12px; background: #fffdfb; }
+.try-cards img { flex: 0 0 auto; width: 96px; height: 96px; }
+.try-cards div { display: grid; gap: 2px; font-size: 14px; }
+.try-cards strong { font-size: 16px; }
+.try-cards small { color: #8a7468; }
+.try-cards small.used { color: #1f5f40; }
+.try-cards button { justify-self: start; margin-top: 4px; min-height: 30px; padding: 4px 10px; font-size: 13px; }
+.qr-wait { width: 96px; height: 96px; display: grid; place-items: center; font-size: 12px; color: #8a7468; }
+.try-hello { margin: 0 0 10px; }
+
+/* QR 인쇄: 체험 카드만 A4에 4줄씩(한 장 20명), 잘라서 나눠 드리기 좋게 */
+@media print {
+  body * { visibility: hidden; }
+  .try-print, .try-print * { visibility: visible; }
+  .try-print { position: absolute; left: 0; top: 0; width: 100%; }
+  .try-print-title { display: block; margin: 0 0 6mm; font-size: 12pt; }
+  .try-cards { max-height: none; overflow: visible; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .try-cards li { break-inside: avoid; flex-direction: column; text-align: center; border: 1px dashed #999; border-radius: 0; padding: 4mm 2mm; height: 52mm; box-sizing: border-box; justify-content: center; }
+  .try-cards img { width: 32mm; height: 32mm; }
+  .try-cards div { justify-items: center; }
+  .try-cards small, .try-cards button { display: none; }
+}
+
+/* 넣은 파일 목록: 한 줄로 접기 */
+.roster-files-empty { margin: 0; padding: 10px 12px; border: 1px dashed #d9cdc1; border-radius: 10px; background: #fcfaf7; font-size: 14px; color: #9a877c; }
+.roster-files-fold { border: 1px dashed #d9cdc1; border-radius: 10px; background: #fcfaf7; font-size: 14px; }
+.roster-files-fold > summary { cursor: pointer; padding: 10px 12px; color: #1f5f40; font-weight: 700; }
+.roster-files-fold .roster-files { border: 0; border-top: 1px dashed #d9cdc1; border-radius: 0; min-height: 0; max-height: 200px; }
+.roster-files-fold .live-reset { margin: 6px 12px 10px; min-height: 30px; padding: 4px 10px; font-size: 13px; }
+.roster-file, .roster-paste { align-content: start; }

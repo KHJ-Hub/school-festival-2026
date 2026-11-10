@@ -83,7 +83,7 @@ export function AdminRoster({ roster, accounts, onAddRoster, onReset, onRemove, 
 
   const rememberFiles = (added: RosterFile[]) => {
     const names = new Set(added.map((item) => item.name))
-    const next = [...added, ...files.filter((item) => !names.has(item.name))].slice(0, 40)
+    const next = [...added, ...files.filter((item) => !names.has(item.name))].slice(0, 60)
     setFiles(next)
     try {
       localStorage.setItem(FILES_KEY, JSON.stringify(next))
@@ -205,7 +205,7 @@ export function AdminRoster({ roster, accounts, onAddRoster, onReset, onRemove, 
   const rows = shown.length === 0 ? <p className="live-empty">{keyword ? '찾는 학생이 없어요.' : '아직 등록한 학생이 없어요.'}</p> : list(shown)
 
   // 전체 보기는 반별로 접어서 보여 줍니다. 학번 = 학년 1자리 + 반 2자리 + 번호 2자리(9로 시작하면 연습 학번).
-  const classOf = (studentId: string) => (studentId.startsWith('9') ? '연습 학번' : `${studentId[0]}학년 ${Number(studentId.slice(1, 3))}반`)
+  const classOf = (studentId: string) => (studentId.startsWith('9') ? '연습·체험 학번' : `${studentId[0]}학년 ${Number(studentId.slice(1, 3))}반`)
   const classes = [...people.reduce((map, entry) => {
     const key = classOf(entry.studentId)
     map.set(key, [...(map.get(key) ?? []), entry])
@@ -250,12 +250,16 @@ export function AdminRoster({ roster, accounts, onAddRoster, onReset, onRemove, 
       <div className="roster-add">
         <div className="roster-file">
           <h3>파일로 넣기 (엑셀·PDF)</h3>
-          {/* 1·2·3학년을 따로 넣을 수 있게, 이 기기에서 넣은 파일을 보여 줍니다. */}
-          <ul className="roster-files">
-            {files.length === 0 ? <li className="empty">아직 넣은 파일이 없어요. 반별 명렬표 PDF를 한꺼번에 골라도 돼요.</li> : files.map((file) => (
-              <li key={`${file.name}-${file.at}`}><span>{file.name}</span><b>{file.count}명</b></li>
-            ))}
-          </ul>
+          {/* 이 기기에서 넣은 파일은 한 줄로 접어 두고, 필요할 때만 펼쳐 봅니다. */}
+          {files.length === 0 ? <p className="roster-files-empty">아직 넣은 파일이 없어요. 반별 명렬표 PDF를 한꺼번에 골라도 돼요.</p> : (
+            <details className="roster-files-fold">
+              <summary>넣은 파일 {files.length}개 · 모두 {files.reduce((sum, file) => sum + file.count, 0)}명</summary>
+              <ul className="roster-files">
+                {files.map((file) => <li key={`${file.name}-${file.at}`}><span>{file.name}</span><b>{file.count}명</b></li>)}
+              </ul>
+              <button type="button" className="live-reset" onClick={() => { setFiles([]); try { localStorage.removeItem(FILES_KEY) } catch { /* 무시 */ } }}>목록 지우기 (명단은 그대로)</button>
+            </details>
+          )}
           <label className="admin-file">
             <input type="file" accept=".xlsx,.csv,.pdf" multiple onChange={(event) => { void addFiles(event.target.files); event.target.value = '' }} />
             <span className="primary-button">파일 고르기 (여러 개 가능)</span>
