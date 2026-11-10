@@ -524,7 +524,9 @@ export function AdminRankingSync() {
     // 덮어쓰기 사고 막기: ① 지급 내역·계정·랭킹을 서버에서 다 읽기 전, ② 7번 학생 함수가 아직 없는 화면(예: 학생 코드가 안 합쳐진 시험 화면)에서는 저장하지 않습니다.
     if (!all.grantsLoaded || !all.accountsLoaded || !loaded) return
     if (!safe(() => rankByTotalEarned(DEMO_GRANTS, 5).length > 0, false)) return
-    const rows = safe(() => rankByTotalEarned(all.grants, 10), []).map((row) => ({
+    // 9로 시작하는 학번(연습·선생님 체험용)은 랭킹에 넣지 않습니다(학생 상품 순위가 밀리지 않게).
+    const studentGrants = all.grants.filter((grant) => !grant.studentId.startsWith('9'))
+    const rows = safe(() => rankByTotalEarned(studentGrants, 10), []).map((row) => ({
       rank: row.rank,
       nickname: all.accounts.find((account) => account.studentId === row.studentId)?.nickname ?? '닉네임 없음',
       total: row.total,
