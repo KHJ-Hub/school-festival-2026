@@ -86,9 +86,18 @@ export function findRosterPairs(text: string): RosterEntry[] {
   const tokens = text.split(/[\s,]+/).filter(Boolean)
   const entries: RosterEntry[] = []
   for (let index = 0; index < tokens.length - 1; index += 1) {
-    if (ID_TOKEN.test(tokens[index]!) && NAME_TOKEN.test(tokens[index + 1]!)) {
+    if (!ID_TOKEN.test(tokens[index]!)) continue
+    if (NAME_TOKEN.test(tokens[index + 1]!)) {
       entries.push({ studentId: tokens[index]!, name: tokens[index + 1]! })
       index += 1
+      continue
+    }
+    // 이름이 한 글자씩 떨어져 있으면("홍 길 동") 이어 붙입니다(2~5글자).
+    let end = index + 1
+    while (end < tokens.length && end - index <= 5 && /^[가-힣]$/.test(tokens[end]!)) end += 1
+    if (end - index - 1 >= 2) {
+      entries.push({ studentId: tokens[index]!, name: tokens.slice(index + 1, end).join('') })
+      index = end - 1
     }
   }
   return entries

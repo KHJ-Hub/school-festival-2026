@@ -75,15 +75,16 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
   }
 
   /** 파일 하나에서 학번·이름을 읽습니다. 엑셀(.xlsx)·CSV는 표로, 명렬표 PDF는 "학번 다음 낱말 = 이름"으로 읽습니다. */
-  const readFile = async (file: File): Promise<RosterEntry[]> => {
+  // skipped: PDF에서 학번은 있는데 이름을 못 찾은 줄(붙여넣기 칸에 남겨서 운영진이 고칠 수 있게 함)
+  const readFile = async (file: File): Promise<{ entries: RosterEntry[]; skipped: string[] }> => {
     if (/\.pdf$/i.test(file.name)) {
       const { pdfToText } = await import('./pdfRoster')
-      return parseRosterText(await pdfToText(file)).entries
+      return parseRosterText(await pdfToText(file))
     }
-    if (/\.csv$/i.test(file.name)) return rowsToRoster(csvToRows(await file.text())).entries
+    if (/\.csv$/i.test(file.name)) return { entries: rowsToRoster(csvToRows(await file.text())).entries, skipped: [] }
     if (/\.xlsx$/i.test(file.name)) {
       const { readSheet } = await import('read-excel-file/browser')
-      return rowsToRoster((await readSheet(file)) as unknown[][]).entries
+      return { entries: rowsToRoster((await readSheet(file)) as unknown[][]).entries, skipped: [] }
     }
     throw new Error('format')
   }
@@ -95,9 +96,11 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
     setNote(`파일 ${list.length}개를 읽는 중…`)
     const results: { file: File; entries: RosterEntry[] }[] = []
     const failed: string[] = []
+    const leftover: string[] = []
     for (const file of list) {
       try {
-        const entries = await readFile(file)
+        const { entries, skipped } = await readFile(file)
+        leftover.push(...skipped)
         if (entries.length > 0) results.push({ file, entries })
         else failed.push(file.name)
       } catch {
@@ -105,12 +108,14 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
       }
     }
     const all = [...new Map(results.flatMap((item) => item.entries).map((entry) => [entry.studentId, entry])).values()]
+    setPasted(leftover.join('\n'))
     if (all.length === 0) {
       setNote('파일에서 학번(숫자 5자리)과 이름을 찾지 못했어요. 엑셀(.xlsx)·CSV·PDF만 읽을 수 있고, 스캔한 그림 PDF는 못 읽어요.')
       return
     }
     const summary = results.map((item) => `${item.file.name}: ${item.entries.length}명`).join('\n')
-    const failNote = failed.length ? `\n\n못 읽은 파일 ${failed.length}개: ${failed.join(', ')}` : ''
+    const failNote = (failed.length ? `\n\n못 읽은 파일 ${failed.length}개: ${failed.join(', ')}` : '')
+      + (leftover.length ? `\n\n학번은 있는데 이름을 못 찾은 줄 ${leftover.length}개는 붙여넣기 칸에 남겨 둘게요.` : '')
     if (!window.confirm(`모두 ${all.length}명을 찾았어요. 명단에 넣을까요? 같은 학번은 새 이름으로 바뀌어요.\n\n${summary}${failNote}`)) {
       setNote('')
       return
@@ -122,7 +127,7 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
       return
     }
     rememberFiles(results.map((item) => ({ name: item.file.name, count: item.entries.length, at: Date.now() })))
-    setNote(`${all.length}명을 명단에 넣었어요.${failed.length ? ` 못 읽은 파일 ${failed.length}개가 있어요: ${failed.join(', ')}` : ''}`)
+    setNote(`${all.length}명을 명단에 넣었어요.${leftover.length ? ` 이름을 못 찾은 ${leftover.length}줄은 붙여넣기 칸에 남겨 두었어요(고쳐서 넣어 주세요).` : ''}${failed.length ? ` 못 읽은 파일 ${failed.length}개가 있어요: ${failed.join(', ')}` : ''}`)
   }
 
   // 찾기 대상 = 명단 + 명단에 없이 등록한 학생. 학번·이름·랭킹 닉네임으로 찾고 띄어쓰기는 무시합니다(상품 줄 때 닉네임으로 찾기).
