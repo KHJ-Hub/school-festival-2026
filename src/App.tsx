@@ -168,7 +168,7 @@ function App() {
             <AdminGrant roster={admin.roster} accounts={admin.accounts} grants={admin.grants} />
             <AdminMenus vouchers={admin.vouchers} vouchersLoaded={admin.vouchersLoaded} />
             <AdminRoster roster={admin.roster} accounts={admin.accounts} onAddRoster={saveRoster} onReset={resetStudent} onRemove={removeStudentRecords} onResetAll={resetAllStudents} />
-            <AdminTeacherTry roster={admin.roster} accounts={admin.accounts} onAddRoster={saveRoster} />
+            <AdminTeacherTry roster={admin.roster} accounts={admin.accounts} onAddRoster={saveRoster} onRemove={removeStudentRecords} />
             <AdminPasswordChange />
           </div>
         )}

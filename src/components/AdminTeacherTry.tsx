@@ -19,10 +19,11 @@ function QrImage({ text }: { text: string }) {
  * 선생님은 QR을 찍고 [등록]만 누르면 학생과 똑같이 코인 신청 → 교환권 → 부스에서 간식 받기까지 해 볼 수 있습니다.
  * 랭킹에는 나오지 않고, 끝나면 학생 등록 관리에서 [지우기]나 [전체 초기화]로 정리합니다.
  */
-export function AdminTeacherTry({ roster, accounts, onAddRoster }: {
+export function AdminTeacherTry({ roster, accounts, onAddRoster, onRemove }: {
   roster: RosterEntry[]
   accounts: Account[]
   onAddRoster: (entries: RosterEntry[]) => Promise<void>
+  onRemove: (studentId: string) => Promise<number>
 }) {
   const [open, setOpen] = useFold('try')
   const [count, setCount] = useState(40)
@@ -45,6 +46,25 @@ export function AdminTeacherTry({ roster, accounts, onAddRoster }: {
       setNote(`체험용 학번 ${ids.length}개를 만들었어요. 아래 QR을 인쇄하거나 링크를 보내 주세요.`)
     } catch {
       setNote('만들지 못했어요. 인터넷 연결을 확인해 주세요.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  /** 체험용 학번(99001~)만 명단·계정·코인·교환권까지 모두 지웁니다. 학생 기록은 건드리지 않습니다. */
+  const removeAll = async () => {
+    if (!window.confirm(`체험용 학번 ${tries.length}개를 모두 지울까요? 되돌릴 수 없어요.\n\n체험 학번의 명단·계정·랭킹 닉네임·코인·교환권이 지워져요.\n학생 기록은 그대로예요.`)) return
+    setBusy(true)
+    setNote('지우는 중…')
+    let done = 0
+    try {
+      for (const entry of tries) {
+        await onRemove(entry.studentId)
+        done += 1
+      }
+      setNote(`체험용 학번 ${done}개를 지웠어요.`)
+    } catch {
+      setNote(`${done}개를 지우고 멈췄어요. 인터넷 연결을 확인하고 다시 눌러 주세요.`)
     } finally {
       setBusy(false)
     }
@@ -96,7 +116,12 @@ export function AdminTeacherTry({ roster, accounts, onAddRoster }: {
           </ul>
         </div>
       )}
-      <p className="allow-help">다 쓰고 나면 학생 등록 관리 → 전체 보기 → 연습 학번에서 [지우기]를 누르거나, [전체 초기화]로 정리해요.</p>
+      {tries.length > 0 && (
+        <div className="reset-all">
+          <p className="allow-help">체험이 끝나면 눌러 주세요. 체험용 학번 {tries.length}개만 모두 지우고, 학생 기록은 그대로 둬요.</p>
+          <button className="ghost" disabled={busy} onClick={() => void removeAll()}>체험 학번 모두 지우기</button>
+        </div>
+      )}
       </>)}
     </article>
   )
