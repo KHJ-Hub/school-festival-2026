@@ -333,3 +333,7 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .scan-hold { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; padding-top: 8px; border-top: 1px dashed #e8b4ad; }
 .scan-hold b { flex: 1 1 200px; }
 .scan-hold button { flex: 0 0 auto; min-height: 38px; padding: 8px 14px; border-radius: 10px; border: 1px solid #a33b2e; background: white; color: #a33b2e; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+/* PDF에서 읽은 모양(이름은 ○로 가림) */
+.pdf-look p { margin: 10px 0 4px; font-size: 14px; }
+.pdf-look pre { margin: 0; padding: 10px 12px; max-height: 260px; overflow: auto; border-radius: 10px; background: #fcfaf7; border: 1px dashed #d9cdc1; font-size: 13px; line-height: 1.6; white-space: pre; }

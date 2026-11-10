@@ -83,7 +83,8 @@ const NAME_TOKEN = /^[가-힣A-Za-z]{2,10}$/
  * 명렬표처럼 "연번 학번 이름"이어도, 한 줄에 여러 명이어도, PDF에서 칸마다 줄이 바뀌어도 읽힙니다.
  */
 export function findRosterPairs(text: string): RosterEntry[] {
-  const tokens = text.split(/[\s,]+/).filter(Boolean)
+  // 숫자와 한글이 붙어 있으면("20301홍길동") 떼어서 봅니다.
+  const tokens = text.replace(/(\d)(?=[가-힣])/g, '$1 ').replace(/([가-힣])(?=\d)/g, '$1 ').split(/[\s,]+/).filter(Boolean)
   const entries: RosterEntry[] = []
   for (let index = 0; index < tokens.length - 1; index += 1) {
     if (!ID_TOKEN.test(tokens[index]!)) continue

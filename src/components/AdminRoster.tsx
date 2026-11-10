@@ -32,6 +32,8 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
   const [note, setNote] = useState('')
   const [search, setSearch] = useState('')
   const [files, setFiles] = useState<RosterFile[]>(readFiles)
+  // 방금 읽은 PDF의 글자 모양(이름은 ○로 가림). 인원이 모자랄 때 어떻게 읽혔는지 확인하는 용도.
+  const [pdfLooks, setPdfLooks] = useState<{ name: string; count: number; masked: string }[]>([])
   const release = async (entry: RosterEntry, nickname: string) => {
     if (!window.confirm(`${entry.studentId} ${entry.name} (${nickname})의 등록을 풀까요?\n\n계정과 랭킹 닉네임만 지워지고, 코인·교환권 기록은 학번에 남아요. 진짜 주인이 이 학번으로 새로 등록할 수 있게 돼요.`)) return
     try {
@@ -78,8 +80,12 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
   // skipped: PDF에서 학번은 있는데 이름을 못 찾은 줄(붙여넣기 칸에 남겨서 운영진이 고칠 수 있게 함)
   const readFile = async (file: File): Promise<{ entries: RosterEntry[]; skipped: string[] }> => {
     if (/\.pdf$/i.test(file.name)) {
-      const { pdfToText } = await import('./pdfRoster')
-      return parseRosterText(await pdfToText(file))
+      // 세 가지 방법으로 읽어서 학생이 가장 많이 나온 결과를 씁니다.
+      const { pdfToTexts, maskNames } = await import('./pdfRoster')
+      const tried = (await pdfToTexts(file)).map((text) => ({ text, result: parseRosterText(text) }))
+      const best = tried.reduce((a, b) => (b.result.entries.length > a.result.entries.length ? b : a))
+      setPdfLooks((current) => [...current, { name: file.name, count: best.result.entries.length, masked: maskNames(best.text) }])
+      return best.result
     }
     if (/\.csv$/i.test(file.name)) return { entries: rowsToRoster(csvToRows(await file.text())).entries, skipped: [] }
     if (/\.xlsx$/i.test(file.name)) {
@@ -94,6 +100,7 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
     const list = picked ? [...picked] : []
     if (list.length === 0) return
     setNote(`파일 ${list.length}개를 읽는 중…`)
+    setPdfLooks([])
     const results: { file: File; entries: RosterEntry[] }[] = []
     const failed: string[] = []
     const leftover: string[] = []
@@ -206,6 +213,19 @@ export function AdminRoster({ roster, accounts, onAddRoster, onRelease }: {
           <button className="primary-button" onClick={() => void addPasted()}>붙여 넣은 명단 넣기</button>
         </div>
       </div>
+
+      {/* 인원이 모자랄 때 원인을 찾는 용도. 이름은 ○로 가려서 화면을 캡처해 보여 줘도 이름이 드러나지 않습니다. */}
+      {pdfLooks.length > 0 && (
+        <details className="live-fold pdf-look">
+          <summary>PDF에서 읽은 모양 보기 (이름은 ○로 가림)</summary>
+          {pdfLooks.map((look) => (
+            <div key={look.name}>
+              <p><b>{look.name}</b> · 찾은 학생 {look.count}명</p>
+              <pre>{look.masked || '(글자를 하나도 못 읽었어요. 스캔한 그림 PDF일 수 있어요.)'}</pre>
+            </div>
+          ))}
+        </details>
+      )}
 
       </>)}
     </article>
