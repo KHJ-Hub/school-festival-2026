@@ -218,7 +218,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
   }, [requestApproved])
   const [message, setMessage] = useState('')
   const [scanCode, setScanCode] = useState('')
-  const [scanned, setScanned] = useState<{ studentId: string; voucherId: string } | null>(null)
+  const [scanned, setScanned] = useState<{ studentId: string; voucherId: string; held: boolean } | null>(null)
   const [lastNotBuilt, setLastNotBuilt] = useState<Record<number, boolean>>({})
 
   const balance = safe(() => calculateCoinBalance(studentId, mine.grants, mine.vouchers), 0)
@@ -304,7 +304,16 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
       setScanned(null)
       return report(6, `"${code.trim()}"는 없는 교환권이에요. 다시 스캔해 주세요.`, false)
     }
-    setScanned({ studentId: found.studentId, voucherId })
+    // 쓴 코인이 모은 코인보다 많거나 교환권이 너무 많으면 자동으로 쓰지 않고 멈춥니다(코인 없이 만든 교환권 막기).
+    const problem = found.status === 'issued' ? studentSummary(found.studentId).problem : ''
+    setScanned({ studentId: found.studentId, voucherId, held: Boolean(problem) })
+    if (problem) return report(6, `사용 처리하지 않았어요. ${problem}. 확인한 뒤 괜찮으면 [그래도 사용 처리]를 눌러 주세요.`, false)
+    await redeemVoucher(voucherId)
+  }
+
+  /** 교환권 사용 처리(6번 학생 함수). 스캔했을 때, 또는 운영진이 [그래도 사용 처리]를 눌렀을 때. */
+  const redeemVoucher = async (voucherId: string) => {
+    setScanned((current) => (current ? { ...current, held: false } : current))
     const result = safe(() => markVoucherUsed(all.vouchers, voucherId), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', vouchers: all.vouchers })
     if (result.ok) {
       try {
@@ -413,6 +422,12 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
                   <strong>{adminLabel(scanned.studentId, all.accounts)}</strong>
                   <span>모은 코인 {info.earned} · 쓴 코인 {info.spent} · 받은 교환권 {info.count}장</span>
                   {info.problem && <b>⚠ 확인 필요: {info.problem}</b>}
+                  {scanned.held && (
+                    <span className="scan-hold">
+                      <b>아직 사용 처리 안 함 · 간식을 주기 전에 확인하세요</b>
+                      <button className="ghost" onClick={() => void redeemVoucher(scanned.voucherId)}>그래도 사용 처리</button>
+                    </span>
+                  )}
                 </div>
               )
             })()}

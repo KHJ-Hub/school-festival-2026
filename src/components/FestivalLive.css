@@ -328,3 +328,8 @@ main > .live-id:not(.admin-lock) { margin-bottom: 18px; }
 .admin-roster .allow-check{margin:8px 0 0;font-size:14px;font-weight:600}
 .admin-roster .allow-check.blocked{color:#c0392b}
 .admin-roster .allow-check.ok{color:#1e7f4f}
+
+/* 스캔했는데 확인이 필요한 교환권: 자동으로 쓰지 않고 멈춘 상태 */
+.scan-hold { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; padding-top: 8px; border-top: 1px dashed #e8b4ad; }
+.scan-hold b { flex: 1 1 200px; }
+.scan-hold button { flex: 0 0 auto; min-height: 38px; padding: 8px 14px; border-radius: 10px; border: 1px solid #a33b2e; background: white; color: #a33b2e; font-weight: 700; cursor: pointer; white-space: nowrap; }
