@@ -35,6 +35,7 @@ import type { AppMode } from './ModeSwitcher'
 import type { Account } from './nicknameRules'
 import './FestivalLive.css'
 import { useFold } from './adminFold'
+import { redeemAtBooth } from './voucherUse'
 
 /**
  * 교사 관리 파일: 학생들이 만든 함수(src/tasks/)를 실제 화면 흐름에 연결합니다.
@@ -314,10 +315,10 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
     await redeemVoucher(voucherId)
   }
 
-  /** 교환권 사용 처리(6번 학생 함수). 스캔했을 때, 또는 운영진이 [그래도 사용 처리]를 눌렀을 때. */
+  /** 교환권 사용 처리. 스캔했을 때, 또는 운영진이 [그래도 사용 처리]를 눌렀을 때. 축제 화면은 교사가 만든 함수(voucherUse.ts)를 씁니다. */
   const redeemVoucher = async (voucherId: string) => {
     setScanned((current) => (current ? { ...current, held: false } : current))
-    const result = safe(() => markVoucherUsed(all.vouchers, voucherId), { ok: false, message: '오류가 났어요. 코드를 확인해 보세요.', vouchers: all.vouchers })
+    const result = redeemAtBooth(all.vouchers, voucherId)
     if (result.ok) {
       try {
         await saveVoucherUse(all.vouchers, result.vouchers)
@@ -325,7 +326,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
         return report(6, SAVE_FAILED, false)
       }
     }
-    report(6, result.message || (result.ok ? '스캔 완료! 사용 처리됐어요.' : ''), result.message === NOT_BUILT)
+    report(6, result.message, false)
   }
 
   return (
@@ -412,7 +413,7 @@ export function FestivalLive({ mode, me, isAdmin }: { mode: AppMode; me: Account
             )}
           </Section>
 
-          <Section no={6} title="교환권 바코드 스캔" desc="손님 폰의 바코드를 스캔하면 자동으로 사용 처리돼요. 스캐너가 없으면 코드를 직접 입력해도 돼요." built={BUILT[6]} open={scanOpen} onToggle={setScanOpen} folded={`아직 안 쓴 교환권 ${issued.length}장`}>
+          <Section no={6} title="교환권 바코드 스캔" desc="손님 폰의 바코드를 스캔하면 자동으로 사용 처리돼요. 스캐너가 없으면 코드를 직접 입력해도 돼요." open={scanOpen} onToggle={setScanOpen} folded={`아직 안 쓴 교환권 ${issued.length}장`}>
             <form className="live-row" onSubmit={(event) => { event.preventDefault(); if (scanCode.trim()) void scanVoucher(scanCode) }}>
               <input value={scanCode} onChange={(event) => setScanCode(event.target.value)} placeholder="여기에 스캔 (예: K7F2Q9AB)" aria-label="교환권 바코드 값" autoComplete="off" />
               <button className="primary-button" type="submit">스캔 <span>→</span></button>
