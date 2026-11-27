@@ -1,0 +1,1 @@
+var e=`/school-festival-2026/assets/pdf.worker.min-yatZIOMy.mjs`;export{e as default};
